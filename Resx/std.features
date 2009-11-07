@@ -1,0 +1,29 @@
+# Segment classes
+feature cons    # consonantal
+feature son     # sonorant
+feature syll    # syllabic
+
+# Glottal features
+feature vc      # voice
+feature sg      # spread glottis
+feature cg      # constricted glottis
+
+# Manner of articulation
+feature cont    # continuant
+feature nas     # nasal
+feature str     # strident
+feature lat     # lateral
+feature dr      # delayed-release
+
+# Labial features
+feature ro      # round
+
+# Coronal features
+feature ant     # anterior
+feature dist    # distributed
+
+# Dorsal features
+feature hi      # high
+feature lo      # low
+feature bk      # back
+feature fr      # front

@@ -1,0 +1,176 @@
+import std.features
+
+# 
+# We add a feature for stress, which is important for many rules
+#
+feature stress
+
+#
+# We create our own symbol set, defining only Romanian phonemes
+#
+
+# Unstressed vowels
+symbol a  [+syll -cons +son -hi +lo -fr -bk -stress]
+symbol e  [+syll -cons +son -hi -lo +fr -bk -stress]
+symbol o  [+syll -cons +son -hi -lo -fr +bk +ro -stress]
+symbol @  [+syll -cons +son -hi -lo -fr -bk -stress]
+symbol i  [+syll -cons +son +hi -lo +fr -bk -stress]
+symbol u  [+syll -cons +son +hi -lo -fr +bk +ro -stress]
+symbol 1  [+syll -cons +son +hi -lo -fr -bk -stress]
+
+# Stressed vowels
+symbol a' [+syll -cons +son -hi +lo -fr -bk +stress]
+symbol e' [+syll -cons +son -hi -lo +fr -bk +stress]
+symbol o' [+syll -cons +son -hi -lo -fr +bk +ro +stress]
+symbol @' [+syll -cons +son -hi -lo -fr -bk +stress]
+symbol i' [+syll -cons +son +hi -lo +fr -bk +stress]
+symbol u' [+syll -cons +son +hi -lo -fr +bk +ro +stress]
+symbol 1' [+syll -cons +son +hi -lo -fr -bk +stress]
+
+# Non-syllabic vocoids
+symbol e` [-syll -cons +son -hi -lo +fr -bk]
+symbol o` [-syll -cons +son -hi -lo -fr +bk +ro]
+symbol j  [-syll -cons +son +hi -lo +fr -bk]
+symbol w  [-syll -cons +son +hi -lo -fr +bk +ro]
+
+# Labials
+symbol p  [+cons +ro -son]
+symbol b  [+cons +ro -son +vc]
+symbol f  [+cons +ro -son +cont]
+symbol v  [+cons +ro -son +cont +vc]
+symbol m  [+cons +ro +son +nas]
+
+# Dentals
+symbol t  [+cons +ant -son]
+symbol ts  [+cons +ant -son +dr]
+symbol d  [+cons +ant -son +vc]
+symbol dz  [+cons +ant -son +dr +vc]
+symbol s  [+cons +cont -son +ant]
+symbol z  [+cons +cont -son +ant +vc]
+symbol n  [+cons +ant +son +nas]
+symbol l  [+cons +ant +son +lat]
+symbol r  [+cons +ant +son +cont]
+
+# Palatals
+symbol tS  [+cons -son -ant +dist +dr]
+symbol dZ  [+cons -son -ant +dist +vc +dr]
+symbol S  [+cons -son -ant +cont +dist]
+symbol Z  [+cons -son -ant +cont +dist +vc]
+
+# Velars
+symbol k  [+cons -son +hi]
+symbol g  [+cons -son +hi +vc]
+symbol h  [+cons -son +hi +cont]
+
+#
+# Here we begin with the rules
+#
+
+# Reduce i/u to semivowels where appropriate
+rule make-semivowels
+[+hi] => [-syll] / [+syll] _
+
+# Stress all penult syllables. This rule illustrates two interesting
+# techniques. First, it specifies a filter of [+syll], which means that the
+# rule only "sees" [+syll] segments. Second, it uses an empty set of braces []
+# to match "any segment".
+rule stress-penult (filter=[+syll])
+[] => [+stress] / _ [] $
+
+# When the antepenult syllable is lexically stressed, remove stress on the
+# penult syllable. 
+rule stress-antepenult (filter=[+syll])
+[+stress] => [-stress] / [+stress] _
+
+# Break word-initial /e/
+rule initial-iotacization
+* => j / $ _ [+fr -hi -lo]
+
+# Palatalize velars before front vowels
+rule palatalize-velars
+[+cons +hi] => [-ant +dist +dr] / _ [+fr]
+
+# Palatalize dental fricatives before high front vowels
+rule palatalize-dentals
+[+cons +ant +cont -son] => [-ant +dist] / _ [+hi +fr]
+
+# Assimilate palatalization
+rule assimilate-palatals
+[+cons -son *ro] => [-ant +dist] / _ [-ant +dist]
+
+# Affricate dental stops before /i/
+rule affricate-dentals
+[+cons +ant] => [+dr] / _ i
+
+# Simplify /dz/
+rule simplify-dz
+dz => z
+
+# Simplify /StS/ everywhere
+rule simplify-StS
+StS => St
+
+# Change velar+/l/ to a palatalized velar
+rule l-palatalize
+l => j / [+cons +hi] _
+
+# Raise stressed central vowels before /n/
+rule prenasal-raising
+[-hi -lo +stress] => [+hi] / _ n
+
+# Centralize front non-high vowels after labials
+rule postlabial-centralize
+[-hi +fr] => [-fr] / [+ro] _
+
+# Front central vowels when the next vowel is a front vowel
+rule front-assimilation (filter=[-cons])
+[-fr -bk -lo] => [+fr] / _ [+fr]
+
+# Raise unstressed /o/
+rule o-raising (filter=[+syll])
+o => u / _ [+stress]
+
+# Drop word-final /u/
+rule drop-final-u
+u => * / _ $
+
+# Desyllabify word-final /i/
+rule desyllabify-final-i
+i => j / _ $
+
+# Centralize unstressed /a/, except when /a/ is the first segment
+rule centralize-a
+a => @ / [] _
+
+# Centralize /a/ in the 1pl verbal ending
+rule centralize-1pl-a
+a' => @' / _m $
+
+# Break stressed mid vowels into semivowel + a when the next syllable contains
+# a non-high vowel
+rule breaking (filter=[+syll])
+[-hi -lo +stress] * => [-syll *stress] a' / _ [-hi *ro]
+
+# Assimilate /ea/ followed by /e/
+rule assimilate-ea (filter=[-cons])
+e`a' => e' * / _ e
+
+# Assimilate /oa/ followed by /w/
+rule assimilate-oa
+o`a' => o' * / _ w
+
+# Assimilate semivowels after a palatal
+rule assimilate-postpalatal-semivowel
+[-syll +fr] => * / [+dr +dist] _
+
+# Assimilate consecutive front semivowels
+rule assimilate-consecutive-semivowel
+[-syll +fr] => * / [-syll +fr] _
+
+# Assimilate coronal sonorants before /j/
+rule assimilate-sonorants
+[+cons +ant +son *cont] => * / _ j
+
+# Drop non-syllabic central vowels
+rule drop-central-vocoids
+[-fr -bk -syll] => *
