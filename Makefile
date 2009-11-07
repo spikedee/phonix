@@ -78,6 +78,7 @@ install: $(PHONIX) $(ANTLR) $(DOC_INFO)
 	cp $(ANTLR) $(libdir)/phonix
 	cp phonix.sh phonix
 	sed -i "s!PREFIX!$(libdir)!" phonix
+	chmod 755 phonix
 	cp phonix $(bindir)
 	cp $(DOC_INFO) /usr/share/info
 	install-info $(DOC_INFO)
@@ -97,3 +98,4 @@ clean:
 	rm -f $(PARSER_FILES)
 	rm -f $(BIN_DIR)/*
 	rm -f $(DOC_FILES)
+	rm -f phonix
