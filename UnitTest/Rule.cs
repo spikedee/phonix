@@ -25,19 +25,19 @@ namespace Phonix.UnitTest
 
             SegmentEnumerator iter = slice.Current.GetEnumerator();
 
-            Assert.AreEqual(firstMatch, seg.Matches(iter), "first match");
+            Assert.AreEqual(firstMatch, seg.Matches(null, iter), "first match");
             if (firstPos != null)
                 Assert.AreSame(firstPos, iter.Current, "position after first match");
 
-            Assert.AreEqual(secondMatch, seg.Matches(iter), "second match");
+            Assert.AreEqual(secondMatch, seg.Matches(null, iter), "second match");
             if (secondPos != null)
                 Assert.AreSame(secondPos, iter.Current, "position after second match");
 
-            Assert.AreEqual(thirdMatch, seg.Matches(iter), "third match");
+            Assert.AreEqual(thirdMatch, seg.Matches(null, iter), "third match");
             if (thirdPos != null)
                 Assert.AreSame(thirdPos, iter.Current, "position after third match");
 
-            Assert.AreEqual(fourthMatch, seg.Matches(iter), "fourth match");
+            Assert.AreEqual(fourthMatch, seg.Matches(null, iter), "fourth match");
         }
 
         private void VerifyCombine(
@@ -54,15 +54,15 @@ namespace Phonix.UnitTest
 
             MutableSegmentEnumerator iter = slice.Current.GetMutableEnumerator();
 
-            seg.Combine(iter);
+            seg.Combine(null, iter);
             if (firstPos != null)
                 Assert.AreSame(firstPos, iter.Current, "position after first combo");
 
-            seg.Combine(iter);
+            seg.Combine(null, iter);
             if (secondPos != null)
                 Assert.AreSame(secondPos, iter.Current, "position after second combo");
 
-            seg.Combine(iter);
+            seg.Combine(null, iter);
             if (thirdPos != null)
                 Assert.AreSame(thirdPos, iter.Current, "position after third combo");
 
@@ -184,13 +184,13 @@ namespace Phonix.UnitTest
             get; private set;
         }
 
-        public bool Matches(SegmentEnumerator segment)
+        public bool Matches(RuleContext ctx, SegmentEnumerator segment)
         {
             MatchesCalled++;
             return segment.MoveNext();
         }
 
-        public void Combine(MutableSegmentEnumerator segment)
+        public void Combine(RuleContext ctx, MutableSegmentEnumerator segment)
         {
             CombineCalled++;
             segment.MoveNext();

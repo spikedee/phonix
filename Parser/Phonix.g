@@ -84,7 +84,7 @@ fragment ALPHA: 'a'..'z' | 'A'..'Z';
 fragment SPACE: ' ' | '\t';
 fragment EOL: '\r' | '\n';
 fragment RESERVED_START: '+' | '-' | '*' | '=' | '[' | ']' | '(' | ')' | '/' | '#' | '_' | '$' | '"' | '\'';
-fragment RESERVED_MID: '[' | ']' | '(' | ')' | '=';
+fragment RESERVED_MID: '[' | ']' | '(' | ')' | '=' | '$';
 fragment CHAR_START: ~( SPACE | EOL | RESERVED_START );
 fragment CHAR_MID: ~( SPACE | EOL | RESERVED_MID );
 fragment SQ: '\'';
@@ -258,6 +258,9 @@ matrix returns [FeatureMatrix fm]
     { $fm = new FeatureMatrix(fvList); }
     ;
 
+variableMatrix:
+    LBRACE (featureVal | variableVal )* RBRACE;
+
 /* Feature values */
 
 featureVal returns [FeatureValue fv]: 
@@ -281,6 +284,8 @@ unaryVal returns [FeatureValue fv]:
 
 nullVal returns [FeatureValue fv]:
     NULL feature { $fv = $feature.f.NullValue; };
+
+variableVal: '$' feature { throw new NotImplementedException(); };
 
 /* Parameters */
 

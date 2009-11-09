@@ -90,19 +90,19 @@ transformations saved in @file{input.txt}, with one word on each line.
 Conveniently, this is exactly the format that Phonix uses. You can then apply
 your rules to your input by typing the following at the command line:
 
-@command{phonix.exe my.phonix -i input.txt}
+@command{phonix my.phonix -i input.txt}
 
 This will print the output to the screen, one word on each line. Should you
 wish to have Phonix save them to a file, simply provide the filename with
 @option{-o}:
 
-@command{phonix.exe my.phonix -i input.txt -o output.txt}
+@command{phonix my.phonix -i input.txt -o output.txt}
 
 @node How To Use Phonix
 @chapter How To Use Phonix
 
 @dfn{Phonix} refers to the Phonix programming language for modeling
-phonological processes, and informally to the program @file{phonix.exe} that
+phonological processes, and informally to the program @file{phonix} that
 interprets Phonix language files and applies the rules contained therein to
 your input.
 
@@ -122,12 +122,12 @@ input or from a file.
 @end enumerate
 
 The Phonix language is described in detail in @ref{The Phonix Language}. This
-section describes how to invoke @file{phonix.exe} to run your phonology files.
+section describes how to invoke @file{phonix} to run your phonology files.
 
 A basic invocation of Phonix looks like this:
 
 @example
-phonix.exe @var{phonix-file} [ @var{arguments} ]
+phonix @var{phonix-file} [ @var{arguments} ]
 @end example
 
 The only required argument is the @var{phonix-file}, which is a file containing
@@ -182,7 +182,7 @@ this section tough going--I recommend that you read up on distinctive feature
 theory and transformational phonology before going further.
 
 The Phonix language is @dfn{declarative}: you use Phonix to create a
-description of your phonology, and @code{phonix.exe} reads your description and
+description of your phonology, and @code{phonix} reads your description and
 applies the rules contained therein to the input. There are three basic
 elements in a Phonix file: @dfn{features}, @dfn{symbols}, and @dfn{rules}. Each
 of these is built up from the previous parts: features are the most basic
@@ -646,10 +646,10 @@ feature ex # this comment explains what 'ex' means
 @node Strings
 @section Strings
 
-The short version: Any time that Phonix expects you to provide a string, like
-for feature names, symbols, or a rule names, you can type almost anything you
-want. The only exception is if the contents of the string somehow confuse the
-Phonix compiler. Don't do that. Everything else is fine.
+Any time that Phonix expects you to provide a string, as for feature names,
+symbols, or a rule names, you can type almost anything you want.  The only
+exception is if the contents of the string somehow confuse the Phonix compiler.
+Don't do that. Everything else is fine.
 
 The long, boring, technical version follows.
 
@@ -710,7 +710,7 @@ active phonological processes in Romanian should be represented.
 You can generate the output file with the following command line:
 
 @example
-phonix.exe romanian.phonix -i romanian.input -o romanian.output
+phonix romanian.phonix -i romanian.input -o romanian.output
 @end example
 
 The following table shows the input and the output together with the output

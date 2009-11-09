@@ -242,7 +242,7 @@ namespace Phonix
             // only ever two instances, we reference compare against those
             // instances to determine our behavior.
 
-            public bool Matches(SegmentEnumerator segment)
+            public bool Matches(RuleContext ctx, SegmentEnumerator segment)
             {
                 if (this == Word.LeftBoundary)
                 {
@@ -265,7 +265,7 @@ namespace Phonix
                 return false;
             }
 
-             public void Combine(MutableSegmentEnumerator segment)
+             public void Combine(RuleContext ctx, MutableSegmentEnumerator segment)
              {
                  // nothing to do
              }

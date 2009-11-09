@@ -284,10 +284,10 @@ namespace Phonix.UnitTest
             var slice = iter.Current;
             var sliceIter = slice.GetEnumerator();
 
-            Assert.IsTrue(Word.LeftBoundary.Matches(sliceIter), "left boundary matches at first segment");
+            Assert.IsTrue(Word.LeftBoundary.Matches(null, sliceIter), "left boundary matches at first segment");
             Assert.IsTrue(sliceIter.MoveNext(), "first MoveNext()");
             Assert.AreSame(FeatureMatrixTest.MatrixA, sliceIter.Current, "next iter is A");
-            Assert.IsFalse(Word.LeftBoundary.Matches(sliceIter), "left boundary doesn't match after first segment");
+            Assert.IsFalse(Word.LeftBoundary.Matches(null, sliceIter), "left boundary doesn't match after first segment");
         }
 
         [Test]
@@ -302,10 +302,10 @@ namespace Phonix.UnitTest
             var sliceIter = slice.GetEnumerator();
             sliceIter.MoveNext();
 
-            Assert.IsFalse(Word.RightBoundary.Matches(sliceIter), "right boundary doesn't match before last segment");
+            Assert.IsFalse(Word.RightBoundary.Matches(null, sliceIter), "right boundary doesn't match before last segment");
             Assert.IsTrue(sliceIter.MoveNext(), "first MoveNext()");
             Assert.AreSame(FeatureMatrixTest.MatrixC, sliceIter.Current, "next iter is C");
-            Assert.IsTrue(Word.RightBoundary.Matches(sliceIter), "right boundary matches at last segment");
+            Assert.IsTrue(Word.RightBoundary.Matches(null, sliceIter), "right boundary matches at last segment");
         }
     }
 }
