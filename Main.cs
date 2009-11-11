@@ -8,6 +8,9 @@ namespace Phonix
 {
     public static class Shell
     {
+        public const string FileRevision = "$Revision$";
+        public const string FileURL = "$HeadURL$";
+
         public static int Main(string[] args)
         {
             int rv = 0;
