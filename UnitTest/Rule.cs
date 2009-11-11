@@ -24,23 +24,36 @@ namespace Phonix.UnitTest
             slice.MoveNext();
 
             SegmentEnumerator iter = slice.Current.GetEnumerator();
+            RuleContext ctx = new RuleContext();
 
-            Assert.AreEqual(firstMatch, seg.Matches(null, iter), "first match");
+            Assert.AreEqual(firstMatch, seg.Matches(ctx, iter), "first match");
             if (firstPos != null)
                 Assert.AreSame(firstPos, iter.Current, "position after first match");
 
-            Assert.AreEqual(secondMatch, seg.Matches(null, iter), "second match");
+            Assert.AreEqual(secondMatch, seg.Matches(ctx, iter), "second match");
             if (secondPos != null)
                 Assert.AreSame(secondPos, iter.Current, "position after second match");
 
-            Assert.AreEqual(thirdMatch, seg.Matches(null, iter), "third match");
+            Assert.AreEqual(thirdMatch, seg.Matches(ctx, iter), "third match");
             if (thirdPos != null)
                 Assert.AreSame(thirdPos, iter.Current, "position after third match");
 
-            Assert.AreEqual(fourthMatch, seg.Matches(null, iter), "fourth match");
+            Assert.AreEqual(fourthMatch, seg.Matches(ctx, iter), "fourth match");
         }
 
         private void VerifyCombine(
+                IRuleSegment seg, 
+                FeatureMatrix firstPos,
+                FeatureMatrix secondPos,
+                FeatureMatrix thirdPos,
+                string finalSlice
+            )
+        {
+            VerifyCombine(new RuleContext(), seg, firstPos, secondPos, thirdPos, finalSlice);
+        }
+
+        private void VerifyCombine(
+                RuleContext ctx,
                 IRuleSegment seg, 
                 FeatureMatrix firstPos,
                 FeatureMatrix secondPos,
@@ -54,17 +67,23 @@ namespace Phonix.UnitTest
 
             MutableSegmentEnumerator iter = slice.Current.GetMutableEnumerator();
 
-            seg.Combine(null, iter);
+            seg.Combine(ctx, iter);
             if (firstPos != null)
-                Assert.AreSame(firstPos, iter.Current, "position after first combo");
+            {
+                Assert.IsTrue(firstPos.Equals(iter.Current), "position after first combo");
+            }
 
-            seg.Combine(null, iter);
+            seg.Combine(ctx, iter);
             if (secondPos != null)
-                Assert.AreSame(secondPos, iter.Current, "position after second combo");
+            {
+                Assert.IsTrue(secondPos.Equals(iter.Current), "position after second combo");
+            }
 
-            seg.Combine(null, iter);
+            seg.Combine(ctx, iter);
             if (thirdPos != null)
-                Assert.AreSame(thirdPos, iter.Current, "position after third combo");
+            {
+                Assert.IsTrue(thirdPos.Equals(iter.Current), "position after third combo");
+            }
 
             // get a new slice rather than reusing the old one
             slice = word.GetSliceEnumerator(Direction.Rightward);
@@ -108,6 +127,74 @@ namespace Phonix.UnitTest
                     SymbolTest.SymbolC.FeatureMatrix,
                     "ccc"
                     );
+        }
+
+        [Test]
+        public void VariableMatrixMatches()
+        {
+            var fs = FeatureSetTest.GetTestSet();
+            var match = new MatrixMatcher(new FeatureValueBase[] { 
+                    fs.Get<Feature>("un").VariableValue,
+                    fs.Get<Feature>("sc").VariableValue
+                    });
+            var seg = new FeatureMatrixSegment(match, MatrixCombiner.NullCombiner);
+
+            VerifyMatches(
+                    seg, 
+                    true, FeatureMatrixTest.MatrixA, 
+                    false, FeatureMatrixTest.MatrixB, 
+                    true, FeatureMatrixTest.MatrixC,
+                    false
+                    );
+        }
+
+        [Test]
+        public void VariableMatrixCombine()
+        {
+            var fs = FeatureSetTest.GetTestSet();
+            var un = fs.Get<UnaryFeature>("un");
+            var sc = fs.Get<ScalarFeature>("sc");
+            var combo = new MatrixCombiner(new FeatureValueBase[] { un.VariableValue, sc.VariableValue });
+            var seg = new FeatureMatrixSegment(MatrixMatcher.AlwaysMatches, combo);
+
+            var expectedSecond = new FeatureMatrix(new FeatureValue[] {
+                        un.Value,
+                        fs.Get<BinaryFeature>("bn").PlusValue,
+                        sc.Value(1),
+                        });
+
+            var ctx = new RuleContext();
+            ctx.VariableFeatures.Add(un, un.Value);
+            ctx.VariableFeatures.Add(sc, sc.Value(1));
+
+            VerifyCombine(
+                    ctx,
+                    seg, 
+                    FeatureMatrixTest.MatrixA,
+                    expectedSecond,
+                    FeatureMatrixTest.MatrixC,
+                    "a[+bn sc=1 un]c"
+                    );
+        }
+
+        [Test]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public void VariableMatrixException()
+        {
+            var fs = FeatureSetTest.GetTestSet();
+            var un = fs.Get<UnaryFeature>("un");
+            var sc = fs.Get<ScalarFeature>("sc");
+            var combo = new MatrixCombiner(new FeatureValueBase[] { un.VariableValue, sc.VariableValue });
+            var seg = new FeatureMatrixSegment(MatrixMatcher.AlwaysMatches, combo);
+
+            var word = WordTest.GetTestWord();
+            var slice = word.GetSliceEnumerator(Direction.Rightward);
+            slice.MoveNext();
+            MutableSegmentEnumerator iter = slice.Current.GetMutableEnumerator();
+
+            // this should throw an InvalidOperationException because the
+            // context doesn't have the variables that we're expecting.
+            seg.Combine(new RuleContext(), iter);
         }
 
         [Test]

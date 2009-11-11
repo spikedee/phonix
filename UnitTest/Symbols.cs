@@ -64,8 +64,8 @@ namespace Phonix.UnitTest
         {
             Symbol s = SymbolA;
 
-            Assert.IsTrue(s.Matches(FeatureMatrixTest.MatrixA));
-            Assert.IsFalse(s.Matches(FeatureMatrix.Empty));
+            Assert.IsTrue(s.Matches(null, FeatureMatrixTest.MatrixA));
+            Assert.IsFalse(s.Matches(null, FeatureMatrix.Empty));
         }
 
         [Test]
@@ -73,10 +73,10 @@ namespace Phonix.UnitTest
         {
             Symbol s = SymbolA;
 
-            var fm = s.Combine(FeatureMatrix.Empty);
+            var fm = s.Combine(null, FeatureMatrix.Empty);
             Assert.AreSame(s.FeatureMatrix, fm);
 
-            fm = s.Combine(FeatureMatrixTest.MatrixA);
+            fm = s.Combine(null, FeatureMatrixTest.MatrixA);
             Assert.AreSame(s.FeatureMatrix, fm);
         }
     }

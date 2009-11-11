@@ -62,12 +62,13 @@ namespace Phonix
 
             public bool MoveNext()
             {
+                RuleContext ctx = new RuleContext();
                 var currNode = _node;
                 if (_valid && !NoAdvance)
                 {
                     _node = _node.Next;
                 }
-                while (_node != null && !_filter.Matches(_node.Value))
+                while (_node != null && !_filter.Matches(ctx, _node.Value))
                 {
                     _node = _node.Next;
                 }
@@ -299,8 +300,9 @@ namespace Phonix
             while (currNode != null)
             {
                 var nextNodePre = (dir == Direction.Rightward ? currNode.Next : currNode.Previous);
+                RuleContext ctx = new RuleContext();
 
-                if (filter.Matches(currNode.Value))
+                if (filter.Matches(ctx, currNode.Value))
                 {
                     yield return new WordSlice(currNode, filter);
                 }

@@ -29,7 +29,7 @@ LINK_RESOURCES=$(foreach resource,$(RESX_FILES),-resource:$(resource))
 GMCS=gmcs $(CS_DEBUG) -nowarn:2002 -warn:4 -warnaserror -r:Antlr3.Runtime.dll -lib:./lib -out:$@ $(LINK_RESOURCES)
 
 $(PHONIX): parser $(CS_FILES) $(RESX_FILES) $(ANTLR)
-	$(GMCS) $(CS_FILES) $(PARSER_FILES)
+	$(GMCS) -optimize+ $(CS_FILES) $(PARSER_FILES)
 
 parser: $(PARSER_FILES)
 
@@ -49,7 +49,7 @@ debug: CS_DEBUG=-debug -define:debug
 debug: clean $(PHONIX)
 
 $(PHONIX_TEST): $(TEST_FILES) $(RESX_FILES)
-	$(GMCS) -debug -r:nunit.framework.dll -lib:/usr/lib/cli/nunit-2.4/ $(TEST_FILES) $(PARSER_FILES)
+	$(GMCS) -optimize- -debug -r:nunit.framework.dll -lib:/usr/lib/cli/nunit-2.4/ $(TEST_FILES) $(PARSER_FILES)
 
 doc: $(DOC_FILES)
 

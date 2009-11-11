@@ -134,12 +134,12 @@ symbol U   [-cons +son +syll -fr +bk +hi -lo +ro -str]
 
 # High mid #
 
-symbol e   [-cons +son +syll +fr -bk +hi +lo +str]
-symbol 2   [-cons +son +syll +fr -bk +hi +lo +ro +str]
-symbol @\  [-cons +son +syll -fr -bk +hi +lo +str]
-symbol 8   [-cons +son +syll -fr -bk +hi +lo +ro +str]
-symbol 7   [-cons +son +syll -fr +bk +hi +lo +str]
-symbol o   [-cons +son +syll -fr +bk +hi +lo +ro +str]
+symbol e   [-cons +son +syll +fr -bk -hi -lo +str]
+symbol 2   [-cons +son +syll +fr -bk -hi -lo +ro +str]
+symbol @\  [-cons +son +syll -fr -bk -hi -lo +str]
+symbol 8   [-cons +son +syll -fr -bk -hi -lo +ro +str]
+symbol 7   [-cons +son +syll -fr +bk -hi -lo +str]
+symbol o   [-cons +son +syll -fr +bk -hi -lo +ro +str]
 
 # Schwa #
 
@@ -147,12 +147,12 @@ symbol @   [-cons +son +syll -fr -bk -hi -lo -str]
 
 # Open mid #
 
-symbol E   [-cons +son +syll +fr -bk -hi -lo +str]
-symbol 9   [-cons +son +syll +fr -bk -hi -lo +ro +str]
-symbol 3   [-cons +son +syll -fr -bk -hi -lo +str]
-symbol 3\  [-cons +son +syll -fr -bk -hi -lo +ro +str]
-symbol V   [-cons +son +syll -fr +bk -hi -lo +str]
-symbol O   [-cons +son +syll -fr +bk -hi -lo +ro +str]
+symbol E   [-cons +son +syll +fr -bk -hi -lo -str]
+symbol 9   [-cons +son +syll +fr -bk -hi -lo +ro -str]
+# Omitted: /3/, which is identical, feature-wise to /@/
+symbol 3\  [-cons +son +syll -fr -bk -hi -lo +ro -str]
+symbol V   [-cons +son +syll -fr +bk -hi -lo -str]
+symbol O   [-cons +son +syll -fr +bk -hi -lo +ro -str]
 
 # Open lax #
 

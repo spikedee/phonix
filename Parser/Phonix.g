@@ -206,12 +206,14 @@ ruleAction returns [List<IRuleSegment> value]
 
 matchTerm returns [IEnumerable<IMatrixMatcher> value]:
         matrix { $value = new IMatrixMatcher[] { new MatrixMatcher($matrix.fm) }; }
+    |   variableMatrix { $value = new IMatrixMatcher[] { new MatrixMatcher($variableMatrix.vars) }; }
     |   symbolStr { $value = $symbolStr.slist.ConvertAll<IMatrixMatcher>(s => s); }
     |   NULL { $value = new IMatrixMatcher[] { null }; }
     ;
 
 actionTerm returns [IEnumerable<IMatrixCombiner> value]: 
         matrix { $value = new IMatrixCombiner[] { new MatrixCombiner($matrix.fm) }; }
+    |   variableMatrix { $value = new IMatrixCombiner[] { new MatrixCombiner($variableMatrix.vars) }; }
     |   symbolStr { $value = $symbolStr.slist.ConvertAll<IMatrixCombiner>(s => s); }
     |   NULL { $value = new IMatrixCombiner[] { null }; }
     ;
@@ -239,7 +241,9 @@ rightContextTerm returns [IEnumerable<IRuleSegment> segs]:
 contextTerm returns [IEnumerable<IRuleSegment> segs]
         @init { $segs = new List<IRuleSegment>(); }:
         matrix 
-        { $segs = new List<IRuleSegment>() { new FeatureMatrixSegment(new MatrixMatcher($matrix.fm), MatrixCombiner.NullCombiner) }; }
+        { $segs = new IRuleSegment[] { new FeatureMatrixSegment(new MatrixMatcher($matrix.fm), MatrixCombiner.NullCombiner) }; }
+    |   variableMatrix 
+        { $segs = new IRuleSegment[] { new FeatureMatrixSegment(new MatrixMatcher($variableMatrix.vars), MatrixCombiner.NullCombiner) }; }
     |   symbolStr
         { $segs = $symbolStr.slist.ConvertAll<IRuleSegment>(s => new FeatureMatrixSegment(s, MatrixCombiner.NullCombiner)); }
     ;
@@ -258,8 +262,13 @@ matrix returns [FeatureMatrix fm]
     { $fm = new FeatureMatrix(fvList); }
     ;
 
-variableMatrix:
-    LBRACE (featureVal | variableVal )* RBRACE;
+variableMatrix returns [IEnumerable<FeatureValueBase> vars]
+    @init{ List<FeatureValueBase> fvList = new List<FeatureValueBase>(); }:
+    LBRACE 
+    ( featureVal { fvList.Add($featureVal.fv); } | variableVal { fvList.Add($variableVal.fv); })* 
+    RBRACE
+    { $vars = fvList; }
+    ;
 
 /* Feature values */
 
@@ -285,7 +294,8 @@ unaryVal returns [FeatureValue fv]:
 nullVal returns [FeatureValue fv]:
     NULL feature { $fv = $feature.f.NullValue; };
 
-variableVal: '$' feature { throw new NotImplementedException(); };
+variableVal returns [FeatureValueBase fv]: 
+    '$' feature { $fv = $feature.f.VariableValue; };
 
 /* Parameters */
 

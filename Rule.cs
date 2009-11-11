@@ -43,7 +43,7 @@ namespace Phonix
 
         public bool Matches(RuleContext ctx, SegmentEnumerator pos)
         {
-            if (pos.MoveNext() && _match.Matches(pos.Current))
+            if (pos.MoveNext() && _match.Matches(ctx, pos.Current))
             {
                 return true;
             }
@@ -53,80 +53,7 @@ namespace Phonix
         public void Combine(RuleContext ctx, MutableSegmentEnumerator pos)
         {
             pos.MoveNext();
-            pos.Current = _combo.Combine(pos.Current);
-        }
-    }
-
-    public class VariableMatrixSegment : IRuleSegment
-    {
-        private readonly FeatureMatrixSegment _matrix;
-        private readonly IEnumerable<Feature> _matchVariables;
-        private readonly IEnumerable<Feature> _comboVariables;
-
-        public VariableMatrixSegment(
-                FeatureMatrixSegment fmSeg, 
-                IEnumerable<Feature> matchVariables, 
-                IEnumerable<Feature> comboVariables)
-        {
-            if (fmSeg == null || matchVariables == null || comboVariables == null)
-            {
-                throw new ArgumentNullException();
-            }
-
-            _matrix = fmSeg;
-            _matchVariables = matchVariables;
-            _comboVariables = comboVariables;
-        }
-
-        public bool Matches(RuleContext ctx, SegmentEnumerator pos)
-        {
-            if (_matrix.Matches(ctx, pos))
-            {
-
-                // for variable features, if the variable has already been
-                // defined in this context, match against that value. If the
-                // variable hasn't been defined, save this value in the current
-                // context.
-
-                foreach (var feature in _matchVariables)
-                {
-                    if (ctx.VariableFeatures.ContainsKey(feature))
-                    {
-                        if (pos.Current[feature] != ctx.VariableFeatures[feature])
-                        {
-                            return false;
-                        }
-                    }
-                    else 
-                    {
-                        ctx.VariableFeatures[feature] = pos.Current[feature];
-                    }
-                }
-                return true;
-            }
-            return false;
-        }
-
-        public void Combine(RuleContext ctx, MutableSegmentEnumerator pos)
-        {
-            _matrix.Combine(ctx, pos);
-
-            // when combining variable features, every feature referenced
-            // should already have been defined in a match.
-
-            var variableVals = new List<FeatureValue>();
-            foreach (var feature in _comboVariables)
-            {
-                if (ctx.VariableFeatures.ContainsKey(feature))
-                {
-                    variableVals.Add(ctx.VariableFeatures[feature]);
-                }
-                else
-                {
-                    throw new InvalidOperationException("variable feature value refers to undefined variable");
-                }
-            }
-            pos.Current = new MatrixCombiner(new FeatureMatrix(variableVals)).Combine(pos.Current);
+            pos.Current = _combo.Combine(ctx, pos.Current);
         }
     }
 
@@ -141,7 +68,7 @@ namespace Phonix
 
         public bool Matches(RuleContext ctx, SegmentEnumerator pos)
         {
-            if (pos.MoveNext() && _match.Matches(pos.Current))
+            if (pos.MoveNext() && _match.Matches(ctx, pos.Current))
             {
                 return true;
             }
@@ -157,11 +84,11 @@ namespace Phonix
         
     public class InsertingSegment : IRuleSegment
     {
-        private FeatureMatrix _insert;
+        private IMatrixCombiner _insert;
 
         public InsertingSegment(IMatrixCombiner insert)
         {
-            _insert = insert.Combine(FeatureMatrix.Empty);
+            _insert = insert;
         }
 
         public bool Matches(RuleContext ctx, SegmentEnumerator pos)
@@ -172,7 +99,7 @@ namespace Phonix
 
         public void Combine(RuleContext ctx, MutableSegmentEnumerator pos)
         {
-            pos.InsertAfter(_insert);
+            pos.InsertAfter(_insert.Combine(ctx, FeatureMatrix.Empty));
             pos.MoveNext();
         }
     }

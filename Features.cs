@@ -14,6 +14,7 @@ namespace Phonix
         {
             Name = name;
             NullValue = new NullFeatureValue(this);
+            VariableValue = new VariableFeatureValue(this);
         }
 
         public override string ToString()
@@ -29,7 +30,20 @@ namespace Phonix
             }
         }
 
+        // VariableFeatureValue is derived from FeatureValueBase to keep it
+        // from being put into a FeatureMatrix or other containers that should
+        // only contain non-variable values.
+        private class VariableFeatureValue : FeatureValueBase
+        {
+            public VariableFeatureValue(Feature f)
+                : base(f, "$" + f.Name)
+            {
+            }
+        }
+
         public readonly FeatureValue NullValue;
+
+        public readonly FeatureValueBase VariableValue;
 
         public static string FriendlyName<T>() where T : Feature
         {
@@ -40,13 +54,16 @@ namespace Phonix
 
     }
 
-    public abstract class FeatureValue : IComparable
+    // FeatureValueBase defines all of the functionality for feature values.
+    // It's separated from Feature Value only to allow us to enforce type
+    // strictness with variable and non-variable FeatureValue.
+    public abstract class FeatureValueBase : IComparable
     {
         public readonly Feature Feature;
 
         private readonly string _desc;
 
-        protected FeatureValue(Feature feature, string desc)
+        protected FeatureValueBase(Feature feature, string desc)
         {
             Feature = feature;
             _desc = desc;
@@ -54,27 +71,37 @@ namespace Phonix
 
         public int CompareTo(object obj)
         {
-            var fv = obj as FeatureValue;
-            if (fv != null)
-            {
-                if (Feature == fv.Feature)
-                {
-                    return _desc.CompareTo(fv._desc);
-                }
-                else
-                {
-                    return Feature.Name.CompareTo(fv.Feature.Name);
-                }
-            }
-            else 
-            {
-                throw new ArgumentException();
-            }
+           var fv = obj as FeatureValue;
+           if (fv != null)
+           {
+               if (Feature == fv.Feature)
+               {
+                   return _desc.CompareTo(fv._desc);
+               }
+               else
+               {
+                   return Feature.Name.CompareTo(fv.Feature.Name);
+               }
+           }
+           else 
+           {
+               throw new ArgumentException();
+           }
         }
 
         public override string ToString()
         {
             return _desc;
+        }
+    }
+
+    // FeatureValue is the class from which all non-variable feature value
+    // types derive.
+    public abstract class FeatureValue : FeatureValueBase
+    {
+        protected FeatureValue(Feature feature, string desc)
+            : base(feature, desc)
+        {
         }
     }
 
@@ -251,9 +278,9 @@ namespace Phonix
         public readonly static FeatureMatrix Empty = 
             new FeatureMatrix(new FeatureValue[] {});
 
-#region IEnumerable(T) members
+#region IEnumerable(FeatureValue) members
 
-        public virtual IEnumerator<FeatureValue> GetEnumerator()
+        public IEnumerator<FeatureValue> GetEnumerator()
         {
             return GetEnumerator(false);
         }
@@ -345,100 +372,6 @@ namespace Phonix
 
             str.Append("]");
             return str.ToString();
-        }
-
-    }
-
-    public interface IMatrixMatcher : IEnumerable<FeatureValue>
-    {
-        bool Matches(FeatureMatrix matrix);
-    }
-
-    public interface IMatrixCombiner : IEnumerable<FeatureValue>
-    {
-        FeatureMatrix Combine(FeatureMatrix matrix);
-    }
-
-    public class MatrixMatcher : IMatrixMatcher
-    {
-        public static MatrixMatcher AlwaysMatches = new MatrixMatcher(FeatureMatrix.Empty);
-
-        private readonly FeatureMatrix _matrix;
-
-        public MatrixMatcher(FeatureMatrix fm)
-        {
-            _matrix = fm;
-        }
-
-#region IEnumerable<FeatureValue> members
-
-        public IEnumerator<FeatureValue> GetEnumerator()
-        {
-            return _matrix.GetEnumerator(true);
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
-#endregion
-
-        public bool Matches(FeatureMatrix matrix)
-        {
-            if (matrix == null)
-            {
-                return false;
-            }
-
-            foreach (FeatureValue fv in this)
-            {
-                if (matrix[fv.Feature] != fv)
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-    }
-
-    public class MatrixCombiner : IMatrixCombiner
-    {
-        public static MatrixCombiner NullCombiner = new MatrixCombiner(FeatureMatrix.Empty);
-
-        private readonly FeatureMatrix _matrix;
-
-        public MatrixCombiner(FeatureMatrix fm)
-        {
-            _matrix = fm;
-        }
-
-#region IEnumerable<FeatureValue> members
-
-        public IEnumerator<FeatureValue> GetEnumerator()
-        {
-            return _matrix.GetEnumerator(true);
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
-#endregion
-
-        public FeatureMatrix Combine(FeatureMatrix matrix)
-        {
-            if (this == NullCombiner)
-            {
-                return matrix;
-            }
-
-            List<FeatureValue> comboValues = new List<FeatureValue>();
-            comboValues.AddRange(matrix);
-            comboValues.AddRange(this);
-
-            return new FeatureMatrix(comboValues);
         }
 
     }

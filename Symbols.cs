@@ -30,17 +30,26 @@ namespace Phonix
             return Label;
         }
 
-        public bool Matches(FeatureMatrix matrix)
+        public bool Matches(RuleContext ctx, FeatureMatrix matrix)
         {
-            return _matcher.Matches(matrix);
+            return _matcher.Matches(ctx, matrix);
         }
 
-        public FeatureMatrix Combine(FeatureMatrix matrix)
+        public FeatureMatrix Combine(RuleContext ctx, FeatureMatrix matrix)
         {
             return FeatureMatrix;
         }
 
-#region IEnumerable(T) members
+#region IEnumerable(FeatureValueBase) members
+
+        IEnumerator<FeatureValueBase> IEnumerable<FeatureValueBase>.GetEnumerator()
+        {
+            foreach (FeatureValue fv in this)
+            {
+                yield return fv;
+            }
+            yield break;
+        }
 
         public IEnumerator<FeatureValue> GetEnumerator()
         {
@@ -90,7 +99,7 @@ namespace Phonix
 
             foreach (var s in this.Values)
             {
-                if (s.Matches(matrix) && s.FeatureMatrix.Weight >= hiweight)
+                if (s.Matches(null, matrix) && s.FeatureMatrix.Weight >= hiweight)
                 {
                     hiweight = s.FeatureMatrix.Weight;
                     match = s;

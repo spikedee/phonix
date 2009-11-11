@@ -29,7 +29,14 @@ namespace Phonix.UnitTest
             StringBuilder str = new StringBuilder();
             foreach (FeatureMatrix seg in slice)
             {
-                str.Append(ss.Spell(seg));
+                try
+                {
+                    str.Append(ss.Spell(seg));
+                }
+                catch (SpellingException)
+                {
+                    str.Append(seg.ToString());
+                }
             }
             return str.ToString();
         }
