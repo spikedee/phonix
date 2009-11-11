@@ -16,6 +16,8 @@ This manual and Phonix itself are licensed under the BSD license.
 @author Jesse Bangs
 @page
 @insertcopying
+
+This manual was last updated $LastChangedDate$.
 @end titlepage
 
 @ifnottex
@@ -30,6 +32,8 @@ This file documents a language for modeling phonological change.
 This is the manual for Phonix, a language for expressing diachronic and
 synchronic phonological processes.
 @end ifnotinfo
+
+Last Updated $LastChangedDate$.
 
 @end ifnottex
 
