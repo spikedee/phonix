@@ -112,6 +112,8 @@ namespace Phonix
 
         public IMatrixMatcher Filter { get; set; }
 
+        public Direction Direction { get; set; }
+
         public Rule(string name, IEnumerable<IRuleSegment> segments)
         {
             if (name == null || segments == null)
@@ -134,7 +136,7 @@ namespace Phonix
         {
             Trace.RuleEntered(this, word);
 
-            var slice = word.GetSliceEnumerator(Direction.Rightward, Filter);
+            var slice = word.GetSliceEnumerator(Direction, Filter);
 
             while (slice.MoveNext())
             {

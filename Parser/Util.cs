@@ -1,8 +1,9 @@
-using System;
 using Antlr.Runtime;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System;
 
 namespace Phonix.Parse
 {
@@ -18,37 +19,54 @@ namespace Phonix.Parse
 
     public static class Util
     {
-        public static Feature MakeFeature(string name, Dictionary<string, object> param)
+        public static Feature MakeFeature(string name, ParamList plist)
         {
             Feature f = null;
 
-            if (param == null)
+            if (plist == null)
             {
                 f = new BinaryFeature(name);
             }
             else
             {
-                if (!param.ContainsKey("type"))
+                // set the type to binary if it doesn't exist yet
+                if (!plist.ContainsKey("type"))
                 {
-                    param["type"] = "binary";
+                    plist["type"] = "binary";
                 }
 
-                switch (param["type"] as string)
+                foreach (string key in plist.Keys)
                 {
-                    case "unary":
-                        f = new UnaryFeature(name);
+                    object val = plist[key];
+                    switch (key)
+                    {
+                        case "type":
+                        {
+                            Debug.Assert(val is string);
+                            string type = val as string;
+                            switch (type)
+                            {
+                                case "unary":
+                                    f = new UnaryFeature(name);
+                                    break;
+
+                                case "binary":
+                                    f = new BinaryFeature(name);
+                                    break;
+
+                                case "scalar":
+                                    f = new ScalarFeature(name);
+                                    break;
+
+                                default:
+                                    throw new UnknownFeatureTypeException(type);
+                            }
+                        }
                         break;
 
-                    case "binary":
-                        f = new BinaryFeature(name);
-                        break;
-
-                    case "scalar":
-                        f = new ScalarFeature(name);
-                        break;
-
-                    default:
-                        throw new FeatureTypeException(name, param["type"] as string);
+                        default:
+                            throw new UnknownParameterException(key);
+                    }
                 }
             }
 
@@ -60,9 +78,34 @@ namespace Phonix.Parse
             var rule = new Rule(name, segs);
             if (plist != null)
             {
-                if (plist.ContainsKey("filter"))
+                foreach (string key in plist.Keys)
                 {
-                    rule.Filter = new MatrixMatcher(plist["filter"] as FeatureMatrix);
+                    object val = plist[key];
+                    switch (key)
+                    {
+                        case "filter":
+                            Debug.Assert(val is FeatureMatrix);
+                            rule.Filter = new MatrixMatcher(val as FeatureMatrix);
+                            break;
+
+                        case "direction":
+                        {
+                            string dir = val as string;
+                            Debug.Assert(dir != null);
+                            if (dir.ToLowerInvariant().Equals("right-to-left"))
+                            {
+                                rule.Direction = Direction.Leftward;
+                            }
+                            else if (dir.ToLowerInvariant().Equals("left-to-right"))
+                            {
+                                rule.Direction = Direction.Rightward;
+                            }
+                        }
+                        break;
+
+                        default:
+                            throw new UnknownParameterException(key);
+                    }
                 }
             }
             return rule;

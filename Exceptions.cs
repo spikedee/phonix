@@ -38,11 +38,28 @@ namespace Phonix
         }
     }
 
+    public class UnknownParameterException : PhonixException
+    {
+        public UnknownParameterException(string param)
+            : base("Unknown parameter: " + param)
+        {
+        }
+    }
+
+    public class UnknownFeatureTypeException : PhonixException
+    {
+        public UnknownFeatureTypeException(string type)
+            : base("Unknown feature type: " + type)
+        {
+        }
+    }
+
     public class ParseException : Exception
     {
         public ParseException(string file)
             : base("Parsing errors in " + file)
-        {}
+        {
+        }
     }
 
     public class FatalWarningException : Exception

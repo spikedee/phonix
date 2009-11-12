@@ -17,7 +17,7 @@ This manual and Phonix itself are licensed under the BSD license.
 @page
 @insertcopying
 
-This manual was last updated $LastChangedDate$.
+$LastChangedDate$
 @end titlepage
 
 @ifnottex
@@ -33,7 +33,7 @@ This is the manual for Phonix, a language for expressing diachronic and
 synchronic phonological processes.
 @end ifnotinfo
 
-Last Updated $LastChangedDate$.
+$LastChangedDate$
 
 @end ifnottex
 

@@ -92,7 +92,7 @@ namespace Phonix
                 catch (SpellingException ex)
                 {
                     err.WriteLine(ex.Message);
-                    str.Append("[?]");
+                    str.Append(fm.ToString());
                 }
             }
             return str.ToString();
@@ -101,9 +101,6 @@ namespace Phonix
         public static PhonixConfig ParseArgs(string[] args)
         {
             var rv = new PhonixConfig();
-
-            rv.Reader = Console.In;
-            rv.Writer = Console.Out;
 
             try
             {
@@ -157,7 +154,7 @@ namespace Phonix
             }
             catch (FileNotFoundException fex)
             {
-                throw new ArgumentException(fex.Message);
+                throw new ArgumentException(fex.Message, fex);
             }
 
             if (rv.PhonixFile == null)
@@ -173,8 +170,8 @@ namespace Phonix
     public class PhonixConfig
     {
         public string PhonixFile;
-        public TextReader Reader;
-        public TextWriter Writer;
+        public TextReader Reader = Console.In;
+        public TextWriter Writer = Console.Out;
         public Level LogLevel = Level.Warning;
         public Level WarningLevel = Level.Error;
     }
