@@ -21,7 +21,8 @@ namespace Phonix.UnitTest
 
             try
             {
-                Phonix.Parse.Util.ParseFile("test", "std.features");
+                Phonology phono = new Phonology();
+                Phonix.Parse.Util.ParseFile(phono, "test", "std.features");
             }
             catch (Exception ex)
             {
@@ -49,7 +50,8 @@ namespace Phonix.UnitTest
             Trace.OnSymbolDuplicate += traceDup;
             try
             {
-                Phonix.Parse.Util.ParseFile("test", "std.symbols");
+                Phonology phono = new Phonology();
+                Phonix.Parse.Util.ParseFile(phono, "test", "std.symbols");
             }
             catch (Exception ex)
             {

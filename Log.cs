@@ -37,6 +37,7 @@ namespace Phonix
             Trace.OnRuleEntered += this.LogRuleEntered;
             Trace.OnRuleExited += this.LogRuleExited;
             Trace.OnRuleApplied += this.LogRuleApplied;
+            Trace.OnUndefinedVariableUsed += this.LogUndefinedVariableUsed;
         }
 
         public void Stop()
@@ -51,6 +52,7 @@ namespace Phonix
             Trace.OnRuleEntered -= this.LogRuleEntered;
             Trace.OnRuleExited -= this.LogRuleExited;
             Trace.OnRuleApplied -= this.LogRuleApplied;
+            Trace.OnUndefinedVariableUsed -= this.LogUndefinedVariableUsed;
 
             Writer.Flush();
         }
@@ -116,6 +118,11 @@ namespace Phonix
         private void LogRuleApplied(Rule rule, Word word, IWordSlice slice)
         {
             Log(Level.Info, "rule {0} applied: {1} (applied at {2})", rule, word, slice);
+        }
+
+        private void LogUndefinedVariableUsed(FeatureValueBase fv)
+        {
+            Log(Level.Warning, "variable {0} used without being defined", fv);
         }
     }
 }

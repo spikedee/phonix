@@ -46,10 +46,10 @@ namespace Phonix
         }
     }
 
-    public class UnknownFeatureTypeException : PhonixException
+    public class InvalidParameterValueException : PhonixException
     {
-        public UnknownFeatureTypeException(string type)
-            : base("Unknown feature type: " + type)
+        public InvalidParameterValueException(string key, string val)
+            : base(String.Format("Invalid value for {0}: {1}", key, val))
         {
         }
     }

@@ -26,9 +26,13 @@ namespace Phonix
                 OnRuleEntered += (r, w) => {};
                 OnRuleApplied += (r, w, s) => {};
                 OnRuleExited += (r, w) => {};
+
+                OnUndefinedVariableUsed += (fv) => {};
             }
         }
 
+        // this is defined in order to allow us to always have some delegate
+        // and never have to worry about whether or not the event is null.
         private static NullTracer tracer = new NullTracer();
 
         public static event Action<Feature> OnFeatureDefined;
@@ -44,6 +48,8 @@ namespace Phonix
         public static event Action<Rule, Word> OnRuleEntered;
         public static event Action<Rule, Word, IWordSlice> OnRuleApplied;
         public static event Action<Rule, Word> OnRuleExited;
+
+        public static event Action<FeatureValueBase> OnUndefinedVariableUsed;
 
         public static void FeatureDefined(Feature f)
         {
@@ -93,6 +99,11 @@ namespace Phonix
         public static void RuleExited(Rule r, Word w)
         {
             OnRuleExited(r, w);
+        }
+
+        public static void UndefinedVariableUsed(FeatureValueBase fv)
+        {
+            OnUndefinedVariableUsed(fv);
         }
     }
 }

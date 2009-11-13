@@ -59,7 +59,7 @@ namespace Phonix.Parse
                                     break;
 
                                 default:
-                                    throw new UnknownFeatureTypeException(type);
+                                    throw new InvalidParameterValueException(key, type);
                             }
                         }
                         break;
@@ -72,7 +72,7 @@ namespace Phonix.Parse
 
             return f;
         }
-        
+
         public static Rule MakeRule(string name, IEnumerable<IRuleSegment> segs, ParamList plist)
         {
             var rule = new Rule(name, segs);
@@ -92,13 +92,18 @@ namespace Phonix.Parse
                         {
                             string dir = val as string;
                             Debug.Assert(dir != null);
-                            if (dir.ToLowerInvariant().Equals("right-to-left"))
+                            switch (dir.ToLowerInvariant())
                             {
-                                rule.Direction = Direction.Leftward;
-                            }
-                            else if (dir.ToLowerInvariant().Equals("left-to-right"))
-                            {
-                                rule.Direction = Direction.Rightward;
+                                case "right-to-left":
+                                    rule.Direction = Direction.Leftward;
+                                    break;
+
+                                case "left-to-right":
+                                    rule.Direction = Direction.Rightward;
+                                    break;
+
+                                default:
+                                    throw new InvalidParameterValueException(key, dir);
                             }
                         }
                         break;
@@ -151,7 +156,7 @@ namespace Phonix.Parse
             return result;
         }
 
-        public static Phonology ParseFile(string currentFile, string filename)
+        public static void ParseFile(Phonology phono, string currentFile, string filename)
         {
             if (currentFile == null || filename == null)
             {
@@ -191,13 +196,18 @@ namespace Phonix.Parse
                 }
             }
 
-            Phonology phono = new Phonology();
             parser.parseRoot(currentFile, phono);
-
-            return phono;
         }
 
-        public static PhonixParser GetParserForStream(TextReader stream)
+        public static void ParseString(Phonology phono, string str)
+        {
+            StringReader reader = new StringReader(str);
+            PhonixParser parser = GetParserForStream(reader);
+
+            parser.parseRoot("$string", phono);
+        }
+
+        private static PhonixParser GetParserForStream(TextReader stream)
         {
             var lexStream = new ANTLRReaderStream(stream);
             var lexer = new PhonixLexer(lexStream);

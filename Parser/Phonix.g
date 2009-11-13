@@ -113,13 +113,13 @@ label returns [string text]:
 /* Parser Rules */
 
 parseRoot[string currentFile, Phonology phono]
-    @init { _phono = $phono; _currentFile = currentFile; }:
+    @init { _phono = $phono; _currentFile = $currentFile; }:
     phonixDecl* EOF
     { if (_parseError) throw new ParseException(currentFile); }
     ;
 
 phonixDecl:
-        importDecl { _phono.Merge($importDecl.phono); }
+        importDecl
     |   featureDecl { _phono.FeatureSet.Add($featureDecl.f); }
     |   symbolDecl { _phono.SymbolSet.Add($symbolDecl.s); }
     |   ruleDecl { _phono.RuleSet.Add($ruleDecl.r); }
@@ -127,9 +127,9 @@ phonixDecl:
 
 /* File import */
 
-importDecl returns [Phonology phono]: 
+importDecl:
     IMPORT str
-    { $phono = Util.ParseFile(_currentFile, $str.text); }
+    { Util.ParseFile(_phono, _currentFile, $str.text); }
     ;
 
 /* Feature declarations */

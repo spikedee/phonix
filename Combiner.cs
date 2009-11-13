@@ -70,13 +70,15 @@ namespace Phonix
                     {
                         throw new InvalidOperationException("context cannot be null for combine with variables");
                     }
+
                     if (ctx.VariableFeatures.ContainsKey(fv.Feature))
                     {
                         comboValues.Add(ctx.VariableFeatures[fv.Feature]);
                     }
                     else
                     {
-                        throw new InvalidOperationException("variable feature value refers to undefined variable");
+                        comboValues.Add(fv.Feature.NullValue);
+                        Trace.UndefinedVariableUsed(fv);
                     }
                 }
                 else

@@ -178,26 +178,6 @@ namespace Phonix.UnitTest
         }
 
         [Test]
-        [ExpectedException(typeof(InvalidOperationException))]
-        public void VariableMatrixException()
-        {
-            var fs = FeatureSetTest.GetTestSet();
-            var un = fs.Get<UnaryFeature>("un");
-            var sc = fs.Get<ScalarFeature>("sc");
-            var combo = new MatrixCombiner(new FeatureValueBase[] { un.VariableValue, sc.VariableValue });
-            var seg = new FeatureMatrixSegment(MatrixMatcher.AlwaysMatches, combo);
-
-            var word = WordTest.GetTestWord();
-            var slice = word.GetSliceEnumerator(Direction.Rightward);
-            slice.MoveNext();
-            MutableSegmentEnumerator iter = slice.Current.GetMutableEnumerator();
-
-            // this should throw an InvalidOperationException because the
-            // context doesn't have the variables that we're expecting.
-            seg.Combine(new RuleContext(), iter);
-        }
-
-        [Test]
         public void DeletingSegmentMatches()
         {
             var match = new MatrixMatcher(FeatureMatrixTest.MatrixA);

@@ -110,8 +110,7 @@ namespace Phonix.UnitTest
         }
 
         [Test]
-        [ExpectedException(typeof(InvalidOperationException))]
-        public void CombineVariableException()
+        public void CombineVariableUndefined()
         {
             var fs = FeatureSetTest.GetTestSet();
             var un = fs.Get<UnaryFeature>("un");
@@ -119,10 +118,22 @@ namespace Phonix.UnitTest
             var test = new MatrixCombiner(new FeatureValueBase[] { un.VariableValue, sc.VariableValue });
             var ctx = new RuleContext();
 
-            // this should throw InvalidOperationException because the context
-            // doesn't contain the required variables
+            uint gotTrace = 0;
+            var undef = new List<Feature>();
+            Action<FeatureValueBase> tracer = (fv) => 
+            {
+                gotTrace++;
+                undef.Add(fv.Feature);
+            };
+            Trace.OnUndefinedVariableUsed += tracer;
 
             test.Combine(ctx, FeatureMatrixTest.MatrixB);
+
+            Assert.AreEqual(2, gotTrace);
+            Assert.IsTrue(undef.Contains(un));
+            Assert.IsTrue(undef.Contains(sc));
+
+            Trace.OnUndefinedVariableUsed -= tracer;
         }
 
         [Test]

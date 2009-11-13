@@ -26,12 +26,13 @@ namespace Phonix
                 Environment.Exit(2);
             }
 
+            Phonology phono = new Phonology();
             var logger = new Logger(config.LogLevel, config.WarningLevel, Console.Error);
             logger.Start();
 
             try
             {
-                Phonology phono = Parse.Util.ParseFile(config.PhonixFile, config.PhonixFile);
+                Parse.Util.ParseFile(phono, config.PhonixFile, config.PhonixFile);
                 InputLoop(phono, config.Reader, config.Writer, Console.Error);
             }
             catch (ParseException px)
