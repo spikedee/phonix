@@ -62,5 +62,23 @@ namespace Phonix.UnitTest
                 Trace.OnUndefinedVariableUsed -= tracer;
             }
         }
+
+        [Test]
+        public void RuleDirectionRightward()
+        {
+            // default direction should be rightward
+            var phono = ParseWithStdImports("rule rightward a => b / a _");
+            ApplyRules(phono, "aaa", "aba");
+
+            var phono2 = ParseWithStdImports("rule rightward (direction=left-to-right) a => b / a _");
+            ApplyRules(phono2, "aaa", "aba");
+        }
+
+        [Test]
+        public void RuleDirectionLeftward()
+        {
+            var phono = ParseWithStdImports("rule rightward (direction=right-to-left) a => b / a _");
+            ApplyRules(phono, "aaa", "abb");
+        }
     }
 }
