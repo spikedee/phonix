@@ -1,9 +1,10 @@
 # Look at how awesome and short my makefile is
 
-BIN_DIR=bin
+CORE_DIR=Core
 RESOURCE_DIR=Resx
 PARSER_DIR=Parser
 TEST_DIR=UnitTest
+BIN_DIR=bin
 DOC_DIR=doc
 EX_DIR=examples
 ANTLR_DLL=Antlr3.Runtime.dll
@@ -18,7 +19,7 @@ DOC_HTML=$(DOC_DIR)/phonix_manual.html
 DOC_INFO=$(DOC_DIR)/phonix.info
 
 RESX_FILES=$(wildcard $(RESOURCE_DIR)/*)
-CS_FILES=$(wildcard *.cs $(PARSER_DIR)/*.cs)
+CS_FILES=$(wildcard $(CORE_DIR)/*.cs $(PARSER_DIR)/*.cs)
 TEST_FILES=$(CS_FILES) $(wildcard *.cs $(TEST_DIR)/*.cs)
 PARSER_FILES=$(PARSER_DIR)/PhonixLexer.cs $(PARSER_DIR)/PhonixParser.cs
 DOC_FILES=$(DOC_PDF) $(DOC_HTML) $(DOC_INFO)
