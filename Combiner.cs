@@ -77,7 +77,8 @@ namespace Phonix
                     }
                     else
                     {
-                        comboValues.Add(fv.Feature.NullValue);
+                        // the user tried to set a variable that hasn't been
+                        // defined. Warn them and leave the variable alone.
                         Trace.UndefinedVariableUsed(fv);
                     }
                 }

@@ -127,8 +127,9 @@ namespace Phonix.UnitTest
             };
             Trace.OnUndefinedVariableUsed += tracer;
 
-            test.Combine(ctx, FeatureMatrixTest.MatrixB);
+            var fm = test.Combine(ctx, FeatureMatrixTest.MatrixB);
 
+            Assert.AreEqual(FeatureMatrixTest.MatrixB, fm);
             Assert.AreEqual(2, gotTrace);
             Assert.IsTrue(undef.Contains(un));
             Assert.IsTrue(undef.Contains(sc));

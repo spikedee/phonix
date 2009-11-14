@@ -52,10 +52,10 @@ namespace Phonix.UnitTest
 
             try
             {
-                var phono = ParseWithStdImports("rule voice-assimilate [] => [$ro] / _ []");
+                var phono = ParseWithStdImports("rule voice-assimilate [] => [$vc] / _ []");
                 ApplyRules(phono, "sz", "sz");
                 Assert.IsTrue(gotTrace);
-                Assert.AreSame(phono.FeatureSet.Get<Feature>("ro"), undef);
+                Assert.AreSame(phono.FeatureSet.Get<Feature>("vc"), undef);
             }
             finally
             {
