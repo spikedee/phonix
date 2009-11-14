@@ -163,9 +163,9 @@ o`a' => o' * / _ w
 rule assimilate-postpalatal-semivowel
 [-syll +fr] => * / [+dr +dist] _
 
-# Assimilate consecutive front semivowels
+# Assimilate consecutive semivowels of the same frontness
 rule assimilate-consecutive-semivowel
-[-syll +fr] => * / [-syll +fr] _
+[-syll $fr] => * / [-syll $fr] _
 
 # Assimilate coronal sonorants before /j/
 rule assimilate-sonorants
