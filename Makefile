@@ -100,3 +100,6 @@ clean:
 	rm -f $(BIN_DIR)/*
 	rm -f $(DOC_FILES)
 	rm -f phonix
+
+tags:
+	ctags -f .tags -R
