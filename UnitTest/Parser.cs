@@ -43,7 +43,7 @@ namespace Phonix.UnitTest
         {
             bool gotTrace = false;
             Feature undef = null;
-            Action<FeatureValueBase> tracer = (fv) => 
+            Action<AbstractFeatureValue> tracer = (fv) => 
             {
                 gotTrace = true;
                 undef = fv.Feature;

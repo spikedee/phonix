@@ -262,8 +262,8 @@ matrix returns [FeatureMatrix fm]
     { $fm = new FeatureMatrix(fvList); }
     ;
 
-variableMatrix returns [IEnumerable<FeatureValueBase> vars]
-    @init{ List<FeatureValueBase> fvList = new List<FeatureValueBase>(); }:
+variableMatrix returns [IEnumerable<AbstractFeatureValue> vars]
+    @init{ List<AbstractFeatureValue> fvList = new List<AbstractFeatureValue>(); }:
     LBRACE 
     ( featureVal { fvList.Add($featureVal.fv); } | variableVal { fvList.Add($variableVal.fv); })* 
     RBRACE
@@ -294,7 +294,7 @@ unaryVal returns [FeatureValue fv]:
 nullVal returns [FeatureValue fv]:
     NULL feature { $fv = $feature.f.NullValue; };
 
-variableVal returns [FeatureValueBase fv]: 
+variableVal returns [AbstractFeatureValue fv]: 
     '$' feature { $fv = $feature.f.VariableValue; };
 
 /* Parameters */

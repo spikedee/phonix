@@ -6,20 +6,20 @@ using System.Diagnostics;
 
 namespace Phonix
 {
-    public interface IMatrixMatcher : IEnumerable<FeatureValueBase>
+    public interface IMatrixMatcher : IEnumerable<AbstractFeatureValue>
     {
         bool Matches(RuleContext ctx, FeatureMatrix matrix);
     }
 
     public class MatrixMatcher : IMatrixMatcher
     {
-        public static MatrixMatcher AlwaysMatches = new MatrixMatcher(new FeatureValueBase[] {});
+        public static MatrixMatcher AlwaysMatches = new MatrixMatcher(new AbstractFeatureValue[] {});
 
-        private readonly IEnumerable<FeatureValueBase> _values;
+        private readonly IEnumerable<AbstractFeatureValue> _values;
 
         public MatrixMatcher(FeatureMatrix fm)
         {
-            List<FeatureValueBase> list = new List<FeatureValueBase>();
+            List<AbstractFeatureValue> list = new List<AbstractFeatureValue>();
             var iter = fm.GetEnumerator(true);
             while (iter.MoveNext())
             {
@@ -30,14 +30,15 @@ namespace Phonix
             _values = list;
         }
 
-        public MatrixMatcher(IEnumerable<FeatureValueBase> values)
+        public MatrixMatcher(IEnumerable<AbstractFeatureValue> values)
         {
-            _values = values;
+            var list = new List<AbstractFeatureValue>(values);
+            _values = list;
         }
 
-#region IEnumerable<FeatureValue> members
+#region IEnumerable<AbstractFeatureValue> members
 
-        public IEnumerator<FeatureValueBase> GetEnumerator()
+        public IEnumerator<AbstractFeatureValue> GetEnumerator()
         {
             return _values.GetEnumerator();
         }
@@ -56,34 +57,44 @@ namespace Phonix
                 return false;
             }
 
-            foreach (FeatureValueBase fv in this)
+            foreach (AbstractFeatureValue fvMatcher in this)
             {
-                FeatureValue compare;
+                AbstractFeatureValue fvCompare;
 
                 // If this is a variable value, then replace it with the real
                 // value from the context. If the real value hasn't been set in
                 // the context yet, then save the value of the current matrix
-                // in the context.
+                // in the context. If it's a node value, then just check that
+                // matrix is not null for that node.
 
-                if (fv == fv.Feature.VariableValue)
+                var fvMatrix = matrix[fvMatcher.Feature];
+                if (fvMatcher == fvMatcher.Feature.VariableValue)
                 {
                     if (ctx == null)
                     {
                         throw new InvalidOperationException("context cannot be null for match with variables");
                     }
-                    if (!ctx.VariableFeatures.ContainsKey(fv.Feature))
+                    if (!ctx.VariableFeatures.ContainsKey(fvMatcher.Feature))
                     {
-                        ctx.VariableFeatures[fv.Feature] = matrix[fv.Feature];
+                        ctx.VariableFeatures[fvMatcher.Feature] = fvMatrix;
                     }
-                    compare = ctx.VariableFeatures[fv.Feature];
+                    fvCompare = ctx.VariableFeatures[fvMatcher.Feature];
+                }
+                else if (fvMatcher.Feature is NodeFeature && 
+                         fvMatcher != fvMatcher.Feature.NullValue &&
+                         fvMatrix != fvMatcher.Feature.NullValue)
+                {
+                    // We're looking for a non-null node, and the matrix has a
+                    // node which isn't null. Assign fvMatrix to fvCompare, so
+                    // that it will match below.
+                    fvCompare = fvMatrix;
                 }
                 else
                 {
-                    compare = fv as FeatureValue;
+                    fvCompare = fvMatcher;
                 }
-                Debug.Assert(compare != null, "compare != null");
 
-                if (matrix[fv.Feature] != compare)
+                if (fvMatrix != fvCompare)
                 {
                     return false;
                 }

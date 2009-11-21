@@ -120,7 +120,7 @@ namespace Phonix
             Log(Level.Info, "rule {0} applied: {1} (applied at {2})", rule, word, slice);
         }
 
-        private void LogUndefinedVariableUsed(FeatureValueBase fv)
+        private void LogUndefinedVariableUsed(AbstractFeatureValue fv)
         {
             Log(Level.Warning, "variable {0} used without being defined", fv);
         }

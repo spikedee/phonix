@@ -30,10 +30,10 @@ namespace Phonix
             }
         }
 
-        // VariableFeatureValue is derived from FeatureValueBase to keep it
+        // VariableFeatureValue is derived from AbstractFeatureValue to keep it
         // from being put into a FeatureMatrix or other containers that should
         // only contain non-variable values.
-        private class VariableFeatureValue : FeatureValueBase
+        private class VariableFeatureValue : AbstractFeatureValue
         {
             public VariableFeatureValue(Feature f)
                 : base(f, "$" + f.Name)
@@ -43,7 +43,7 @@ namespace Phonix
 
         public readonly FeatureValue NullValue;
 
-        public readonly FeatureValueBase VariableValue;
+        public readonly AbstractFeatureValue VariableValue;
 
         public static string FriendlyName<T>() where T : Feature
         {
@@ -54,16 +54,16 @@ namespace Phonix
 
     }
 
-    // FeatureValueBase defines all of the functionality for feature values.
+    // AbstractFeatureValue defines all of the functionality for feature values.
     // It's separated from Feature Value only to allow us to enforce type
     // strictness with variable and non-variable FeatureValue.
-    public abstract class FeatureValueBase : IComparable
+    public abstract class AbstractFeatureValue : IComparable
     {
         public readonly Feature Feature;
 
         private readonly string _desc;
 
-        protected FeatureValueBase(Feature feature, string desc)
+        protected AbstractFeatureValue(Feature feature, string desc)
         {
             Feature = feature;
             _desc = desc;
@@ -93,11 +93,44 @@ namespace Phonix
         {
             return _desc;
         }
+
+        public static bool operator == (AbstractFeatureValue fvA, AbstractFeatureValue fvB)
+        {
+            return fvA.Equals(fvB);
+        }
+
+        public static bool operator != (AbstractFeatureValue fvA, AbstractFeatureValue fvB)
+        {
+            return !(fvA == fvB);
+        }
+
+        override public bool Equals(object obj)
+        {
+            return base.Equals(obj);
+        }
+
+        override public int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
     }
 
     // FeatureValue is the class from which all non-variable feature value
     // types derive.
-    public abstract class FeatureValue : FeatureValueBase
+    public abstract class StaticFeatureValue : AbstractFeatureValue
+    {
+        protected StaticFeatureValue(Feature feature, string desc)
+            : base(feature, desc)
+        {
+        }
+
+        virtual public IEnumerable<FeatureValue> ToValueList()
+        {
+            return new FeatureValue[] { this as FeatureValue };
+        }
+    }
+
+    public abstract class FeatureValue : StaticFeatureValue
     {
         protected FeatureValue(Feature feature, string desc)
             : base(feature, desc)
@@ -180,6 +213,90 @@ namespace Phonix
             return scalarVal;
         }
 
+    }
+
+    public class NodeFeature : Feature
+    {
+        private readonly IEnumerable<Feature> _children;
+
+        public NodeFeature(string name, IEnumerable<Feature> children)
+            : base(name)
+        {
+            _children = children;
+        }
+
+        public StaticFeatureValue Value(FeatureMatrix fm)
+        {
+            // Return a real feature value if there are eny non-null children,
+            // otherwise return the null value.
+            foreach (var f in _children)
+            {
+                if (fm[f] != f.NullValue)
+                {
+                    return new NodeFeatureValue(this, fm);
+                }
+            }
+            return this.NullValue;
+        }
+
+        private class NodeFeatureValue : StaticFeatureValue
+        {
+            private readonly FeatureMatrix _fm;
+            private readonly NodeFeature _node;
+
+            public NodeFeatureValue(NodeFeature f, IEnumerable<FeatureValue> fvList)
+                : base(f, f.Name)
+            {
+                _fm = new FeatureMatrix(fvList);
+                _node = Feature as NodeFeature;
+            }
+
+            override public IEnumerable<FeatureValue> ToValueList()
+            {
+                var list = new List<FeatureValue>();
+                foreach (var f in _node._children)
+                {
+                    list.AddRange(_fm[f].ToValueList());
+                }
+                return list;
+            }
+
+            override public bool Equals(object obj)
+            {
+                // short-cut for one common case
+                if (object.ReferenceEquals(this, obj))
+                {
+                    return true;
+                }
+
+                var fv = obj as NodeFeatureValue;
+                if (fv == null)
+                {
+                    return base.Equals(obj);
+                }
+                else
+                {
+                    foreach (var feature in _node._children)
+                    {
+                        if (_fm[feature] != fv._fm[feature])
+                        {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+            }
+
+            override public int GetHashCode()
+            {
+                int rv = 0;
+                foreach (var feature in _node._children)
+                {
+                    rv = unchecked(rv + _fm[feature].GetHashCode());
+                }
+                return rv;
+            }
+        }
     }
 
     public class FeatureSet : IEnumerable<Feature>
@@ -275,8 +392,7 @@ namespace Phonix
         {
         }
 
-        public readonly static FeatureMatrix Empty = 
-            new FeatureMatrix(new FeatureValue[] {});
+        public readonly static FeatureMatrix Empty = new FeatureMatrix(new FeatureValue[] {});
 
 #region IEnumerable(FeatureValue) members
 
@@ -304,11 +420,15 @@ namespace Phonix
             yield break;
         }
 
-        public FeatureValue this[Feature f]
+        public StaticFeatureValue this[Feature f]
         {
             get
             {
-                if (_values.ContainsKey(f))
+                if (f is NodeFeature)
+                {
+                    return (f as NodeFeature).Value(this);
+                }
+                else if (_values.ContainsKey(f))
                 {
                     return _values[f];
                 }

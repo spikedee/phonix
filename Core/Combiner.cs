@@ -5,7 +5,7 @@ using System.Diagnostics;
 
 namespace Phonix
 {
-    public interface IMatrixCombiner : IEnumerable<FeatureValueBase>
+    public interface IMatrixCombiner : IEnumerable<AbstractFeatureValue>
     {
         FeatureMatrix Combine(RuleContext ctx, FeatureMatrix matrix);
     }
@@ -14,11 +14,11 @@ namespace Phonix
     {
         public static MatrixCombiner NullCombiner = new MatrixCombiner(FeatureMatrix.Empty);
 
-        private readonly IEnumerable<FeatureValueBase> _values;
+        private readonly IEnumerable<AbstractFeatureValue> _values;
 
         public MatrixCombiner(FeatureMatrix fm)
         {
-            List<FeatureValueBase> list = new List<FeatureValueBase>();
+            List<AbstractFeatureValue> list = new List<AbstractFeatureValue>();
             var iter = fm.GetEnumerator(true);
             while (iter.MoveNext())
             {
@@ -29,14 +29,14 @@ namespace Phonix
             _values = list;
         }
 
-        public MatrixCombiner(IEnumerable<FeatureValueBase> values)
+        public MatrixCombiner(IEnumerable<AbstractFeatureValue> values)
         {
             _values = values;
         }
 
-#region IEnumerable<FeatureValueBase> members
+#region IEnumerable<AbstractFeatureValue> members
 
-        public IEnumerator<FeatureValueBase> GetEnumerator()
+        public IEnumerator<AbstractFeatureValue> GetEnumerator()
         {
             return _values.GetEnumerator();
         }
@@ -55,7 +55,7 @@ namespace Phonix
                 return matrix;
             }
 
-            List<FeatureValue> comboValues = new List<FeatureValue>();
+            var comboValues = new List<FeatureValue>();
             comboValues.AddRange(matrix);
 
             foreach (var fv in this)
@@ -73,7 +73,7 @@ namespace Phonix
 
                     if (ctx.VariableFeatures.ContainsKey(fv.Feature))
                     {
-                        comboValues.Add(ctx.VariableFeatures[fv.Feature]);
+                        comboValues.AddRange(ctx.VariableFeatures[fv.Feature].ToValueList());
                     }
                     else
                     {

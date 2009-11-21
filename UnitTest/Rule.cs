@@ -133,7 +133,7 @@ namespace Phonix.UnitTest
         public void VariableMatrixMatches()
         {
             var fs = FeatureSetTest.GetTestSet();
-            var match = new MatrixMatcher(new FeatureValueBase[] { 
+            var match = new MatrixMatcher(new AbstractFeatureValue[] { 
                     fs.Get<Feature>("un").VariableValue,
                     fs.Get<Feature>("sc").VariableValue
                     });
@@ -154,7 +154,7 @@ namespace Phonix.UnitTest
             var fs = FeatureSetTest.GetTestSet();
             var un = fs.Get<UnaryFeature>("un");
             var sc = fs.Get<ScalarFeature>("sc");
-            var combo = new MatrixCombiner(new FeatureValueBase[] { un.VariableValue, sc.VariableValue });
+            var combo = new MatrixCombiner(new AbstractFeatureValue[] { un.VariableValue, sc.VariableValue });
             var seg = new FeatureMatrixSegment(MatrixMatcher.AlwaysMatches, combo);
 
             var expectedSecond = new FeatureMatrix(new FeatureValue[] {

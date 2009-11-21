@@ -26,8 +26,8 @@ namespace Phonix
 
     public class RuleContext
     {
-        public readonly Dictionary<Feature, FeatureValue> VariableFeatures 
-            = new Dictionary<Feature, FeatureValue>();
+        public readonly Dictionary<Feature, StaticFeatureValue> VariableFeatures 
+            = new Dictionary<Feature, StaticFeatureValue>();
     }
 
     public class FeatureMatrixSegment : IRuleSegment

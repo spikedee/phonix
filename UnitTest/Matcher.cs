@@ -55,7 +55,7 @@ namespace Phonix.UnitTest
             var fs = FeatureSetTest.GetTestSet();
             var un = fs.Get<UnaryFeature>("un");
             var sc = fs.Get<ScalarFeature>("sc");
-            var test = new MatrixMatcher(new FeatureValueBase[] { un.VariableValue, sc.VariableValue });
+            var test = new MatrixMatcher(new AbstractFeatureValue[] { un.VariableValue, sc.VariableValue });
             var ctx = new RuleContext();
 
             Assert.IsTrue(test.Matches(ctx, FeatureMatrixTest.MatrixA), "test matches A");
@@ -75,7 +75,7 @@ namespace Phonix.UnitTest
             var fs = FeatureSetTest.GetTestSet();
             var un = fs.Get<UnaryFeature>("un");
             var sc = fs.Get<ScalarFeature>("sc");
-            var test = new MatrixMatcher(new FeatureValueBase[] { un.VariableValue, sc.VariableValue });
+            var test = new MatrixMatcher(new AbstractFeatureValue[] { un.VariableValue, sc.VariableValue });
 
             // this should throw InvalidOperationException since the context is
             // null and there are variables

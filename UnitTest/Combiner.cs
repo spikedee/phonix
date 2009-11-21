@@ -92,7 +92,7 @@ namespace Phonix.UnitTest
             var fs = FeatureSetTest.GetTestSet();
             var un = fs.Get<UnaryFeature>("un");
             var sc = fs.Get<ScalarFeature>("sc");
-            var test = new MatrixCombiner(new FeatureValueBase[] { un.VariableValue, sc.VariableValue });
+            var test = new MatrixCombiner(new AbstractFeatureValue[] { un.VariableValue, sc.VariableValue });
             var ctx = new RuleContext();
             ctx.VariableFeatures[un] = un.Value;
             ctx.VariableFeatures[sc] = sc.Value(1);
@@ -115,12 +115,12 @@ namespace Phonix.UnitTest
             var fs = FeatureSetTest.GetTestSet();
             var un = fs.Get<UnaryFeature>("un");
             var sc = fs.Get<ScalarFeature>("sc");
-            var test = new MatrixCombiner(new FeatureValueBase[] { un.VariableValue, sc.VariableValue });
+            var test = new MatrixCombiner(new AbstractFeatureValue[] { un.VariableValue, sc.VariableValue });
             var ctx = new RuleContext();
 
             uint gotTrace = 0;
             var undef = new List<Feature>();
-            Action<FeatureValueBase> tracer = (fv) => 
+            Action<AbstractFeatureValue> tracer = (fv) => 
             {
                 gotTrace++;
                 undef.Add(fv.Feature);
@@ -144,7 +144,7 @@ namespace Phonix.UnitTest
             var fs = FeatureSetTest.GetTestSet();
             var un = fs.Get<UnaryFeature>("un");
             var sc = fs.Get<ScalarFeature>("sc");
-            var test = new MatrixCombiner(new FeatureValueBase[] { un.VariableValue, sc.VariableValue });
+            var test = new MatrixCombiner(new AbstractFeatureValue[] { un.VariableValue, sc.VariableValue });
 
             // this should throw InvalidOperationException because the context
             // is null.
