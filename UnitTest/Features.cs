@@ -68,12 +68,47 @@ namespace Phonix.UnitTest
             Assert.AreSame(fv, fv2);
         }
 
+        [Test]
+        public void Node()
+        {
+            var flist = new Feature[] 
+            {
+                new UnaryFeature(TEST + "Unary"),
+                new BinaryFeature(TEST + "Binary"),
+                new ScalarFeature(TEST + "Scalar")
+            };
+            NodeFeature node = new NodeFeature(TEST, flist);
+
+            Assert.AreEqual(node.Name, TEST);
+        }
+
+        [Test]
+        public void NodeFeatureValue()
+        {
+            var fs = FeatureSetTest.GetTestSet();
+            var flist = new Feature[] 
+            {
+                fs.Get<UnaryFeature>("un"),
+                fs.Get<BinaryFeature>("bn"),
+                fs.Get<ScalarFeature>("sc")
+            };
+
+            var node = new NodeFeature(TEST, flist);
+
+            var fvA = node.Value(FeatureMatrixTest.MatrixA);
+            var fvB = node.Value(FeatureMatrixTest.MatrixA);
+
+            Assert.AreNotSame(fvA, fvB);
+            Assert.AreEqual(fvA, fvB);
+            Assert.IsTrue(fvA == fvB);
+        }
+
     }
 
     [TestFixture]
     public class FeatureSetTest
     {
-        public static Feature[] Features = new Feature[]
+        private static Feature[] Features = new Feature[]
         {
             new UnaryFeature("un"),
             new UnaryFeature("un2"),
@@ -90,6 +125,13 @@ namespace Phonix.UnitTest
             {
                 fs.Add(f);
             }
+            var node1 = new NodeFeature("Node1", new Feature[] { Features[0], Features[2], Features[4] });
+            var node2 = new NodeFeature("Node2", new Feature[] { Features[1], Features[3], Features[5] });
+            var root = new NodeFeature("ROOT", new Feature[] { node1, node2 });
+            fs.Add(node1);
+            fs.Add(node2);
+            fs.Add(root);
+
             return fs;
         }
 
@@ -189,7 +231,9 @@ namespace Phonix.UnitTest
                 count++;
             }
 
-            Assert.AreEqual(Features.Length + 1, flist.Count);
+            // the expected length is the length of Features, plus the one we
+            // added, plus the three nodes.
+            Assert.AreEqual(Features.Length + 1 + 3, flist.Count);
         }
     }
 
@@ -308,6 +352,29 @@ namespace Phonix.UnitTest
             Console.Out.WriteLine("Manual feature matrix string check: " + fm.ToString());
 
             Assert.AreEqual("[]", FeatureMatrix.Empty.ToString());
+        }
+
+        [Test]
+        public void Index()
+        {
+            var fs = FeatureSetTest.GetTestSet();
+            var fm = MatrixB;
+
+            var un = fm[fs.Get<Feature>("un")];
+            Assert.IsNotNull(un);
+            Assert.AreSame(un, un.Feature.NullValue);
+
+            var bn = fm[fs.Get<Feature>("bn")];
+            Assert.IsNotNull(bn);
+            Assert.AreSame(bn, (bn.Feature as BinaryFeature).PlusValue);
+
+            var sc = fm[fs.Get<Feature>("sc")];
+            Assert.IsNotNull(sc);
+            Assert.AreSame(sc, (sc.Feature as ScalarFeature).Value(2));
+
+            var node = fm[fs.Get<Feature>("Node1")];
+            Assert.IsNotNull(sc);
+            Assert.AreEqual(node, (node.Feature as NodeFeature).Value(fm));
         }
     }
 

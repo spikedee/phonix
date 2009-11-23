@@ -96,7 +96,14 @@ namespace Phonix
 
         public static bool operator == (AbstractFeatureValue fvA, AbstractFeatureValue fvB)
         {
-            return fvA.Equals(fvB);
+            if (object.ReferenceEquals(fvA, null))
+            {
+                return object.ReferenceEquals(fvA, fvB);
+            }
+            else
+            {
+                return fvA.Equals(fvB);
+            }
         }
 
         public static bool operator != (AbstractFeatureValue fvA, AbstractFeatureValue fvB)

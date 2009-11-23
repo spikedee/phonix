@@ -81,5 +81,36 @@ namespace Phonix.UnitTest
             // null and there are variables
             test.Matches(null, FeatureMatrixTest.MatrixA);
         }
+
+        [Test]
+        public void MatchNode()
+        {
+            var fs = FeatureSetTest.GetTestSet();
+            var node = fs.Get<NodeFeature>("Node1");
+            var test = new MatrixMatcher(new AbstractFeatureValue[] { node.Value(FeatureMatrixTest.MatrixC) });
+
+            Assert.IsTrue(test.Matches(null, FeatureMatrixTest.MatrixA));
+
+            var node2 = fs.Get<NodeFeature>("Node2");
+            var test2 = new MatrixMatcher(new AbstractFeatureValue[] { node2.Value(FeatureMatrixTest.MatrixC) });
+
+            Assert.IsFalse(test2.Matches(null, FeatureMatrixTest.MatrixA));
+        }
+
+        [Test]
+        public void MatchNodeVariable()
+        {
+            var fs = FeatureSetTest.GetTestSet();
+            var node = fs.Get<NodeFeature>("Node1");
+            var test = new MatrixMatcher(new AbstractFeatureValue[] { node.VariableValue });
+            var ctx = new RuleContext();
+
+            Assert.IsTrue(test.Matches(ctx, FeatureMatrixTest.MatrixA), "test matches A");
+            Assert.IsTrue(ctx.VariableFeatures.ContainsKey(node), "context has node value");
+            Assert.AreEqual(FeatureMatrixTest.MatrixA[node], ctx.VariableFeatures[node], "context node equals A node");
+
+            Assert.IsFalse(test.Matches(ctx, FeatureMatrixTest.MatrixB), "test matches B");
+            Assert.IsFalse(test.Matches(ctx, FeatureMatrix.Empty), "test matches empty");
+        }
     }
 }
