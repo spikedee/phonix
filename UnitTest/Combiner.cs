@@ -18,7 +18,7 @@ namespace Phonix.UnitTest
 
             // the combo enumerator should include the zero values
             bool hasNull = false;
-            foreach (var fv in combo)
+            foreach (FeatureValue fv in combo)
             {
                 Assert.AreSame(fv, FeatureMatrixTest.MatrixA[fv.Feature]);
                 if (fv == fv.Feature.NullValue)
@@ -82,6 +82,7 @@ namespace Phonix.UnitTest
             Assert.AreEqual(0, fm.Weight);
             foreach (var f in fs)
             {
+                if (f is NodeFeature) continue;
                 Assert.AreSame(f.NullValue, fm[f]);
             }
         }
@@ -92,7 +93,7 @@ namespace Phonix.UnitTest
             var fs = FeatureSetTest.GetTestSet();
             var un = fs.Get<UnaryFeature>("un");
             var sc = fs.Get<ScalarFeature>("sc");
-            var test = new MatrixCombiner(new AbstractFeatureValue[] { un.VariableValue, sc.VariableValue });
+            var test = new MatrixCombiner(new ICombinable[] { un.VariableValue, sc.VariableValue });
             var ctx = new RuleContext();
             ctx.VariableFeatures[un] = un.Value;
             ctx.VariableFeatures[sc] = sc.Value(1);
@@ -115,7 +116,7 @@ namespace Phonix.UnitTest
             var fs = FeatureSetTest.GetTestSet();
             var un = fs.Get<UnaryFeature>("un");
             var sc = fs.Get<ScalarFeature>("sc");
-            var test = new MatrixCombiner(new AbstractFeatureValue[] { un.VariableValue, sc.VariableValue });
+            var test = new MatrixCombiner(new ICombinable[] { un.VariableValue, sc.VariableValue });
             var ctx = new RuleContext();
 
             uint gotTrace = 0;
@@ -144,7 +145,7 @@ namespace Phonix.UnitTest
             var fs = FeatureSetTest.GetTestSet();
             var un = fs.Get<UnaryFeature>("un");
             var sc = fs.Get<ScalarFeature>("sc");
-            var test = new MatrixCombiner(new AbstractFeatureValue[] { un.VariableValue, sc.VariableValue });
+            var test = new MatrixCombiner(new ICombinable[] { un.VariableValue, sc.VariableValue });
 
             // this should throw InvalidOperationException because the context
             // is null.

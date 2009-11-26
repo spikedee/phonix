@@ -42,7 +42,16 @@ namespace Phonix
 
 #region IEnumerable(AbstractFeatureValue) members
 
-        IEnumerator<AbstractFeatureValue> IEnumerable<AbstractFeatureValue>.GetEnumerator()
+        IEnumerator<IMatchable> IEnumerable<IMatchable>.GetEnumerator()
+        {
+            foreach (FeatureValue fv in this)
+            {
+                yield return fv;
+            }
+            yield break;
+        }
+
+        IEnumerator<ICombinable> IEnumerable<ICombinable>.GetEnumerator()
         {
             foreach (FeatureValue fv in this)
             {
