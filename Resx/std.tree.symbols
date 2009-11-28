@@ -1,0 +1,173 @@
+import std.tree.features
+
+### CONSONANTS ###
+
+## Obstruents ##
+
+# Labial #
+
+symbol p   [+cons -son -cont -str -vc -ro]
+symbol p\  [+cons -son +cont -str -vc -ro]
+symbol f   [+cons -son +cont +str -vc -ro]
+symbol b   [+cons -son -cont -str +vc -ro]
+symbol B   [+cons -son +cont -str +vc -ro]
+symbol v   [+cons -son +cont +str +vc -ro]
+
+# Dental #
+
+symbol t_d [+cons -son -cont -str -vc +ant +dist]
+symbol T   [+cons -son +cont -str -vc +ant +dist]
+symbol s_d [+cons -son +cont +str -vc +ant +dist]
+symbol d_d [+cons -son -cont -str +vc +ant +dist]
+symbol D   [+cons -son +cont -str +vc +ant +dist]
+symbol z_d [+cons -son +cont +str +vc +ant +dist]
+
+# Alveolar #
+
+symbol t   [+cons -son -cont -str -vc +ant -dist]
+symbol s   [+cons -son +cont +str -vc +ant -dist]
+symbol d   [+cons -son -cont -str +vc +ant -dist]
+symbol z   [+cons -son +cont +str +vc +ant -dist]
+
+# Palatal #
+
+symbol c   [+cons -son -cont -str -vc -ant +dist]
+symbol C   [+cons -son +cont -str -vc -ant +dist]
+symbol S   [+cons -son +cont +str -vc -ant +dist]
+symbol J\  [+cons -son -cont -str +vc -ant +dist]
+symbol j\  [+cons -son +cont -str +vc -ant +dist]
+symbol Z   [+cons -son +cont +str +vc -ant +dist]
+
+# Retroflex #
+
+symbol t`  [+cons -son -cont -str -vc -ant -dist]
+symbol s`  [+cons -son +cont +str -vc -ant -dist]
+symbol d`  [+cons -son -cont -str +vc -ant -dist]
+symbol z`  [+cons -son +cont +str +vc -ant -dist]
+
+# Velar #
+
+symbol k   [+cons -son -cont -str -vc +bk -lo +hi]
+symbol x   [+cons -son +cont -str -vc +bk -lo +hi]
+symbol g   [+cons -son -cont -str +vc +bk -lo +hi]
+symbol G   [+cons -son +cont -str +vc +bk -lo +hi]
+
+# Uvular #
+
+symbol q   [+cons -son -cont -str -vc +bk -lo -hi]
+symbol X   [+cons -son +cont -str -vc +bk -lo -hi]
+symbol G\  [+cons -son -cont -str +vc +bk -lo -hi]
+symbol R   [+cons -son +cont -str +vc +bk -lo -hi]
+
+# Pharyngeal #
+
+symbol X\  [+cons -son +cont -str -vc +bk +lo -hi]
+symbol ?\  [+cons -son +cont -str +vc +bk +lo -hi]
+
+# Glottal #
+
+symbol ?   [+cons -son -cont -str -vc]
+symbol h   [+cons -son +cont -str -vc]
+symbol h\  [+cons -son +cont -str +vc]
+
+## Sonorants ##
+
+# Labial #
+
+symbol m   [+cons +son -cont +nas -lat -ro]
+symbol B_o [-cons +son +cont -nas -lat -ro]
+symbol B\  [+cons +son +cont -nas -lat -ro]
+
+# Dental #
+
+symbol n_d [+cons +son -cont +nas -lat +ant +dist]
+symbol l_d [+cons +son -cont -nas +lat +ant +dist]
+
+# Alveolar #
+
+symbol n   [+cons +son -cont +nas -lat +ant -dist]
+symbol l   [+cons +son -cont -nas +lat +ant -dist]
+symbol 4   [+cons +son -cont -nas -lat +ant -dist]
+symbol r   [+cons +son +cont -nas -lat +ant -dist]
+symbol r\  [-cons +son +cont -nas -lat +ant -dist]
+
+# Retroflex #
+
+symbol n`  [+cons +son -cont +nas -lat -ant -dist]
+symbol l`  [+cons +son -cont -nas +lat -ant -dist]
+
+# Postalveolar #
+
+symbol J   [+cons +son -cont +nas -lat -ant +dist]
+symbol L   [+cons +son -cont -nas +lat -ant +dist]
+
+# Velar #
+
+symbol N   [+cons +son -cont +nas -lat +bk -lo +hi]
+symbol L\  [+cons +son -cont -nas +lat +bk -lo +hi]
+
+# Uvular #
+
+symbol N\  [+cons +son -cont +nas -lat +bk -lo -hi]
+symbol R\  [+cons +son +cont -nas -lat +bk -lo -hi]
+
+### Vocoids ###
+
+## Vowels ##
+
+# High tense #
+
+symbol i   [-cons +son +syll +fr -bk +hi -lo +str]
+symbol y   [-cons +son +syll +fr -bk +hi -lo +ro +str]
+symbol 1   [-cons +son +syll -fr -bk +hi -lo +str]
+symbol }   [-cons +son +syll -fr -bk +hi -lo +ro +str]
+symbol M   [-cons +son +syll -fr +bk +hi -lo +str]
+symbol u   [-cons +son +syll -fr +bk +hi -lo +ro +str]
+
+# High lax #
+
+symbol I   [-cons +son +syll +fr -bk +hi -lo -str]
+symbol Y   [-cons +son +syll +fr -bk +hi -lo +ro -str]
+symbol I\  [-cons +son +syll -fr -bk +hi -lo -str]
+symbol U\  [-cons +son +syll -fr -bk +hi -lo +ro -str]
+symbol U   [-cons +son +syll -fr +bk +hi -lo +ro -str]
+
+# High mid #
+
+symbol e   [-cons +son +syll +fr -bk -hi -lo +str]
+symbol 2   [-cons +son +syll +fr -bk -hi -lo +ro +str]
+symbol @\  [-cons +son +syll -fr -bk -hi -lo +str]
+symbol 8   [-cons +son +syll -fr -bk -hi -lo +ro +str]
+symbol 7   [-cons +son +syll -fr +bk -hi -lo +str]
+symbol o   [-cons +son +syll -fr +bk -hi -lo +ro +str]
+
+# Schwa #
+
+symbol @   [-cons +son +syll -fr -bk -hi -lo -str]
+
+# Open mid #
+
+symbol E   [-cons +son +syll +fr -bk -hi -lo -str]
+symbol 9   [-cons +son +syll +fr -bk -hi -lo +ro -str]
+# Omitted: /3/, which is identical, feature-wise to /@/
+symbol 3\  [-cons +son +syll -fr -bk -hi -lo +ro -str]
+symbol V   [-cons +son +syll -fr +bk -hi -lo -str]
+symbol O   [-cons +son +syll -fr +bk -hi -lo +ro -str]
+
+# Open lax #
+
+symbol {   [-cons +son +syll -fr -bk -hi +lo -str]
+symbol 6   [-cons +son +syll -fr +bk -hi +lo -str]
+
+# Open #
+
+symbol a   [-cons +son +syll -fr -bk -hi +lo +str]
+symbol &   [-cons +son +syll -fr -bk -hi +lo -ro +str]
+symbol A   [-cons +son +syll -fr +bk -hi +lo +str]
+symbol Q   [-cons +son +syll -fr +bk -hi +lo -ro +str]
+
+## Semivowels ##
+
+symbol j   [-cons +son -syll +fr -bk +hi -lo +str]
+symbol H   [-cons +son -syll +fr -bk +hi -lo +ro +str]
+symbol w   [-cons +son -syll -fr +bk +hi -lo +ro +str]
