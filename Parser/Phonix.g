@@ -136,7 +136,7 @@ importDecl:
 
 featureDecl returns [Feature f]: 
     FEATURE str paramList?
-    { $f = Util.MakeFeature($str.text, $paramList.list); }
+    { $f = Util.MakeFeature($str.text, $paramList.list, _phono); }
     ;
 
 feature returns [Feature f]:
@@ -157,6 +157,11 @@ binaryFeature returns [BinaryFeature f]:
 scalarFeature returns [ScalarFeature f]:
     str
     { $f = _phono.FeatureSet.Get<ScalarFeature>($str.text); }
+    ;
+
+nodeFeature returns [NodeFeature f]:
+    str
+    { $f = _phono.FeatureSet.Get<NodeFeature>($str.text); }
     ;
 
 /* Symbol declarations and usage */
@@ -205,15 +210,13 @@ ruleAction returns [List<IRuleSegment> value]
     ;
 
 matchTerm returns [IEnumerable<IMatrixMatcher> value]:
-        matrix { $value = new IMatrixMatcher[] { new MatrixMatcher($matrix.fm) }; }
-    |   variableMatrix { $value = new IMatrixMatcher[] { new MatrixMatcher($variableMatrix.vars) }; }
+        matchableMatrix { $value = new IMatrixMatcher[] { new MatrixMatcher($matchableMatrix.val) }; }
     |   symbolStr { $value = $symbolStr.slist.ConvertAll<IMatrixMatcher>(s => s); }
     |   NULL { $value = new IMatrixMatcher[] { null }; }
     ;
 
 actionTerm returns [IEnumerable<IMatrixCombiner> value]: 
-        matrix { $value = new IMatrixCombiner[] { new MatrixCombiner($matrix.fm) }; }
-    |   variableMatrix { $value = new IMatrixCombiner[] { new MatrixCombiner($variableMatrix.vars) }; }
+        combinableMatrix { $value = new IMatrixCombiner[] { new MatrixCombiner($combinableMatrix.val) }; }
     |   symbolStr { $value = $symbolStr.slist.ConvertAll<IMatrixCombiner>(s => s); }
     |   NULL { $value = new IMatrixCombiner[] { null }; }
     ;
@@ -240,10 +243,8 @@ rightContextTerm returns [IEnumerable<IRuleSegment> segs]:
 
 contextTerm returns [IEnumerable<IRuleSegment> segs]
         @init { $segs = new List<IRuleSegment>(); }:
-        matrix 
-        { $segs = new IRuleSegment[] { new FeatureMatrixSegment(new MatrixMatcher($matrix.fm), MatrixCombiner.NullCombiner) }; }
-    |   variableMatrix 
-        { $segs = new IRuleSegment[] { new FeatureMatrixSegment(new MatrixMatcher($variableMatrix.vars), MatrixCombiner.NullCombiner) }; }
+        matchableMatrix 
+        { $segs = new IRuleSegment[] { new FeatureMatrixSegment(new MatrixMatcher($matchableMatrix.val), MatrixCombiner.NullCombiner) }; }
     |   symbolStr
         { $segs = $symbolStr.slist.ConvertAll<IRuleSegment>(s => new FeatureMatrixSegment(s, MatrixCombiner.NullCombiner)); }
     ;
@@ -262,12 +263,20 @@ matrix returns [FeatureMatrix fm]
     { $fm = new FeatureMatrix(fvList); }
     ;
 
-variableMatrix returns [IEnumerable<IMatchCombine> vars]
-    @init{ var fvList = new List<IMatchCombine>(); }:
+matchableMatrix returns [IEnumerable<IMatchable> val]
+    @init{ var fvList = new List<IMatchable>(); }:
     LBRACE 
-    ( featureVal { fvList.Add($featureVal.fv); } | variableVal { fvList.Add($variableVal.fv); })* 
+    ( matchableVal { fvList.Add($matchableVal.fv); } )* 
     RBRACE
-    { $vars = fvList; }
+    { $val = fvList; }
+    ;
+
+combinableMatrix returns [IEnumerable<ICombinable> val]
+    @init{ var fvList = new List<ICombinable>(); }:
+    LBRACE 
+    ( combinableVal { fvList.Add($combinableVal.fv); } )* 
+    RBRACE
+    { $val = fvList; }
     ;
 
 /* Feature values */
@@ -277,6 +286,22 @@ featureVal returns [FeatureValue fv]:
     |   binaryVal { $fv = $binaryVal.fv; }
     |   unaryVal { $fv = $unaryVal.fv; }
     |   nullVal { $fv = $nullVal.fv; }
+    ;
+
+matchableVal returns [IMatchable fv]:
+        scalarVal { $fv = $scalarVal.fv; }
+    |   binaryVal { $fv = $binaryVal.fv; }
+    |   bareVal { $fv = $bareVal.fv; }
+    |   nullVal { $fv = $nullVal.fv; }
+    |   variableVal { $fv = $variableVal.fv; }
+    ;
+
+combinableVal returns [ICombinable fv]:
+        scalarVal { $fv = $scalarVal.fv; }
+    |   binaryVal { $fv = $binaryVal.fv; }
+    |   unaryVal { $fv = $unaryVal.fv; }
+    |   nullVal { $fv = $nullVal.fv; }
+    |   variableVal { $fv = $variableVal.fv; }
     ;
 
 scalarVal returns [FeatureValue fv]: 
@@ -296,6 +321,17 @@ nullVal returns [FeatureValue fv]:
 
 variableVal returns [IMatchCombine fv]: 
     '$' feature { $fv = $feature.f.VariableValue; };
+
+/* the bareVal can be a unary match or a node-exists match. it exists here to
+ * help the parser handle the ambiguity that otherwise results. 
+ */
+bareVal returns [IMatchable fv]:
+    feature 
+    {
+        if ($feature.f is NodeFeature) $fv = ($feature.f as NodeFeature).ExistsValue;
+        else $fv = ($feature.f as UnaryFeature).Value;
+    }
+    ;
 
 /* Parameters */
 

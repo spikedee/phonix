@@ -281,6 +281,10 @@ namespace Phonix
 
         public void Add(Feature f)
         {
+            if (f == null)
+            {
+                throw new ArgumentNullException("f");
+            }
             Trace.FeatureDefined(f);
             AddImpl(f.Name, f);
         }

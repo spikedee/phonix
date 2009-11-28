@@ -25,10 +25,28 @@ namespace Phonix.UnitTest
 
         public void ApplyRules(Phonology phono, string input, string expectedOutput)
         {
-            var word = new Word(phono.SymbolSet.Pronounce(input));
-            phono.RuleSet.ApplyAll(word);
-            var output = phono.SymbolSet.MakeString(word);
-            Assert.AreEqual(expectedOutput, output);
+            Action<Rule, Word, IWordSlice> tracer = (rule, w, slice) =>
+            {
+                Console.WriteLine("{0} applied", rule.Name);
+                foreach (var seg in w)
+                {
+                    Console.WriteLine("{0} : {1}", phono.SymbolSet.Spell(seg), seg);
+                }
+            };
+
+            Trace.OnRuleApplied += tracer;
+
+            try
+            {
+                var word = new Word(phono.SymbolSet.Pronounce(input));
+                phono.RuleSet.ApplyAll(word);
+                var output = phono.SymbolSet.MakeString(word);
+                Assert.AreEqual(expectedOutput, output);
+            }
+            finally
+            {
+                Trace.OnRuleApplied -= tracer;
+            }
         }
 
         [Test]
@@ -79,6 +97,34 @@ namespace Phonix.UnitTest
         {
             var phono = ParseWithStdImports("rule rightward (direction=right-to-left) a => b / a _");
             ApplyRules(phono, "aaa", "abb");
+        }
+
+        [Test]
+        public void NodeFeature()
+        {
+            var phono = ParseWithStdImports("feature Coronal (type=node children=ant,dist)");
+            Assert.IsTrue(phono.FeatureSet.Has<NodeFeature>("Coronal"));
+
+            var node = phono.FeatureSet.Get<NodeFeature>("Coronal");
+            var children = new List<Feature>(node.Children);
+            Assert.IsTrue(children.Contains(phono.FeatureSet.Get<Feature>("ant")));
+            Assert.IsTrue(children.Contains(phono.FeatureSet.Get<Feature>("dist")));
+        }
+
+        [Test]
+        public void NodeExistsInRule()
+        {
+            var phono = ParseWithStdImports(
+                    @" feature Coronal (type=node children=ant,dist) rule coronal-test [Coronal] => [+vc]");
+            ApplyRules(phono, "ptk", "pdk");
+        }
+
+        [Test]
+        public void NodeVariableInRule()
+        {
+            var phono = ParseWithStdImports(
+                    @" feature Coronal (type=node children=ant,dist) rule coronal-test [] => [$Coronal] / _ [$Coronal -vc]");
+            ApplyRules(phono, "TCg", "CCg");
         }
     }
 }

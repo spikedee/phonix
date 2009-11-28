@@ -19,9 +19,11 @@ namespace Phonix.Parse
 
     public static class Util
     {
-        public static Feature MakeFeature(string name, ParamList plist)
+        public static Feature MakeFeature(string name, ParamList plist, Phonology phono)
         {
             Feature f = null;
+            bool isNode = false;
+            IEnumerable<Feature> childList = null;
 
             if (plist == null)
             {
@@ -58,9 +60,24 @@ namespace Phonix.Parse
                                     f = new ScalarFeature(name);
                                     break;
 
+                                case "node":
+                                    isNode = true;
+                                    break;
+
                                 default:
                                     throw new InvalidParameterValueException(key, type);
                             }
+                        }
+                        break;
+
+                        case "children":
+                        {
+                            var list = new List<Feature>();
+                            foreach (string child in (val as string).Split(','))
+                            {
+                                list.Add(phono.FeatureSet.Get<Feature>(child.Trim()));
+                            }
+                            childList = list;
                         }
                         break;
 
@@ -69,6 +86,21 @@ namespace Phonix.Parse
                     }
                 }
             }
+
+            if (isNode)
+            {
+                if (childList == null)
+                {
+                    throw new InvalidParameterValueException("node", "no 'children' parameter found");
+                }
+                f = new NodeFeature(name, childList);
+            }
+            else if (childList != null)
+            {
+                throw new InvalidParameterValueException("children", "not allowed except on feature nodes");
+            }
+
+            Debug.Assert(f != null, "f != null");
 
             return f;
         }
