@@ -181,20 +181,14 @@ symbolStr returns [List<Symbol> slist]
 
 ruleDecl returns [Rule r]: 
     RULE str paramList? rule
-    { $r = Util.MakeRule($str.text, $rule.value, $paramList.list); }
+    { $r = Util.MakeRule($str.text, $rule.action, $rule.context, $rule.excluded, $paramList.list); }
     ;
 
-rule returns [List<IRuleSegment> value]
-    @init { $value = new List<IRuleSegment>(); }:
-    ruleAction
-    { $value.AddRange($ruleAction.value); }
+rule returns [List<IRuleSegment> action, RuleContext context, RuleContext excluded]:
+    ruleAction { $action = $ruleAction.value; }
     (
-        SLASH ruleContext
-        { 
-            $value = $ruleContext.left;
-            $value.AddRange($ruleAction.value);
-            $value.AddRange($ruleContext.right);
-        }
+        SLASH ( ruleContext { $context = $ruleContext.value; } SLASH? )?
+        ( SLASH excludedContext { $excluded = $excludedContext.value; } )?
     )?
     ;
 
@@ -221,16 +215,18 @@ actionTerm returns [IEnumerable<IMatrixCombiner> value]:
     |   NULL { $value = new IMatrixCombiner[] { null }; }
     ;
 
-ruleContext returns [List<IRuleSegment> left, List<IRuleSegment> right]
-    @init { 
-        $left = new List<IRuleSegment>(); 
-        $right = new List<IRuleSegment>(); 
-    }:
-    (lBound { $left.Add($lBound.seg); })? 
-    (leftContextTerm { $left.AddRange($leftContextTerm.segs); })* 
-    UNDERSCORE 
-    (rightContextTerm { $right.AddRange($rightContextTerm.segs); })* 
-    (rBound { $right.Add($rBound.seg); })?
+ruleContext returns [RuleContext value]
+    @init { $value = new RuleContext(); }:
+    (lBound { $value.Left.Add($lBound.seg); })? 
+    (leftContextTerm { $value.Left.AddRange($leftContextTerm.segs); })* 
+    UNDERSCORE
+    (rightContextTerm { $value.Right.AddRange($rightContextTerm.segs); })* 
+    (rBound { $value.Right.Add($rBound.seg); })?
+    ;
+
+excludedContext returns [RuleContext value]:
+    ruleContext
+    { $value = $ruleContext.value; }
     ;
 
 leftContextTerm returns [IEnumerable<IRuleSegment> segs]:

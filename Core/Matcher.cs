@@ -25,6 +25,7 @@ namespace Phonix
     public class MatrixMatcher : IMatrixMatcher
     {
         public static MatrixMatcher AlwaysMatches = new MatrixMatcher(new IMatchable[] {});
+        public static MatrixMatcher NeverMatches = new MatrixMatcher(new IMatchable[] {});
 
         private readonly IEnumerable<IMatchable> _values;
 
@@ -66,9 +67,13 @@ namespace Phonix
 
 #endregion
 
-        public bool Matches(RuleContext ctx, FeatureMatrix matrix)
+        virtual public bool Matches(RuleContext ctx, FeatureMatrix matrix)
         {
             if (matrix == null)
+            {
+                throw new ArgumentNullException("matrix");
+            }
+            if (this == NeverMatches)
             {
                 return false;
             }
@@ -82,39 +87,23 @@ namespace Phonix
             }
             return true;
         }
-#if false
+    }
 
-                AbstractFeatureValue fvCompare;
+    public class NegativeMatrixMatcher : MatrixMatcher
+    {
+        public NegativeMatrixMatcher(IMatrixMatcher match)
+            : base(match)
+        {
+        }
 
-                // If this is a variable value, then replace it with the real
-                // value from the context. If the real value hasn't been set in
-                // the context yet, then save the value of the current matrix
-                // in the context. If it's a node value, then just check that
-                // matrix is not null for that node.
+        public NegativeMatrixMatcher(IEnumerable<IMatchable> vals)
+            : base(vals)
+        {
+        }
 
-                var fvMatrix = matrix[fvMatcher.Feature];
-                if (fvMatcher == fvMatcher.Feature.VariableValue)
-                {
-                }
-                else if (fvMatcher.Feature is NodeFeature && 
-                         fvMatcher != fvMatcher.Feature.NullValue &&
-                         fvMatrix != fvMatcher.Feature.NullValue)
-                {
-                    // We're looking for a non-null node, and the matrix has a
-                    // node which isn't null. Assign fvMatrix to fvCompare, so
-                    // that it will match below.
-                    fvCompare = fvMatrix;
-                }
-                else
-                {
-                    fvCompare = fvMatcher;
-                }
-
-                if (fvMatrix != fvCompare)
-                {
-                    return false;
-                }
-            return true;
-#endif
+        override public bool Matches(RuleContext ctx, FeatureMatrix matrix)
+        {
+            return !base.Matches(ctx, matrix);
+        }
     }
 }

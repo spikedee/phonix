@@ -126,5 +126,65 @@ namespace Phonix.UnitTest
                     @" feature Coronal (type=node children=ant,dist) rule coronal-test [] => [$Coronal] / _ [$Coronal -vc]");
             ApplyRules(phono, "TCg", "CCg");
         }
+
+        [Test]
+        public void LeftwardInsert()
+        {
+            var phono = ParseWithStdImports("rule leftward-insert (direction=right-to-left) * => c / b _ b");
+            ApplyRules(phono, "abba", "abcba");
+        }
+
+        [Test]
+        public void RightwardInsert()
+        {
+            var phono = ParseWithStdImports("rule rightward-insert (direction=left-to-right) * => c / b _ b");
+            ApplyRules(phono, "abba", "abcba");
+        }
+
+        [Test]
+        public void BasicExclude()
+        {
+            var phono = ParseWithStdImports("rule ex a => b / _ c // _ cc");
+            ApplyRules(phono, "ac", "bc");
+            ApplyRules(phono, "acc", "acc");
+        }
+
+        [Test]
+        public void ExcludeContextLonger()
+        {
+            var phono = ParseWithStdImports("rule ex a => b / c[-vc] _  // c _");
+            ApplyRules(phono, "csa", "csb");
+            ApplyRules(phono, "cca", "cca");
+        }
+
+        [Test]
+        public void ExcludeContextShorter()
+        {
+            var phono = ParseWithStdImports("rule ex a => b / k _  // sk _");
+            ApplyRules(phono, "ka", "kb");
+            ApplyRules(phono, "ska", "ska");
+        }
+
+        [Test]
+        public void ExcludeNoContext()
+        {
+            var phono = ParseWithStdImports("rule ex a => b // c _");
+            ApplyRules(phono, "ka", "kb");
+            ApplyRules(phono, "ca", "ca");
+        }
+
+        [Test]
+        public void ContextTrailingSlash()
+        {
+            var phono = ParseWithStdImports("rule ex a => b / _ c / ");
+            ApplyRules(phono, "aac", "abc");
+        }
+
+        [Test]
+        public void ExcludeSingleSlash()
+        {
+            var phono = ParseWithStdImports("rule ex a => b / _ c / a _ ");
+            ApplyRules(phono, "aac", "aac");
+        }
     }
 }

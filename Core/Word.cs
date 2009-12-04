@@ -9,6 +9,7 @@ namespace Phonix
     {
         bool IsFirst { get; }
         bool IsLast { get; }
+        bool MovePrev();
         new FeatureMatrix Current { get; }
     }
 
@@ -48,14 +49,15 @@ namespace Phonix
             private LinkedListNode<FeatureMatrix> _lastNode;
             private readonly IMatrixMatcher _filter;
 
-            private bool _valid = false;
-
-            public bool NoAdvance = false;
+            private bool _beforeFirst = false;
+            private bool _afterLast = false;
 
             public WordSegment(LinkedListNode<FeatureMatrix> node, IMatrixMatcher filter)
             {
-                _node = _startNode = node;
+                _startNode = node;
+                _lastNode = node.List.Last;
                 _filter = filter;
+                Reset();
             }
 
 #region IEnumerator<FeatureMatrix> members
@@ -63,8 +65,7 @@ namespace Phonix
             public bool MoveNext()
             {
                 RuleContext ctx = new RuleContext();
-                var currNode = _node;
-                if (_valid && !NoAdvance)
+                if (!_beforeFirst)
                 {
                     _node = _node.Next;
                 }
@@ -72,16 +73,14 @@ namespace Phonix
                 {
                     _node = _node.Next;
                 }
+                _beforeFirst = false;
 
-                _valid = true;
                 if (_node == null)
                 {
-                    _lastNode = currNode;
-                    _valid = false;
+                    _afterLast = true;
+                    _node = _lastNode;
                 }
-
-                NoAdvance = false;
-                return _valid;
+                return !_afterLast;
             }
 
             public FeatureMatrix Current
@@ -101,7 +100,8 @@ namespace Phonix
             public void Reset()
             {
                 _node = _startNode;
-                _valid = false;
+                _beforeFirst = true;
+                _afterLast = false;
             }
 
             object IEnumerator.Current
@@ -135,18 +135,41 @@ namespace Phonix
                 }
             }
 
+            public bool MovePrev()
+            {
+                RuleContext ctx = new RuleContext();
+
+                if (!_afterLast)
+                {
+                    _node = _node.Previous;
+                }
+                while (_node != null && !_filter.Matches(ctx, _node.Value))
+                {
+                    _node = _node.Previous;
+                }
+                _afterLast = false;
+
+                if (_node == null)
+                {
+                    _beforeFirst = true;
+                    _node = _startNode.List.First;
+                }
+
+                return !_beforeFirst;
+            }
+
 #endregion
 
 #region MutableSegmentEnumerator members
 
             public void InsertBefore(FeatureMatrix fm)
             {
-                if (_node == _startNode && !_valid)
+                if (_node == _startNode && _beforeFirst)
                 {
                     // can't insert before you've started iterating
                     throw new InvalidOperationException();
                 }
-                if (_node == null && _lastNode != null)
+                else if (_node == _lastNode && _afterLast)
                 {
                     // we've gone past the end, but we can still add "before",
                     // which means after the last node.
@@ -160,11 +183,11 @@ namespace Phonix
 
             public void InsertAfter(FeatureMatrix fm)
             {
-                if (_node == null)
+                if (_node == _lastNode &&  _afterLast)
                 {
                     throw new InvalidOperationException();
                 }
-                if (_node == _startNode && !_valid)
+                else if (_node == _startNode && _beforeFirst)
                 {
                     // we haven't started yet, so "after" actually means before
                     // our start node. we also move the start node back
@@ -183,14 +206,14 @@ namespace Phonix
                 var deleted = _node;
                 _node = _node.Next;
                 deleted.List.Remove(deleted);
-                _valid = false;
+                _beforeFirst = true;
             }
 
 #endregion
 
             private void CheckValid()
             {
-                if (!_valid)
+                if (_beforeFirst || _afterLast)
                 {
                     throw new InvalidOperationException();
                 }
@@ -249,12 +272,8 @@ namespace Phonix
                 {
                     if (segment.MoveNext() && segment.IsFirst)
                     {
-                        // here we cheat and do evil wicked things. Set
-                        // NoAdvance to true, which makes the next iteration
-                        // return the same segment again. This is a hack to
-                        // avoid setting up a real lookahead.
-                        WordSegment wordSegment = (WordSegment)segment;
-                        wordSegment.NoAdvance = true;
+                        // move back to undo this move
+                        segment.MovePrev();
                         return true;
                     }
                     return false;

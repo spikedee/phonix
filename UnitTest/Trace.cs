@@ -126,11 +126,10 @@ namespace Phonix.UnitTest
             Trace.OnRuleDefined += r => { calledDefined++; gotRule = r; };
 
             var rs = new RuleSet();
-            var rule = new Rule("test", new IRuleSegment[] {});
-            rs.Add(rule);
+            rs.Add(RuleTest.TestRule);
 
             Assert.AreEqual(1, calledDefined);
-            Assert.AreSame(rule, gotRule);
+            Assert.AreSame(RuleTest.TestRule, gotRule);
         }
 
         [Test]
@@ -143,8 +142,8 @@ namespace Phonix.UnitTest
             Trace.OnRuleRedefined += (old, newer) => { calledRedefined++; oldRule = old; newRule = newer; };
 
             var rs = new RuleSet();
-            var or = new Rule("test", new IRuleSegment[] {});
-            var nr = new Rule("test", new IRuleSegment[] {});
+            var or = new Rule("test", new IRuleSegment[] {}, new IRuleSegment[] {});
+            var nr = new Rule("test", new IRuleSegment[] {}, new IRuleSegment[] {});
             rs.Add(or);
             rs.Add(nr);
 
@@ -168,8 +167,10 @@ namespace Phonix.UnitTest
             Trace.OnRuleExited += (r, w) => { exited++; ruleExited = r; wordExited = w; };
             Trace.OnRuleApplied += (r, w, s) => { applied++; };
 
-            Rule rule = new Rule("test", new IRuleSegment[]
-                    { new FeatureMatrixSegment(MatrixMatcher.AlwaysMatches, MatrixCombiner.NullCombiner) }
+            Rule rule = new Rule(
+                    "test", 
+                    new IRuleSegment[] { new FeatureMatrixSegment(MatrixMatcher.AlwaysMatches, MatrixCombiner.NullCombiner) },
+                    new IRuleSegment[] { new FeatureMatrixSegment(MatrixMatcher.NeverMatches, MatrixCombiner.NullCombiner) }
                     );
             Word word = WordTest.GetTestWord();
 
