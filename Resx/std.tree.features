@@ -16,7 +16,7 @@ feature nas     # nasal
 feature str     # strident
 feature lat     # lateral
 feature dr      # delayed-release
-feature Manner (type=node children=cont,nas,str,lat,dr)
+feature Manner (type=node children=cont,nas,str,lat,dr,Class)
 
 # Labial features
 feature ro      # round

@@ -10,7 +10,7 @@ namespace Phonix.UnitTest
     [TestFixture]
     public class ResxTest
     {
-        private void ParseResource(string name)
+        private void ParseResource(params string[] resources)
         {
             Action<Feature, Feature> traceFeatureRedef = (f1, f2) => 
             { 
@@ -30,10 +30,13 @@ namespace Phonix.UnitTest
             };
             Trace.OnSymbolDuplicate += traceSymbolDup;
 
+            Phonology phono = new Phonology();
             try
             {
-                Phonology phono = new Phonology();
-                Phonix.Parse.Util.ParseFile(phono, "test", name);
+                foreach (var res in resources)
+                {
+                    Phonix.Parse.Util.ParseFile(phono, "test", res);
+                }
             }
             catch (Exception ex)
             {
@@ -56,7 +59,7 @@ namespace Phonix.UnitTest
         [Test]
         public void ParseStdSymbols()
         {
-            ParseResource("std.symbols");
+            ParseResource("std.features", "std.symbols");
         }
 
         [Test]
@@ -68,7 +71,7 @@ namespace Phonix.UnitTest
         [Test]
         public void ParseStdTreeSymbols()
         {
-            ParseResource("std.tree.symbols");
+            ParseResource("std.tree.features", "std.symbols");
         }
 
     }

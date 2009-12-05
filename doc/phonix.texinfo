@@ -64,7 +64,7 @@ The first line will automatically add the standard feature set to your
 phonology. The second line will add the standard symbol set.  Together, these
 provide you with a set of contrastive features and phonetic symbols to allow
 you express whatever phonological processes you desire. You can find out more
-by reading @ref{Standard Features} and @ref{Standard Symbols}.
+by reading @ref{std.features} and @ref{std.symbols}.
 
 But you've only started. Your phonology contains rules, and the first and most
 important rule in your phonology is I-Nasal. This rule expressed in English is
@@ -235,6 +235,7 @@ rules.
 * Unary Features::
 * Binary Features::
 * Scalar Features::
+* Node Features::
 @end menu
 
 @node Basic Features
@@ -272,9 +273,10 @@ feature @var{feature-name} (@var{parameter-name}=@var{parameter-value})
 @end example
 
 Note that the parenthesis around the parameter list is part of the syntax and
-cannot be omitted. Currently the only parameter allowed on feature declarations
-is @code{type}, which may have the values @code{unary}, @code{binary}, or
-@code{scalar}.
+cannot be omitted. Currently the only parameters allowed on feature
+declarations are @code{type}, which may have the values @code{unary},
+@code{binary}, @code{scalar}, or @code{node}, and @code{children}, which is
+discussed under @xref{Node Features}.
 
 These feature types are discussed in detail in the following sections.
 
@@ -314,14 +316,12 @@ meaningful except as applied to coronals, so a labial segment would have the
 value @code{*anterior}. 
 
 @node Scalar Features
-@subsection Scalar features
+@subsection Scalar Features
 
 The following example declares a scalar feature:
 
 @example
-
 feature sc (type=scalar)
-
 @end example
 
 Scalar features may have any non-negative integer value, and are written as
@@ -330,6 +330,49 @@ Scalar features may have any non-negative integer value, and are written as
 and @code{sc=foo} are not valid. Scalar features may also be absent, in which
 case they are written @code{*sc}.
 
+@node Node Features
+@subsection Node Features
+
+Node features are used to represent @emph{feature trees}, as used in many
+phonologcal theories. All of the other feature types are single features with
+their own values. A node feature, on the other hand, represents a collection of
+child features, and the value of a node feature is the value of all of its
+children.
+
+A node feature is declared with the parameter @code{type=node} and the
+@code{children} parameter. For example:
+
+@example
+feature nd (type=node children=a,b.c)
+@end example
+
+The @code{children} parameter is required for node features, and forbidden on
+all other feature types. Its value is a list of the child features, separated
+by commas. You cannot put spaces after the commas unless you put the whole list
+in quotes, e.g. @code{children=a,b,c} or @code{children="a, b, c"}. The
+features that you declare as children must have been declared before you
+declare the node feature.
+
+Feature nodes can have any kind of feature as a child, including other nodes.
+This allows you to create a multi-level hierarchies. For an example of such a
+feature tree, see @xref{std.tree.features}.
+
+Feature nodes are @dfn{present} if any of their child features are present
+(i.e. if any child feature has a value other than @code{*feature}), otherwise
+they are @dfn{absent}. Feature nodes are written the same way as unary
+features, with @code{nd} for present and @code{*nd} for absent. Note that there
+are some restrictions on where you can use node feature values.
+
+@itemize
+
+@item Node feature values can't be used at all in symbol declarations. Symbols
+can only contain leaf features.
+
+@item Present values can only be used in the @dfn{match} and @dfn{context}
+portions of a rule. This is because it isn't meaningful to assign a "present"
+value directly to a node.
+
+@end itemize
 @node Feature Matrices
 @section Feature Matrices
 
@@ -345,7 +388,9 @@ feature matrix are assumed to have the @dfn{absent} value. In the feature
 matrix above, the vocalic feature @code{fr} (front) is unspecified, so it has
 the default value of @code{[*fr]}.
 
-Feature matrices are used to define symbols and rules.
+Feature matrices are used to define symbols and rules. However, only unary,
+binary, and scalar feature values can appear in symbols. Node feature values
+and variable feature values cannot be used in symbol declarations.
 
 @node Symbols
 @section Symbols
@@ -401,7 +446,7 @@ to the symbol /sk/, and not to the sequence /s/+/k/. To disambiguate such
 strings in your rules, you can add spaces. The string @code{s k} appearing in a
 rule will always be interpreted as /s/+/k/.
 
-For many examples of symbol definitions, @xref{Standard Symbols}.
+For many examples of symbol definitions, @xref{std.symbols}.
 
 @node Rules
 @section Rules
@@ -415,6 +460,7 @@ another.
 * Basic transformations::
 * Inserting and deleting::
 * Variable feature values::
+* Assimilation and gemination::
 * Rule parameters::
 @end menu
 
@@ -424,7 +470,7 @@ another.
 A complete rule has the following syntax:
 
 @example
-rule @var{name} (@var{parameters}) @var{match} => @var{action} / @var{context}
+rule @var{name} (@var{parameters}) @var{match} => @var{action} / @var{context} // @var{excluded-context}
 @end example
 
 @itemize
@@ -446,7 +492,11 @@ the transformations applied to the match.
 @item The @dfn{context} defines the conditions under which the transformation
 occurs. These are the adjacent segments which aren't themselves altered, but
 which are required to trigger the rule. If the rule is @dfn{unconditional} and
-does not depend on the surrounding segments, you can omit the context.
+does not depend on the surrounding segments, you can omit the context and the
+excluded context.
+
+@item The @dfn{excluded-context} defines conditions under which the rule should
+not apply. Thus, this indicates exceptions to the conditions in the context.
 
 @end itemize
 
@@ -486,8 +536,8 @@ feature @code{+vc} to them.
 Most rules do not apply everywhere, however, but have some @dfn{context}. The
 context consists of, at minimum, the character @code{_} with any number of
 feature matrices or symbols before or after it. The @code{_} character stands
-in for the segment(s) of the match/action. Regardless of how many segments are
-matched or transformed, you write only one underscore. For example, let's
+for the segment(s) of the match/action. Regardless of how many segments are
+matched or transformed, you must write only one underscore. For example, let's
 modify our previous rule to only apply after a nasal:
 
 @example
@@ -498,10 +548,10 @@ In this case, the context @code{/ [+nas] _} indicates that the segments matched
 must be preceded by a segment with the feature @code{+nas}.
 
 To indicate word boundaries we use @code{$}. The @code{$} character can stand
-for either the beginning or the end of a word.  It can only appear as the first
-or the last character of the rule context. Suppose that we wish to further
-restrict our rule to only apply at the end of a word. In this case, we write
-this:
+for either the beginning or the end of a word. It can only appear as the first
+or the last character of the rule context (or both), but it cannot appear
+internal to a rule. Suppose that we wish to further restrict our rule to only
+apply at the end of a word. In this case, we write this:
 
 @example
 rule final-postnasal-voicing
@@ -509,7 +559,44 @@ rule final-postnasal-voicing
 @end example
 
 (Note that we've broken this rule into two lines. This is perfectly acceptable:
-Phonix is indifferent to the spaces and line breaks in your phonology file.)
+Phonix is usually indifferent to the spaces and line breaks in your phonology
+file.)
+
+If we wish to add an exception to this rule, we use the @emph{excluded
+context}. This is indicated by a double-slash @code{//} after the context. If
+the rule includes an excluded context, then phonix will check both that the
+context matches the input and that the excluded context does @emph{not} match.
+For example:
+
+@example
+rule postnasal-voicing-with-exception
+[+cont] => [+vc] / [+nas] _ // N _
+@end example
+
+Here we voice continuants after nasals, @emph{except} after /N/ (the velar
+nasal).
+
+If you wish, you can also indicate the excluded context without the context:
+
+@example
+rule voicing-with-exception
+[+cont] => [+vc] // $ _
+@end example
+
+This voices all continuants unless they are the first segment in the word. Note
+that we could accomplish the exact same thing with:
+
+@example
+rule voicing-with-exception
+[+cont] => [+vc] / [] _
+@end example
+
+Here, we specify that voicing occurs when the continuant is preceded by any
+segment. (A feature matrix with no values @code{[]} effectively acts as a match
+for any segment.) This illustrates that an excluded context can usually be
+indicated by a properly constructed matching context and vice-versa. The
+excluded context construct is provided only to make rules clearer and easier to
+understand.
 
 @node Inserting and deleting
 @subsection Inserting and deleting
@@ -618,6 +705,44 @@ but the value the value for @code{son} is not defined anywhere else in the
 rule. Since this usually indicates a mistake, Phonix issues a warning and leave
 the value of @code{son} unchanged.
 
+@node Assimilation and gemination
+@subsection Assimilation and gemination
+
+Node features (@ref{Node Features}) are especially useful for assimilation and
+gemination rules. One of the most common phonological processes
+cross-linguistically is @emph{nasal place assimilation}, by which nasals in
+coda positions take on the place of the following segments. These rules can be
+written with a flat feature set by using several different variable values, for
+every feature that represents a part of the notion of "place". However, this
+can get very cumbersome--consider that to write a @emph{total} assimilation
+rule, you would need to mention write every single feature in your phonology as
+a variable in your rule.
+
+However, these processes are considerably simplified by using a feature tree
+that unites related features under a single node. For example, using
+@xref{std.tree.features}, we can write a nasal place assimilation rule as
+follows:
+
+@example
+rule nasal-place-assimilation
+[+nas] => [$Place] / _ [+cons $Place]
+@end example
+
+This rule is greatly simplified by using the @code{Place} node, which has as
+its children all of the features that contribute to place of articulation. You
+can extend this even further for a gemination rule that duplicates @emph{all}
+of the features for a given segment:
+
+@example
+rule intervocalic-gemination
+* => [$ROOT] / [-cons][+cons $ROOT] _ [-cons]
+@end example
+
+Here a consonantal segment is doubled when surrounded on either side by
+non-consonantal segments. The feature @code{ROOT} has as its children every
+feature in @code{std.tree.features}, and so the inserted segment takes every
+value from the preceding segment.
+
 @node Rule parameters
 @subsection Rule parameters
 
@@ -711,8 +836,9 @@ covered in this section.
 
 @menu
 * Importing files::
-* Standard Features::
-* Standard Symbols::
+* std.features::
+* std.tree.features::
+* std.symbols::
 @end menu
 
 @node Importing files
@@ -752,8 +878,8 @@ The @dfn{named resources} that Phonix looks for are special "filenames" that
 represent built-in feature or symbol sets meant to simplify common linguistic
 tasks. The following sections describe these resources.
 
-@node Standard Features
-@subsection Standard Features
+@node std.features
+@subsection std.features
 
 The standard feature set contains the commonly used features that you probably
 learned about in your introductory Phonology class. You include the standard
@@ -764,11 +890,59 @@ standard set are binary features given in their abbreviated forms.
 @verbatiminclude Resx/std.features
 @end example
 
-@node Standard Symbols
-@subsection Standard Symbols
+@node std.tree.features
+@subsection std.tree.features
+
+The standard feature tree contains the same leaf features as
+@ref{std.features}, but it gathers them into a feature tree.  The features in
+this set follow a standard naming convention: leaf features are written in
+lower case, node features are written in initial caps, and the @code{ROOT}
+feature is written in all caps. The tree has the following structure:
+
+@example
++ROOT
+    +Place
+        +Labial
+            -ro
+        +Coronal
+            -ant
+            -dist
+        +Dorsal
+            -hi
+            -lo
+            -bk
+            -fr
+    +Glottal
+        -vc
+        -sg
+        -cg
+    +Manner
+        -cont
+        -nas
+        -str
+        -lat
+        -dr
+        +Class
+            -cons
+            -syll
+            -son
+@end example
+
+To include this feature set, use @code{import std.tree.features}. The file
+itself looks as follows:
+
+@example
+@verbatiminclude Resx/std.tree.features
+@end example
+
+@node std.symbols
+@subsection std.symbols
 
 The standard symbol set contains over 100 phonetic symbols that you can use for
-input and output. You include the standard symbols by writing @code{import
+input and output. In order to use the standard symbol set, you have to first
+import one of the standard feature sets (@code{std.features} or
+@code{std.tree.features}, since the standard symbols depend on the features
+defined in those sets. You include the standard symbols by writing @code{import
 std.symbols}. The standard symbol set uses only 7-bit ASCII characters and is
 based on the X-SAMPA IPA encoding.
 
