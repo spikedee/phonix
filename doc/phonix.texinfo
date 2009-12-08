@@ -276,7 +276,7 @@ Note that the parenthesis around the parameter list is part of the syntax and
 cannot be omitted. Currently the only parameters allowed on feature
 declarations are @code{type}, which may have the values @code{unary},
 @code{binary}, @code{scalar}, or @code{node}, and @code{children}, which is
-discussed under @xref{Node Features}.
+discussed under @ref{Node Features}.
 
 These feature types are discussed in detail in the following sections.
 
@@ -355,7 +355,7 @@ declare the node feature.
 
 Feature nodes can have any kind of feature as a child, including other nodes.
 This allows you to create a multi-level hierarchies. For an example of such a
-feature tree, see @xref{std.tree.features}.
+feature tree, see @ref{std.features}.
 
 Feature nodes are @dfn{present} if any of their child features are present
 (i.e. if any child feature has a value other than @code{*feature}), otherwise
@@ -446,7 +446,7 @@ to the symbol /sk/, and not to the sequence /s/+/k/. To disambiguate such
 strings in your rules, you can add spaces. The string @code{s k} appearing in a
 rule will always be interpreted as /s/+/k/.
 
-For many examples of symbol definitions, @xref{std.symbols}.
+For many examples of symbol definitions, see @ref{std.symbols}.
 
 @node Rules
 @section Rules
@@ -460,6 +460,7 @@ another.
 * Basic transformations::
 * Inserting and deleting::
 * Variable feature values::
+* Node feature values::
 * Assimilation and gemination::
 * Rule parameters::
 @end menu
@@ -475,8 +476,7 @@ rule @var{name} (@var{parameters}) @var{match} => @var{action} / @var{context} /
 
 @itemize
 
-@item The @dfn{name} of the rule can be any Phonix string. See @ref{Strings}
-for more information.
+@item The @dfn{name} of the rule can be any Phonix string. @xref{Strings}.
 
 @item The @dfn{parameters} are optional and define characteristics of how the
 rule is applied. If you don't apply any parameters, you can omit the
@@ -705,10 +705,55 @@ but the value the value for @code{son} is not defined anywhere else in the
 rule. Since this usually indicates a mistake, Phonix issues a warning and leave
 the value of @code{son} unchanged.
 
+@node Node feature values
+@subsection Node feature values
+
+Node features are features with one or more child features (@pxref{Node
+Features}), and they have some special properties.
+
+A node feature is @dfn{present} if one or more of its children is present. Node
+features don't have any value of their own. Within a rule you can use the same
+syntax that is used for unary values to test for the presence of a node:
+
+@example
+rule postlabial-centralization
+[+fr -bk] => [-fr] / [Labial] _
+@end example
+
+In this case we are testing for the presence of the @code{Labial} node. This is
+especially convenient because it allows us to capture both @code{+ro} segments
+(rounded vowels) and @code{-ro} segments (labial consonants), which otherwise
+can't be represented in a natural class.
+
+Conversely, you can test for the absence of a particular node by testing for
+@code{*Labial}. The following rule centralizes vowels after non-@code{Coronal}
+segments.
+
+@example
+rule nonlabial-centralization
+[+fr -bk] => [-fr] / [*Coronal] _
+@end example
+
+Within the action portion of a rule, you can use this syntax to set an entire
+group of segments to their absent values. For example, the following rule
+reduces all stops in final position to /?/ by removing all of their segments
+under the @code{Place} node.
+
+@example
+rule final-glottalization
+[-cont] => [*Place] / _ $
+@end example
+
+As this rule illustrates, you may use the @code{*Node} syntax in a rule action,
+but you cannot use the @code{Node} syntax in an action, because it makes no
+sense to assign a value directly to a node. A node is present if one of its
+children is present, so in order to make a node be present, assign a value to
+one of its children.
+
 @node Assimilation and gemination
 @subsection Assimilation and gemination
 
-Node features (@ref{Node Features}) are especially useful for assimilation and
+Node features (@pxref{Node Features}) are especially useful for assimilation and
 gemination rules. One of the most common phonological processes
 cross-linguistically is @emph{nasal place assimilation}, by which nasals in
 coda positions take on the place of the following segments. These rules can be
@@ -718,10 +763,9 @@ can get very cumbersome--consider that to write a @emph{total} assimilation
 rule, you would need to mention write every single feature in your phonology as
 a variable in your rule.
 
-However, these processes are considerably simplified by using a feature tree
-that unites related features under a single node. For example, using
-@xref{std.tree.features}, we can write a nasal place assimilation rule as
-follows:
+However, these processes are considerably simplified by using node features.
+For example, using @ref{std.features}, we can write a nasal place assimilation
+rule as follows:
 
 @example
 rule nasal-place-assimilation
@@ -740,8 +784,8 @@ rule intervocalic-gemination
 
 Here a consonantal segment is doubled when surrounded on either side by
 non-consonantal segments. The feature @code{ROOT} has as its children every
-feature in @code{std.tree.features}, and so the inserted segment takes every
-value from the preceding segment.
+feature in @code{std.features}, and so the inserted segment copies every value
+from the preceding segment.
 
 @node Rule parameters
 @subsection Rule parameters
@@ -837,7 +881,6 @@ covered in this section.
 @menu
 * Importing files::
 * std.features::
-* std.tree.features::
 * std.symbols::
 @end menu
 
@@ -884,20 +927,11 @@ tasks. The following sections describe these resources.
 The standard feature set contains the commonly used features that you probably
 learned about in your introductory Phonology class. You include the standard
 feature set by writing @code{import std.features}. All of the features in the
-standard set are binary features given in their abbreviated forms.
-
-@example
-@verbatiminclude Resx/std.features
-@end example
-
-@node std.tree.features
-@subsection std.tree.features
-
-The standard feature tree contains the same leaf features as
-@ref{std.features}, but it gathers them into a feature tree.  The features in
-this set follow a standard naming convention: leaf features are written in
-lower case, node features are written in initial caps, and the @code{ROOT}
-feature is written in all caps. The tree has the following structure:
+standard set are binary features given in their abbreviated forms. The features
+are gathered into a feature tree following this naming convention: leaf
+features are written in lower case, node features are written in initial caps,
+and the @code{ROOT} feature is written in all caps. The tree has the following
+structure:
 
 @example
 +ROOT
@@ -928,11 +962,10 @@ feature is written in all caps. The tree has the following structure:
             -son
 @end example
 
-To include this feature set, use @code{import std.tree.features}. The file
-itself looks as follows:
+The @code{std.features} file itself looks like this:
 
 @example
-@verbatiminclude Resx/std.tree.features
+@verbatiminclude Resx/std.features
 @end example
 
 @node std.symbols
@@ -940,11 +973,10 @@ itself looks as follows:
 
 The standard symbol set contains over 100 phonetic symbols that you can use for
 input and output. In order to use the standard symbol set, you have to first
-import one of the standard feature sets (@code{std.features} or
-@code{std.tree.features}, since the standard symbols depend on the features
-defined in those sets. You include the standard symbols by writing @code{import
-std.symbols}. The standard symbol set uses only 7-bit ASCII characters and is
-based on the X-SAMPA IPA encoding.
+import the standard feature set @code{std.features}, since the standard symbols
+depend on the features defined in that set. You include the standard symbols by
+writing @code{import std.symbols}. The standard symbol set uses only 7-bit
+ASCII characters and is based on the X-SAMPA IPA encoding.
 
 @example
 @verbatiminclude Resx/std.symbols

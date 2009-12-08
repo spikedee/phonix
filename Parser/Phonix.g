@@ -64,7 +64,18 @@ catch (PhonixException px)
     Console.Error.WriteLine(String.Format("{0} at {1} line {2}", px.Message, _currentFile, token.Line));
     _parseError = true;
 }
-catch (ArgumentNullException nx)
+catch (ArgumentNullException)
+{
+    if (_parseError)
+    {
+        // after a parsing error, all bets are off, so we swallow this exception
+    }
+    else
+    {
+        throw;
+    }
+}
+catch (NullReferenceException)
 {
     if (_parseError)
     {

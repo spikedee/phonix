@@ -62,17 +62,5 @@ namespace Phonix.UnitTest
             ParseResource("std.features", "std.symbols");
         }
 
-        [Test]
-        public void ParseStdTreeFeatures()
-        {
-            ParseResource("std.tree.features");
-        }
-
-        [Test]
-        public void ParseStdTreeSymbols()
-        {
-            ParseResource("std.tree.features", "std.symbols");
-        }
-
     }
 }

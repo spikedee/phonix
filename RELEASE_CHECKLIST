@@ -1,0 +1,15 @@
+BEFORE YOU CAN RELEASE
+Ensure that all issues slated for the release are fixed
+Run `make clean test' and ensure that everything passes
+Update docs
+
+RELEASE PROCESS
+Confirm there are no changes in the working copy
+`svn copy' from trunk/ to tags/$VERSION
+`make test' in the tagged repos (ensure everything passes)
+`make doc' in the tagged repos
+`make dist' in the tagged repos
+Rename the .zip and .pdf files with the appropriate version tags
+Upload .zip and .pdf files as "featured"
+Update the .html docs on the wiki
+Deprecate the old dist versions
