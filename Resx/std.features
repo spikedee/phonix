@@ -2,11 +2,13 @@
 feature cons    # consonantal
 feature son     # sonorant
 feature syll    # syllabic
+feature Class (type=node children=cons,son,syll)
 
 # Glottal features
 feature vc      # voice
 feature sg      # spread glottis
 feature cg      # constricted glottis
+feature Glottal (type=node children=vc,sg,cg)
 
 # Manner of articulation
 feature cont    # continuant
@@ -14,16 +16,26 @@ feature nas     # nasal
 feature str     # strident
 feature lat     # lateral
 feature dr      # delayed-release
+feature Manner (type=node children=cont,nas,str,lat,dr,Class)
 
 # Labial features
 feature ro      # round
+feature Labial (type=node children=ro)
 
 # Coronal features
 feature ant     # anterior
 feature dist    # distributed
+feature Coronal (type=node children=ant,dist)
 
 # Dorsal features
 feature hi      # high
 feature lo      # low
 feature bk      # back
 feature fr      # front
+feature Dorsal (type=node children=hi,lo,bk,fr)
+
+# The Place node governs all place-of-articulation features
+feature Place (type=node children=Labial,Coronal,Dorsal)
+
+# The ROOT node governs all features
+feature ROOT (type=node children=Place,Glottal,Manner,Class)

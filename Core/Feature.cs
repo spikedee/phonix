@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace Phonix
@@ -14,7 +13,12 @@ namespace Phonix
         {
             Name = name;
             NullValue = new NullFeatureValue(this);
-            VariableValue = new VariableFeatureValue(this);
+            VariableValue = GetVariable();
+        }
+
+        protected virtual IMatchCombine GetVariable()
+        {
+            return new VariableFeatureValue(this);
         }
 
         public override string ToString()
@@ -30,78 +34,58 @@ namespace Phonix
             }
         }
 
-        // VariableFeatureValue is derived from FeatureValueBase to keep it
+        // VariableFeatureValue is derived from AbstractFeatureValue to keep it
         // from being put into a FeatureMatrix or other containers that should
         // only contain non-variable values.
-        private class VariableFeatureValue : FeatureValueBase
+        private class VariableFeatureValue : AbstractFeatureValue, IMatchCombine
         {
             public VariableFeatureValue(Feature f)
                 : base(f, "$" + f.Name)
             {
             }
+
+            public bool Matches(RuleContext ctx, FeatureMatrix matrix)
+            {
+                if (ctx == null)
+                {
+                    throw new InvalidOperationException("context cannot be null for match with variables");
+                }
+                if (!ctx.VariableFeatures.ContainsKey(Feature))
+                {
+                    ctx.VariableFeatures[Feature] = matrix[Feature];
+                }
+                return matrix[Feature] == ctx.VariableFeatures[Feature];
+            }
+
+            public IEnumerable<FeatureValue> GetValues(RuleContext ctx)
+            {
+                if (ctx == null)
+                {
+                    throw new InvalidOperationException("context cannot be null for combine with variables");
+                }
+                if (ctx.VariableFeatures.ContainsKey(Feature))
+                {
+                    return new FeatureValue[] { ctx.VariableFeatures[Feature] };
+                }
+                else
+                {
+                    // the user tried to set a variable that hasn't been
+                    // defined. Warn them and leave the variable alone.
+                    Trace.UndefinedVariableUsed(this);
+                    return new FeatureValue[] {};
+                }
+            }
         }
 
         public readonly FeatureValue NullValue;
 
-        public readonly FeatureValueBase VariableValue;
+        public readonly IMatchCombine VariableValue;
 
         public static string FriendlyName<T>() where T : Feature
         {
             StringBuilder str = new StringBuilder(typeof(T).Name);
             str.Replace("Feature", "");
             return str.ToString().ToLowerInvariant();
-        }
-
-    }
-
-    // FeatureValueBase defines all of the functionality for feature values.
-    // It's separated from Feature Value only to allow us to enforce type
-    // strictness with variable and non-variable FeatureValue.
-    public abstract class FeatureValueBase : IComparable
-    {
-        public readonly Feature Feature;
-
-        private readonly string _desc;
-
-        protected FeatureValueBase(Feature feature, string desc)
-        {
-            Feature = feature;
-            _desc = desc;
-        }
-
-        public int CompareTo(object obj)
-        {
-           var fv = obj as FeatureValue;
-           if (fv != null)
-           {
-               if (Feature == fv.Feature)
-               {
-                   return _desc.CompareTo(fv._desc);
-               }
-               else
-               {
-                   return Feature.Name.CompareTo(fv.Feature.Name);
-               }
-           }
-           else 
-           {
-               throw new ArgumentException();
-           }
-        }
-
-        public override string ToString()
-        {
-            return _desc;
-        }
-    }
-
-    // FeatureValue is the class from which all non-variable feature value
-    // types derive.
-    public abstract class FeatureValue : FeatureValueBase
-    {
-        protected FeatureValue(Feature feature, string desc)
-            : base(feature, desc)
-        {
         }
     }
 
@@ -182,6 +166,98 @@ namespace Phonix
 
     }
 
+    public class NodeFeature : Feature
+    {
+        public readonly IEnumerable<Feature> Children;
+
+        public readonly IMatchable ExistsValue;
+
+        public NodeFeature(string name, IEnumerable<Feature> children)
+            : base(name)
+        {
+            Children = children;
+            ExistsValue = new NodeExistsValue(this);
+        }
+
+        override protected IMatchCombine GetVariable()
+        {
+            return new NodeVariableValue(this);
+        }
+
+        private class NodeExistsValue : AbstractFeatureValue, IMatchable
+        {
+            private readonly NodeFeature _node;
+
+            public NodeExistsValue(NodeFeature feature)
+                : base(feature, feature.Name)
+            {
+                _node = feature;
+            }
+
+            public bool Matches(RuleContext ctx, FeatureMatrix matrix)
+            {
+                foreach (var feature in _node.Children)
+                {
+                    if (matrix[feature] != feature.NullValue)
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+
+        // this class is only intended to be used as the VariableValue for
+        // NodeFeature objects
+        private class NodeVariableValue : AbstractFeatureValue, IMatchCombine
+        {
+            private readonly NodeFeature _node;
+
+            public NodeVariableValue(NodeFeature feature)
+                : base(feature, "$" + feature.Name)
+            {
+                _node = feature;
+            }
+
+            public bool Matches(RuleContext ctx, FeatureMatrix matrix)
+            {
+                if (ctx.VariableNodes.ContainsKey(_node))
+                {
+                    foreach (var fv in ctx.VariableNodes[_node])
+                    {
+                        if (fv != matrix[fv.Feature])
+                        {
+                            return false;
+                        }
+                    }
+                }
+                else
+                {
+                    var list = new List<FeatureValue>();
+                    foreach (var feature in _node.Children)
+                    {
+                        list.Add(matrix[feature]);
+                    }
+                    ctx.VariableNodes[_node] = list;
+                }
+                return true;
+            }
+
+            public IEnumerable<FeatureValue> GetValues(RuleContext ctx)
+            {
+                if (ctx.VariableNodes.ContainsKey(_node))
+                {
+                    return ctx.VariableNodes[_node];
+                }
+                else
+                {
+                    Trace.UndefinedVariableUsed(this);
+                    return new FeatureValue[] {};
+                }
+            }
+        }
+    }
+
     public class FeatureSet : IEnumerable<Feature>
     {
         private Dictionary<string, Feature> _dict = new Dictionary<string, Feature>();
@@ -205,6 +281,10 @@ namespace Phonix
 
         public void Add(Feature f)
         {
+            if (f == null)
+            {
+                throw new ArgumentNullException("f");
+            }
             Trace.FeatureDefined(f);
             AddImpl(f.Name, f);
         }
@@ -250,129 +330,6 @@ namespace Phonix
         }
 
 #endregion
-
-    }
-
-    public class FeatureMatrix : IEnumerable<FeatureValue>
-    {
-        private readonly Dictionary<Feature, FeatureValue> _values = new Dictionary<Feature, FeatureValue>();
-
-        public FeatureMatrix(IEnumerable<FeatureValue> values)
-        {
-            if (values == null)
-            {
-                throw new ArgumentNullException();
-            }
-
-            foreach (var val in values)
-            {
-                _values[val.Feature] = val;
-            }
-        }
-
-        public FeatureMatrix(FeatureMatrix matrix)
-            : this(matrix._values.Values)
-        {
-        }
-
-        public readonly static FeatureMatrix Empty = 
-            new FeatureMatrix(new FeatureValue[] {});
-
-#region IEnumerable(FeatureValue) members
-
-        public IEnumerator<FeatureValue> GetEnumerator()
-        {
-            return GetEnumerator(false);
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
-#endregion
-
-        public IEnumerator<FeatureValue> GetEnumerator(bool enumerateNullValues)
-        {
-            foreach (FeatureValue fv in _values.Values)
-            {
-                if (enumerateNullValues || fv != fv.Feature.NullValue)
-                {
-                    yield return fv;
-                }
-            }
-            yield break;
-        }
-
-        public FeatureValue this[Feature f]
-        {
-            get
-            {
-                if (_values.ContainsKey(f))
-                {
-                    return _values[f];
-                }
-                return f.NullValue;
-            }
-        }
-
-        public int Weight
-        {
-            get
-            {
-                return this.Count();
-            }
-        }
-
-        public bool Equals(FeatureMatrix fm)
-        {
-            if (this.Weight != fm.Weight)
-                return false;
-            
-            foreach (var fv in this)
-            {
-                if (fm[fv.Feature] != fv)
-                    return false;
-            }
-
-            return true;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (obj is FeatureMatrix)
-            {
-                return Equals((FeatureMatrix)obj);
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        public override int GetHashCode()
-        {
-            int hash = 0;
-            foreach (var fv in this)
-            {
-                hash += fv.GetHashCode();
-            }
-            return hash;
-        }
-
-        public override string ToString()
-        {
-            StringBuilder str = new StringBuilder();
-            str.Append("[");
-
-            var list = new List<FeatureValue>(this);
-            list.Sort();
-
-            str.Append(String.Join(" ", list.ConvertAll(fv => fv.ToString()).ToArray()));
-
-            str.Append("]");
-            return str.ToString();
-        }
 
     }
 }

@@ -6,20 +6,32 @@ using System.Diagnostics;
 
 namespace Phonix
 {
-    public interface IMatrixMatcher : IEnumerable<FeatureValueBase>
+    public interface IMatrixMatcher : IEnumerable<IMatchable>
     {
         bool Matches(RuleContext ctx, FeatureMatrix matrix);
     }
 
+    public interface IMatchable
+    {
+        bool Matches(RuleContext ctx, FeatureMatrix matrix);
+    }
+
+    public interface IMatchCombine : IMatchable, ICombinable
+    {
+        // this exists just to provide a convenient way to specify both
+        // behaviors
+    }
+
     public class MatrixMatcher : IMatrixMatcher
     {
-        public static MatrixMatcher AlwaysMatches = new MatrixMatcher(new FeatureValueBase[] {});
+        public static MatrixMatcher AlwaysMatches = new MatrixMatcher(new IMatchable[] {});
+        public static MatrixMatcher NeverMatches = new MatrixMatcher(new IMatchable[] {});
 
-        private readonly IEnumerable<FeatureValueBase> _values;
+        private readonly IEnumerable<IMatchable> _values;
 
         public MatrixMatcher(FeatureMatrix fm)
         {
-            List<FeatureValueBase> list = new List<FeatureValueBase>();
+            var list = new List<IMatchable>();
             var iter = fm.GetEnumerator(true);
             while (iter.MoveNext())
             {
@@ -30,14 +42,20 @@ namespace Phonix
             _values = list;
         }
 
-        public MatrixMatcher(IEnumerable<FeatureValueBase> values)
+        public MatrixMatcher(IEnumerable<IMatchable> values)
         {
-            _values = values;
+            var list = new List<IMatchable>(values);
+            _values = list;
         }
 
-#region IEnumerable<FeatureValue> members
+        public MatrixMatcher(IEnumerable<IMatchCombine> values)
+            : this(new List<IMatchCombine>(values).ConvertAll<IMatchable>(v => v))
+        {
+        }
 
-        public IEnumerator<FeatureValueBase> GetEnumerator()
+#region IEnumerable<AbstractFeatureValue> members
+
+        public IEnumerator<IMatchable> GetEnumerator()
         {
             return _values.GetEnumerator();
         }
@@ -49,46 +67,43 @@ namespace Phonix
 
 #endregion
 
-        public bool Matches(RuleContext ctx, FeatureMatrix matrix)
+        virtual public bool Matches(RuleContext ctx, FeatureMatrix matrix)
         {
             if (matrix == null)
+            {
+                throw new ArgumentNullException("matrix");
+            }
+            if (this == NeverMatches)
             {
                 return false;
             }
 
-            foreach (FeatureValueBase fv in this)
+            foreach (IMatchable match in this)
             {
-                FeatureValue compare;
-
-                // If this is a variable value, then replace it with the real
-                // value from the context. If the real value hasn't been set in
-                // the context yet, then save the value of the current matrix
-                // in the context.
-
-                if (fv == fv.Feature.VariableValue)
-                {
-                    if (ctx == null)
-                    {
-                        throw new InvalidOperationException("context cannot be null for match with variables");
-                    }
-                    if (!ctx.VariableFeatures.ContainsKey(fv.Feature))
-                    {
-                        ctx.VariableFeatures[fv.Feature] = matrix[fv.Feature];
-                    }
-                    compare = ctx.VariableFeatures[fv.Feature];
-                }
-                else
-                {
-                    compare = fv as FeatureValue;
-                }
-                Debug.Assert(compare != null, "compare != null");
-
-                if (matrix[fv.Feature] != compare)
+                if (!match.Matches(ctx, matrix))
                 {
                     return false;
                 }
             }
             return true;
+        }
+    }
+
+    public class NegativeMatrixMatcher : MatrixMatcher
+    {
+        public NegativeMatrixMatcher(IMatrixMatcher match)
+            : base(match)
+        {
+        }
+
+        public NegativeMatrixMatcher(IEnumerable<IMatchable> vals)
+            : base(vals)
+        {
+        }
+
+        override public bool Matches(RuleContext ctx, FeatureMatrix matrix)
+        {
+            return !base.Matches(ctx, matrix);
         }
     }
 }

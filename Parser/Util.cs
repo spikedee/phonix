@@ -2,6 +2,7 @@ using Antlr.Runtime;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System;
 
@@ -17,11 +18,25 @@ namespace Phonix.Parse
     {
     }
 
+    public class RuleContext
+    {
+        public List<IRuleSegment> Left;
+        public List<IRuleSegment> Right;
+
+        public RuleContext()
+        {
+            Left = new List<IRuleSegment>();
+            Right = new List<IRuleSegment>();
+        }
+    }
+
     public static class Util
     {
-        public static Feature MakeFeature(string name, ParamList plist)
+        public static Feature MakeFeature(string name, ParamList plist, Phonology phono)
         {
             Feature f = null;
+            bool isNode = false;
+            IEnumerable<Feature> childList = null;
 
             if (plist == null)
             {
@@ -58,9 +73,24 @@ namespace Phonix.Parse
                                     f = new ScalarFeature(name);
                                     break;
 
+                                case "node":
+                                    isNode = true;
+                                    break;
+
                                 default:
                                     throw new InvalidParameterValueException(key, type);
                             }
+                        }
+                        break;
+
+                        case "children":
+                        {
+                            var list = new List<Feature>();
+                            foreach (string child in (val as string).Split(','))
+                            {
+                                list.Add(phono.FeatureSet.Get<Feature>(child.Trim()));
+                            }
+                            childList = list;
                         }
                         break;
 
@@ -70,12 +100,73 @@ namespace Phonix.Parse
                 }
             }
 
+            if (isNode)
+            {
+                if (childList == null)
+                {
+                    throw new InvalidParameterValueException("node", "no 'children' parameter found");
+                }
+                f = new NodeFeature(name, childList);
+            }
+            else if (childList != null)
+            {
+                throw new InvalidParameterValueException("children", "not allowed except on feature nodes");
+            }
+
+            Debug.Assert(f != null, "f != null");
+
             return f;
         }
 
-        public static Rule MakeRule(string name, IEnumerable<IRuleSegment> segs, ParamList plist)
+        public static Rule MakeRule(string name, IEnumerable<IRuleSegment> action, RuleContext context, RuleContext excluded, ParamList plist)
         {
-            var rule = new Rule(name, segs);
+            var contextSegs = new List<IRuleSegment>();
+            var excludedSegs = new List<IRuleSegment>();
+
+            if (context == null)
+            {
+               context = new RuleContext();
+            }
+            if (excluded == null)
+            {
+                // always add a non-matching segment to the excluded context if it's null
+                excluded = new RuleContext();
+                excluded.Right.Add(new FeatureMatrixSegment(MatrixMatcher.NeverMatches, MatrixCombiner.NullCombiner));
+            }
+
+            // add the context segments into their list
+            contextSegs.AddRange(context.Left);
+            contextSegs.AddRange(action);
+            contextSegs.AddRange(context.Right);
+
+            // the left sides of the context and the exclusion need to
+            // be aligned. We add StepSegments (which only advance the
+            // cursor) or BackstepSegments (which only move back the
+            // cursor) to accomplish this
+            int diff = context.Left.Count - excluded.Left.Count;
+            if (diff > 0)
+            {
+                for (int i = 0; i < diff; i++)
+                {
+                    excludedSegs.Add(new StepSegment());
+                }
+            }
+            else if (diff < 0)
+            {
+                for (int i = 0; i > diff; i--)
+                {
+                    excludedSegs.Add(new BackstepSegment());
+                }
+            }
+
+            excludedSegs.AddRange(excluded.Left);
+            for (int i = 0; i < action.Count(); i++)
+            {
+                excludedSegs.Add(new StepSegment());
+            }
+            excludedSegs.AddRange(excluded.Right);
+
+            var rule = new Rule(name, contextSegs, excludedSegs);
             if (plist != null)
             {
                 foreach (string key in plist.Keys)

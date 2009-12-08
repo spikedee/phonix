@@ -40,9 +40,18 @@ namespace Phonix
             return FeatureMatrix;
         }
 
-#region IEnumerable(FeatureValueBase) members
+#region IEnumerable(AbstractFeatureValue) members
 
-        IEnumerator<FeatureValueBase> IEnumerable<FeatureValueBase>.GetEnumerator()
+        IEnumerator<IMatchable> IEnumerable<IMatchable>.GetEnumerator()
+        {
+            foreach (FeatureValue fv in this)
+            {
+                yield return fv;
+            }
+            yield break;
+        }
+
+        IEnumerator<ICombinable> IEnumerable<ICombinable>.GetEnumerator()
         {
             foreach (FeatureValue fv in this)
             {

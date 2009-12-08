@@ -49,7 +49,7 @@ namespace Phonix
         public static event Action<Rule, Word, IWordSlice> OnRuleApplied;
         public static event Action<Rule, Word> OnRuleExited;
 
-        public static event Action<FeatureValueBase> OnUndefinedVariableUsed;
+        public static event Action<AbstractFeatureValue> OnUndefinedVariableUsed;
 
         public static void FeatureDefined(Feature f)
         {
@@ -101,7 +101,7 @@ namespace Phonix
             OnRuleExited(r, w);
         }
 
-        public static void UndefinedVariableUsed(FeatureValueBase fv)
+        public static void UndefinedVariableUsed(AbstractFeatureValue fv)
         {
             OnUndefinedVariableUsed(fv);
         }

@@ -64,7 +64,18 @@ catch (PhonixException px)
     Console.Error.WriteLine(String.Format("{0} at {1} line {2}", px.Message, _currentFile, token.Line));
     _parseError = true;
 }
-catch (ArgumentNullException nx)
+catch (ArgumentNullException)
+{
+    if (_parseError)
+    {
+        // after a parsing error, all bets are off, so we swallow this exception
+    }
+    else
+    {
+        throw;
+    }
+}
+catch (NullReferenceException)
 {
     if (_parseError)
     {
@@ -136,7 +147,7 @@ importDecl:
 
 featureDecl returns [Feature f]: 
     FEATURE str paramList?
-    { $f = Util.MakeFeature($str.text, $paramList.list); }
+    { $f = Util.MakeFeature($str.text, $paramList.list, _phono); }
     ;
 
 feature returns [Feature f]:
@@ -159,6 +170,11 @@ scalarFeature returns [ScalarFeature f]:
     { $f = _phono.FeatureSet.Get<ScalarFeature>($str.text); }
     ;
 
+nodeFeature returns [NodeFeature f]:
+    str
+    { $f = _phono.FeatureSet.Get<NodeFeature>($str.text); }
+    ;
+
 /* Symbol declarations and usage */
 
 symbolDecl returns [Symbol s]: 
@@ -176,20 +192,14 @@ symbolStr returns [List<Symbol> slist]
 
 ruleDecl returns [Rule r]: 
     RULE str paramList? rule
-    { $r = Util.MakeRule($str.text, $rule.value, $paramList.list); }
+    { $r = Util.MakeRule($str.text, $rule.action, $rule.context, $rule.excluded, $paramList.list); }
     ;
 
-rule returns [List<IRuleSegment> value]
-    @init { $value = new List<IRuleSegment>(); }:
-    ruleAction
-    { $value.AddRange($ruleAction.value); }
+rule returns [List<IRuleSegment> action, RuleContext context, RuleContext excluded]:
+    ruleAction { $action = $ruleAction.value; }
     (
-        SLASH ruleContext
-        { 
-            $value = $ruleContext.left;
-            $value.AddRange($ruleAction.value);
-            $value.AddRange($ruleContext.right);
-        }
+        SLASH ( ruleContext { $context = $ruleContext.value; } SLASH? )?
+        ( SLASH excludedContext { $excluded = $excludedContext.value; } )?
     )?
     ;
 
@@ -205,29 +215,29 @@ ruleAction returns [List<IRuleSegment> value]
     ;
 
 matchTerm returns [IEnumerable<IMatrixMatcher> value]:
-        matrix { $value = new IMatrixMatcher[] { new MatrixMatcher($matrix.fm) }; }
-    |   variableMatrix { $value = new IMatrixMatcher[] { new MatrixMatcher($variableMatrix.vars) }; }
+        matchableMatrix { $value = new IMatrixMatcher[] { new MatrixMatcher($matchableMatrix.val) }; }
     |   symbolStr { $value = $symbolStr.slist.ConvertAll<IMatrixMatcher>(s => s); }
     |   NULL { $value = new IMatrixMatcher[] { null }; }
     ;
 
 actionTerm returns [IEnumerable<IMatrixCombiner> value]: 
-        matrix { $value = new IMatrixCombiner[] { new MatrixCombiner($matrix.fm) }; }
-    |   variableMatrix { $value = new IMatrixCombiner[] { new MatrixCombiner($variableMatrix.vars) }; }
+        combinableMatrix { $value = new IMatrixCombiner[] { new MatrixCombiner($combinableMatrix.val) }; }
     |   symbolStr { $value = $symbolStr.slist.ConvertAll<IMatrixCombiner>(s => s); }
     |   NULL { $value = new IMatrixCombiner[] { null }; }
     ;
 
-ruleContext returns [List<IRuleSegment> left, List<IRuleSegment> right]
-    @init { 
-        $left = new List<IRuleSegment>(); 
-        $right = new List<IRuleSegment>(); 
-    }:
-    (lBound { $left.Add($lBound.seg); })? 
-    (leftContextTerm { $left.AddRange($leftContextTerm.segs); })* 
-    UNDERSCORE 
-    (rightContextTerm { $right.AddRange($rightContextTerm.segs); })* 
-    (rBound { $right.Add($rBound.seg); })?
+ruleContext returns [RuleContext value]
+    @init { $value = new RuleContext(); }:
+    (lBound { $value.Left.Add($lBound.seg); })? 
+    (leftContextTerm { $value.Left.AddRange($leftContextTerm.segs); })* 
+    UNDERSCORE
+    (rightContextTerm { $value.Right.AddRange($rightContextTerm.segs); })* 
+    (rBound { $value.Right.Add($rBound.seg); })?
+    ;
+
+excludedContext returns [RuleContext value]:
+    ruleContext
+    { $value = $ruleContext.value; }
     ;
 
 leftContextTerm returns [IEnumerable<IRuleSegment> segs]:
@@ -240,10 +250,8 @@ rightContextTerm returns [IEnumerable<IRuleSegment> segs]:
 
 contextTerm returns [IEnumerable<IRuleSegment> segs]
         @init { $segs = new List<IRuleSegment>(); }:
-        matrix 
-        { $segs = new IRuleSegment[] { new FeatureMatrixSegment(new MatrixMatcher($matrix.fm), MatrixCombiner.NullCombiner) }; }
-    |   variableMatrix 
-        { $segs = new IRuleSegment[] { new FeatureMatrixSegment(new MatrixMatcher($variableMatrix.vars), MatrixCombiner.NullCombiner) }; }
+        matchableMatrix 
+        { $segs = new IRuleSegment[] { new FeatureMatrixSegment(new MatrixMatcher($matchableMatrix.val), MatrixCombiner.NullCombiner) }; }
     |   symbolStr
         { $segs = $symbolStr.slist.ConvertAll<IRuleSegment>(s => new FeatureMatrixSegment(s, MatrixCombiner.NullCombiner)); }
     ;
@@ -262,12 +270,20 @@ matrix returns [FeatureMatrix fm]
     { $fm = new FeatureMatrix(fvList); }
     ;
 
-variableMatrix returns [IEnumerable<FeatureValueBase> vars]
-    @init{ List<FeatureValueBase> fvList = new List<FeatureValueBase>(); }:
+matchableMatrix returns [IEnumerable<IMatchable> val]
+    @init{ var fvList = new List<IMatchable>(); }:
     LBRACE 
-    ( featureVal { fvList.Add($featureVal.fv); } | variableVal { fvList.Add($variableVal.fv); })* 
+    ( matchableVal { fvList.Add($matchableVal.fv); } )* 
     RBRACE
-    { $vars = fvList; }
+    { $val = fvList; }
+    ;
+
+combinableMatrix returns [IEnumerable<ICombinable> val]
+    @init{ var fvList = new List<ICombinable>(); }:
+    LBRACE 
+    ( combinableVal { fvList.Add($combinableVal.fv); } )* 
+    RBRACE
+    { $val = fvList; }
     ;
 
 /* Feature values */
@@ -277,6 +293,22 @@ featureVal returns [FeatureValue fv]:
     |   binaryVal { $fv = $binaryVal.fv; }
     |   unaryVal { $fv = $unaryVal.fv; }
     |   nullVal { $fv = $nullVal.fv; }
+    ;
+
+matchableVal returns [IMatchable fv]:
+        scalarVal { $fv = $scalarVal.fv; }
+    |   binaryVal { $fv = $binaryVal.fv; }
+    |   bareVal { $fv = $bareVal.fv; }
+    |   nullVal { $fv = $nullVal.fv; }
+    |   variableVal { $fv = $variableVal.fv; }
+    ;
+
+combinableVal returns [ICombinable fv]:
+        scalarVal { $fv = $scalarVal.fv; }
+    |   binaryVal { $fv = $binaryVal.fv; }
+    |   unaryVal { $fv = $unaryVal.fv; }
+    |   nullVal { $fv = $nullVal.fv; }
+    |   variableVal { $fv = $variableVal.fv; }
     ;
 
 scalarVal returns [FeatureValue fv]: 
@@ -294,8 +326,19 @@ unaryVal returns [FeatureValue fv]:
 nullVal returns [FeatureValue fv]:
     NULL feature { $fv = $feature.f.NullValue; };
 
-variableVal returns [FeatureValueBase fv]: 
+variableVal returns [IMatchCombine fv]: 
     '$' feature { $fv = $feature.f.VariableValue; };
+
+/* the bareVal can be a unary match or a node-exists match. it exists here to
+ * help the parser handle the ambiguity that otherwise results. 
+ */
+bareVal returns [IMatchable fv]:
+    feature 
+    {
+        if ($feature.f is NodeFeature) $fv = ($feature.f as NodeFeature).ExistsValue;
+        else $fv = ($feature.f as UnaryFeature).Value;
+    }
+    ;
 
 /* Parameters */
 
