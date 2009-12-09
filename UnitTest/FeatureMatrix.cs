@@ -21,7 +21,7 @@ namespace Phonix.UnitTest
                     FeatureValue[] fvs = new FeatureValue[] 
                     {
                         fs.Get<UnaryFeature>("un").Value,
-                        fs.Get<UnaryFeature>("un2").NullValue,
+                        fs.Get<UnaryFeature>("un2").NullValue.GetValues(null).First(),
                         fs.Get<BinaryFeature>("bn").PlusValue,
                         fs.Get<BinaryFeature>("bn2").MinusValue,
                         fs.Get<ScalarFeature>("sc").Value(1),

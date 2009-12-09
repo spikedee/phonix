@@ -27,7 +27,7 @@ namespace Phonix
             }
 
             Phonology phono = new Phonology();
-            var logger = new Logger(config.LogLevel, config.WarningLevel, Console.Error);
+            var logger = new Logger(config.LogLevel, config.WarningLevel, Console.Error, phono);
             logger.Start();
 
             try
@@ -123,7 +123,7 @@ namespace Phonix
                         case "--out":
                         {
                             string file = args[++i];
-                            rv.Writer = new StreamWriter(File.OpenWrite(file));
+                            rv.Writer = File.CreateText(file);
                             break;
                         }
 

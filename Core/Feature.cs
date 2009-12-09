@@ -12,13 +12,18 @@ namespace Phonix
         protected Feature(string name)
         {
             Name = name;
-            NullValue = new NullFeatureValue(this);
-            VariableValue = GetVariable();
+            NullValue = GetNullValue();
+            VariableValue = GetVariableValue();
         }
 
-        protected virtual IMatchCombine GetVariable()
+        protected virtual IMatchCombine GetVariableValue()
         {
             return new VariableFeatureValue(this);
+        }
+
+        protected virtual IMatchCombine GetNullValue()
+        {
+            return new NullFeatureValue(this);
         }
 
         public override string ToString()
@@ -77,7 +82,7 @@ namespace Phonix
             }
         }
 
-        public readonly FeatureValue NullValue;
+        public readonly IMatchCombine NullValue;
 
         public readonly IMatchCombine VariableValue;
 
@@ -179,9 +184,14 @@ namespace Phonix
             ExistsValue = new NodeExistsValue(this);
         }
 
-        override protected IMatchCombine GetVariable()
+        override protected IMatchCombine GetVariableValue()
         {
             return new NodeVariableValue(this);
+        }
+
+        override protected IMatchCombine GetNullValue()
+        {
+            return new NodeNullValue(this);
         }
 
         private class NodeExistsValue : AbstractFeatureValue, IMatchable
@@ -198,7 +208,14 @@ namespace Phonix
             {
                 foreach (var feature in _node.Children)
                 {
-                    if (matrix[feature] != feature.NullValue)
+                    if (feature is NodeFeature)
+                    {
+                        if ((feature as NodeFeature).ExistsValue.Matches(ctx, matrix))
+                        {
+                            return true;
+                        }
+                    }
+                    else if (matrix[feature] != feature.NullValue)
                     {
                         return true;
                     }
@@ -207,8 +224,39 @@ namespace Phonix
             }
         }
 
-        // this class is only intended to be used as the VariableValue for
-        // NodeFeature objects
+        private class NodeNullValue : AbstractFeatureValue, IMatchCombine
+        {
+            private readonly NodeFeature _node;
+
+            public NodeNullValue(NodeFeature f)
+                : base(f, "*" + f.Name)
+            {
+                _node = f;
+            }
+
+            public bool Matches(RuleContext ctx, FeatureMatrix matrix)
+            {
+                foreach (var feature in _node.Children)
+                {
+                    if (!feature.NullValue.Matches(ctx, matrix))
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            public IEnumerable<FeatureValue> GetValues(RuleContext ctx)
+            {
+                var list = new List<FeatureValue>();
+                foreach (var feature in _node.Children)
+                {
+                    list.AddRange(feature.NullValue.GetValues(ctx));
+                }
+                return list;
+            }
+        }
+
         private class NodeVariableValue : AbstractFeatureValue, IMatchCombine
         {
             private readonly NodeFeature _node;

@@ -71,7 +71,8 @@ namespace Phonix
                 }
                 else
                 {
-                    return f.NullValue;
+                    // a FeatureValue is guaranteed to only return a single value
+                    return f.NullValue.GetValues(null).First();
                 }
             }
         }

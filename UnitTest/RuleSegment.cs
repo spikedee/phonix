@@ -98,11 +98,11 @@ namespace Phonix.UnitTest
         }
 
         [Test]
-        public void FeatureMatrixMatches()
+        public void ActionMatches()
         {
             var match = new MatrixMatcher(FeatureMatrixTest.MatrixA);
             var combo = SymbolTest.SymbolC;
-            var seg = new FeatureMatrixSegment(match, combo);
+            var seg = new ActionSegment(match, combo);
 
             VerifyMatches(
                     seg, 
@@ -114,11 +114,11 @@ namespace Phonix.UnitTest
         }
 
         [Test]
-        public void FeatureMatrixCombine()
+        public void ActionCombine()
         {
             var match = new MatrixMatcher(FeatureMatrixTest.MatrixA);
             var combo = SymbolTest.SymbolC;
-            var seg = new FeatureMatrixSegment(match, combo);
+            var seg = new ActionSegment(match, combo);
 
             VerifyCombine(
                     seg, 
@@ -137,7 +137,7 @@ namespace Phonix.UnitTest
                     fs.Get<Feature>("un").VariableValue,
                     fs.Get<Feature>("sc").VariableValue
                     });
-            var seg = new FeatureMatrixSegment(match, MatrixCombiner.NullCombiner);
+            var seg = new ContextSegment(match);
 
             VerifyMatches(
                     seg, 
@@ -155,7 +155,7 @@ namespace Phonix.UnitTest
             var un = fs.Get<UnaryFeature>("un");
             var sc = fs.Get<ScalarFeature>("sc");
             var combo = new MatrixCombiner(new ICombinable[] { un.VariableValue, sc.VariableValue });
-            var seg = new FeatureMatrixSegment(MatrixMatcher.AlwaysMatches, combo);
+            var seg = new ActionSegment(MatrixMatcher.AlwaysMatches, combo);
 
             var expectedSecond = new FeatureMatrix(new FeatureValue[] {
                         un.Value,

@@ -169,8 +169,8 @@ namespace Phonix.UnitTest
 
             Rule rule = new Rule(
                     "test", 
-                    new IRuleSegment[] { new FeatureMatrixSegment(MatrixMatcher.AlwaysMatches, MatrixCombiner.NullCombiner) },
-                    new IRuleSegment[] { new FeatureMatrixSegment(MatrixMatcher.NeverMatches, MatrixCombiner.NullCombiner) }
+                    new IRuleSegment[] { new ActionSegment(MatrixMatcher.AlwaysMatches, MatrixCombiner.NullCombiner) },
+                    new IRuleSegment[] { new ActionSegment(MatrixMatcher.NeverMatches, MatrixCombiner.NullCombiner) }
                     );
             Word word = WordTest.GetTestWord();
 

@@ -1,6 +1,7 @@
+using Phonix;
 using System;
 using System.Collections.Generic;
-using Phonix;
+using System.Linq;
 
 namespace Phonix.UnitTest
 {
@@ -69,6 +70,10 @@ namespace Phonix.UnitTest
 
             Assert.IsTrue(node.ExistsValue.Matches(null, FeatureMatrixTest.MatrixA));
             Assert.IsFalse(node.ExistsValue.Matches(null, FeatureMatrixTest.MatrixB));
+
+            var root = fs.Get<NodeFeature>("ROOT");
+            Assert.IsTrue(root.ExistsValue.Matches(null, FeatureMatrixTest.MatrixA));
+            Assert.IsTrue(root.ExistsValue.Matches(null, FeatureMatrixTest.MatrixB));
         }
 
         [Test]
@@ -84,6 +89,20 @@ namespace Phonix.UnitTest
             Assert.IsTrue(node.VariableValue.Matches(ctx, FeatureMatrixTest.MatrixA));
             Assert.IsFalse(node.VariableValue.Matches(ctx, FeatureMatrixTest.MatrixB));
             Assert.IsFalse(node.VariableValue.Matches(ctx, FeatureMatrixTest.MatrixC));
+        }
+
+        [Test]
+        public void NodeNull()
+        {
+            var fs = FeatureSetTest.GetTestSet();
+            var node = fs.Get<NodeFeature>("Node2");
+
+            var values = node.NullValue.GetValues(null);
+            Assert.AreEqual(node.Children.Count(), values.Count());
+            foreach (var child in values)
+            {
+                Assert.AreEqual(child.Feature.NullValue, child);
+            }
         }
     }
 }

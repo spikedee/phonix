@@ -25,12 +25,36 @@ namespace Phonix
     
     }
 
-    public class FeatureMatrixSegment : IRuleSegment
+    public class ContextSegment : IRuleSegment
+    {
+        private readonly IMatrixMatcher _match;
+
+        public ContextSegment(IMatrixMatcher match)
+        {
+            _match = match;
+        }
+
+        public bool Matches(RuleContext ctx, SegmentEnumerator pos)
+        {
+            if (pos.MoveNext() && _match.Matches(ctx, pos.Current))
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public void Combine(RuleContext ctx, MutableSegmentEnumerator pos)
+        {
+            pos.MoveNext();
+        }
+    }
+
+    public class ActionSegment : IRuleSegment
     {
         private readonly IMatrixMatcher _match;
         private readonly IMatrixCombiner _combo;
 
-        public FeatureMatrixSegment(IMatrixMatcher match, IMatrixCombiner combo)
+        public ActionSegment(IMatrixMatcher match, IMatrixCombiner combo)
         {
             _match = match;
             _combo = combo;

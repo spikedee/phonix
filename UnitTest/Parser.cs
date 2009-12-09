@@ -25,16 +25,8 @@ namespace Phonix.UnitTest
 
         public void ApplyRules(Phonology phono, string input, string expectedOutput)
         {
-            Action<Rule, Word, IWordSlice> tracer = (rule, w, slice) =>
-            {
-                Console.WriteLine("{0} applied", rule.Name);
-                foreach (var seg in w)
-                {
-                    Console.WriteLine("{0} : {1}", phono.SymbolSet.Spell(seg), seg);
-                }
-            };
-
-            Trace.OnRuleApplied += tracer;
+            var log = new Logger(Level.Verbose, Level.Error, Console.Out, phono);
+            log.Start();
 
             try
             {
@@ -45,7 +37,7 @@ namespace Phonix.UnitTest
             }
             finally
             {
-                Trace.OnRuleApplied -= tracer;
+                log.Stop();
             }
         }
 
@@ -102,20 +94,20 @@ namespace Phonix.UnitTest
         [Test]
         public void NodeFeature()
         {
-            var phono = ParseWithStdImports("feature Coronal (type=node children=ant,dist)");
+            var phono = ParseWithStdImports("feature Height (type=node children=hi,lo)");
             Assert.IsTrue(phono.FeatureSet.Has<NodeFeature>("Coronal"));
 
-            var node = phono.FeatureSet.Get<NodeFeature>("Coronal");
+            var node = phono.FeatureSet.Get<NodeFeature>("Height");
             var children = new List<Feature>(node.Children);
-            Assert.IsTrue(children.Contains(phono.FeatureSet.Get<Feature>("ant")));
-            Assert.IsTrue(children.Contains(phono.FeatureSet.Get<Feature>("dist")));
+            Assert.IsTrue(children.Contains(phono.FeatureSet.Get<Feature>("hi")));
+            Assert.IsTrue(children.Contains(phono.FeatureSet.Get<Feature>("lo")));
         }
 
         [Test]
         public void NodeExistsInRule()
         {
             var phono = ParseWithStdImports(
-                    @" feature Coronal (type=node children=ant,dist) rule coronal-test [Coronal] => [+vc]");
+                    @"rule coronal-test [Coronal] => [+vc]");
             ApplyRules(phono, "ptk", "pdk");
         }
 
@@ -123,8 +115,16 @@ namespace Phonix.UnitTest
         public void NodeVariableInRule()
         {
             var phono = ParseWithStdImports(
-                    @" feature Coronal (type=node children=ant,dist) rule coronal-test [] => [$Coronal] / _ [$Coronal -vc]");
+                    @"rule coronal-test [] => [$Coronal] / _ [$Coronal -vc]");
             ApplyRules(phono, "TCg", "CCg");
+        }
+
+        [Test]
+        public void NodeNullInRule()
+        {
+            var phono = ParseWithStdImports(
+                    @"rule coronal-null [Coronal] => [*Place] / _ ");
+            ApplyRules(phono, "fTx", "fhx");
         }
 
         [Test]

@@ -8,6 +8,8 @@ namespace Phonix
 {
     public class Symbol : IMatrixMatcher, IMatrixCombiner
     {
+        public static readonly Symbol Unknown = new Symbol("[?]", FeatureMatrix.Empty);
+
         public readonly string Label;
         public readonly FeatureMatrix FeatureMatrix;
 

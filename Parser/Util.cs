@@ -131,7 +131,7 @@ namespace Phonix.Parse
             {
                 // always add a non-matching segment to the excluded context if it's null
                 excluded = new RuleContext();
-                excluded.Right.Add(new FeatureMatrixSegment(MatrixMatcher.NeverMatches, MatrixCombiner.NullCombiner));
+                excluded.Right.Add(new ContextSegment(MatrixMatcher.NeverMatches));
             }
 
             // add the context segments into their list
@@ -240,7 +240,7 @@ namespace Phonix.Parse
                 }
                 else
                 {
-                    result.Add(new FeatureMatrixSegment(leftObj.Current, rightObj.Current));
+                    result.Add(new ActionSegment(leftObj.Current, rightObj.Current));
                 }
             }
 

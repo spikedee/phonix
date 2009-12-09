@@ -17,12 +17,14 @@ namespace Phonix
         public readonly Level LogLevel;
         public readonly Level ErrorLevel;
         public readonly TextWriter Writer;
+        private readonly Phonology _phono;
 
-        public Logger(Level logLevel, Level errorLevel, TextWriter writer)
+        public Logger(Level logLevel, Level errorLevel, TextWriter writer, Phonology phono)
         {
             LogLevel = logLevel;
             ErrorLevel = errorLevel;
             Writer = writer;
+            _phono = phono;
         }
 
         public void Start()
@@ -107,17 +109,57 @@ namespace Phonix
 
         private void LogRuleEntered(Rule rule, Word word)
         {
-            Log(Level.Verbose, "rule {0} entered: {1}", rule, word);
+            Log(Level.Verbose, "rule {0} entered", rule);
         }
 
         private void LogRuleExited(Rule rule, Word word)
         {
-            Log(Level.Verbose, "rule {0} exited: {1}", rule, word);
+            Log(Level.Verbose, "rule {0} exited", rule);
         }
 
         private void LogRuleApplied(Rule rule, Word word, IWordSlice slice)
         {
-            Log(Level.Info, "rule {0} applied: {1} (applied at {2})", rule, word, slice);
+            // since this method is potentially expensive, skip it if we're not
+            // going to log anything
+            if (this.LogLevel < Level.Info)
+            {
+                return;
+            }
+
+            Log(Level.Info, "rule {0} applied", rule);
+
+            // match until we get to the current segmet
+            var ctx = new RuleContext();
+            var seg = rule.Segments.GetEnumerator();
+            var pos = slice.GetEnumerator();
+            while (seg.MoveNext() && seg.Current is ContextSegment)
+            {
+                seg.Current.Matches(ctx, pos);
+            }
+
+            // match one more time to move onto the affected segment
+            var current = pos.MoveNext() ? pos.Current : null;
+
+            foreach (var fm in word)
+            {
+                var str = new StringBuilder();
+                if (current != null && fm == current)
+                {
+                    str.Append("> ");
+                }
+                Symbol symbol;
+                try
+                {
+                    symbol = _phono.SymbolSet.Spell(fm);
+                }
+                catch (SpellingException)
+                {
+                    symbol = Symbol.Unknown;
+                }
+                str.Append("{0} : {1}");
+
+                Log(Level.Info, str.ToString(), symbol, fm);
+            }
         }
 
         private void LogUndefinedVariableUsed(AbstractFeatureValue fv)

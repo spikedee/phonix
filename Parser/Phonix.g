@@ -251,9 +251,9 @@ rightContextTerm returns [IEnumerable<IRuleSegment> segs]:
 contextTerm returns [IEnumerable<IRuleSegment> segs]
         @init { $segs = new List<IRuleSegment>(); }:
         matchableMatrix 
-        { $segs = new IRuleSegment[] { new FeatureMatrixSegment(new MatrixMatcher($matchableMatrix.val), MatrixCombiner.NullCombiner) }; }
+        { $segs = new IRuleSegment[] { new ContextSegment(new MatrixMatcher($matchableMatrix.val)) }; }
     |   symbolStr
-        { $segs = $symbolStr.slist.ConvertAll<IRuleSegment>(s => new FeatureMatrixSegment(s, MatrixCombiner.NullCombiner)); }
+        { $segs = $symbolStr.slist.ConvertAll<IRuleSegment>(s => new ContextSegment(s)); }
     ;
 
 lBound returns [IRuleSegment seg]: 
@@ -265,7 +265,7 @@ rBound returns [IRuleSegment seg]:
 /* Feature matrices */
 
 matrix returns [FeatureMatrix fm] 
-    @init { List<FeatureValue> fvList = new List<FeatureValue>(); }:
+    @init { var fvList = new List<FeatureValue>(); }:
     LBRACE (featureVal { fvList.Add($featureVal.fv); })* RBRACE
     { $fm = new FeatureMatrix(fvList); }
     ;
@@ -292,7 +292,14 @@ featureVal returns [FeatureValue fv]:
         scalarVal { $fv = $scalarVal.fv; }
     |   binaryVal { $fv = $binaryVal.fv; }
     |   unaryVal { $fv = $unaryVal.fv; }
-    |   nullVal { $fv = $nullVal.fv; }
+    |   nullVal 
+        { 
+            if (!($nullVal.fv is FeatureValue))
+            {
+                throw new FeatureTypeException($nullVal.text, "null leaf feature");
+            }
+            $fv = $nullVal.fv as FeatureValue;
+        }
     ;
 
 matchableVal returns [IMatchable fv]:
@@ -323,7 +330,7 @@ binaryVal returns [FeatureValue fv]:
 unaryVal returns [FeatureValue fv]: 
     unaryFeature { $fv = $unaryFeature.f.Value; };
 
-nullVal returns [FeatureValue fv]:
+nullVal returns [IMatchCombine fv]:
     NULL feature { $fv = $feature.f.NullValue; };
 
 variableVal returns [IMatchCombine fv]: 
