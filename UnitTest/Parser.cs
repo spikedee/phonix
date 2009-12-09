@@ -186,5 +186,37 @@ namespace Phonix.UnitTest
             var phono = ParseWithStdImports("rule ex a => b / _ c / a _ ");
             ApplyRules(phono, "aac", "aac");
         }
+
+        [Test]
+        public void Insert()
+        {
+            // middle
+            var phono = ParseWithStdImports("rule insert * => a / b _ b");
+            ApplyRules(phono, "bb", "bab");
+
+            // beginning
+            phono = ParseWithStdImports("rule insert * => a / _ bb");
+            ApplyRules(phono, "bb", "abb");
+
+            // end
+            phono = ParseWithStdImports("rule insert * => a / bb _");
+            ApplyRules(phono, "bb", "bba");
+        }
+
+        [Test]
+        public void Delete()
+        {
+            // middle
+            var phono = ParseWithStdImports("rule delete a => * / b _ b");
+            ApplyRules(phono, "bab", "bb");
+
+            // beginning
+            phono = ParseWithStdImports("rule delete a => * / _ bb");
+            ApplyRules(phono, "abb", "bb");
+
+            // end
+            phono = ParseWithStdImports("rule delete a => * / bb _");
+            ApplyRules(phono, "bba", "bb");
+        }
     }
 }

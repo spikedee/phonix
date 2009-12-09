@@ -54,6 +54,19 @@ namespace Phonix
 
             public WordSegment(LinkedListNode<FeatureMatrix> node, IMatrixMatcher filter)
             {
+                if (node == null)
+                {
+                    throw new ArgumentNullException("node");
+                }
+                if (filter == null)
+                {
+                    throw new ArgumentNullException("filter");
+                }
+                if (node.List == null)
+                {
+                    throw new SegmentDeletedException();
+                }
+
                 _startNode = node;
                 _lastNode = node.List.Last;
                 _filter = filter;

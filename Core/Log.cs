@@ -128,17 +128,27 @@ namespace Phonix
 
             Log(Level.Info, "rule {0} applied", rule);
 
-            // match until we get to the current segmet
+            // match until we get to the current segment, so that we can
+            // display which segment was acted upon
             var ctx = new RuleContext();
             var seg = rule.Segments.GetEnumerator();
-            var pos = slice.GetEnumerator();
-            while (seg.MoveNext() && seg.Current is ContextSegment)
+            FeatureMatrix current = null;
+            try
             {
-                seg.Current.Matches(ctx, pos);
-            }
+                var pos = slice.GetEnumerator();
+                while (seg.MoveNext() && seg.Current is ContextSegment)
+                {
+                    seg.Current.Matches(ctx, pos);
+                }
 
-            // match one more time to move onto the affected segment
-            var current = pos.MoveNext() ? pos.Current : null;
+                current = pos.MoveNext() ? pos.Current : null;
+            }
+            catch (SegmentDeletedException)
+            {
+                // this occurs when we try to get the enumerator for a deleted
+                // segment. this exception (and only this exception) can be
+                // safely swallowed
+            }
 
             foreach (var fm in word)
             {

@@ -54,6 +54,14 @@ namespace Phonix
         }
     }
 
+    public class SegmentDeletedException : PhonixException
+    {
+        public SegmentDeletedException()
+            : base("An attempt was made to access a segment which was deleted.")
+        {
+        }
+    }
+
     public class ParseException : Exception
     {
         public ParseException(string file)
