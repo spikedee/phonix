@@ -89,6 +89,24 @@ namespace Phonix.UnitTest
             Assert.IsTrue(node.VariableValue.Matches(ctx, FeatureMatrixTest.MatrixA));
             Assert.IsFalse(node.VariableValue.Matches(ctx, FeatureMatrixTest.MatrixB));
             Assert.IsFalse(node.VariableValue.Matches(ctx, FeatureMatrixTest.MatrixC));
+
+            foreach (var fv in node.VariableValue.GetValues(ctx))
+            {
+                Assert.AreSame(FeatureMatrixTest.MatrixA[fv.Feature], fv);
+            }
+
+            var root = fs.Get<NodeFeature>("ROOT");
+            Assert.IsTrue(root.VariableValue.Matches(ctx, FeatureMatrixTest.MatrixA));
+            Assert.IsTrue(ctx.VariableNodes.ContainsKey(root));
+
+            Assert.IsTrue(root.VariableValue.Matches(ctx, FeatureMatrixTest.MatrixA));
+            Assert.IsFalse(root.VariableValue.Matches(ctx, FeatureMatrixTest.MatrixB));
+            Assert.IsFalse(root.VariableValue.Matches(ctx, FeatureMatrixTest.MatrixC));
+
+            foreach (var fv in root.VariableValue.GetValues(ctx))
+            {
+                Assert.AreSame(FeatureMatrixTest.MatrixA[fv.Feature], fv);
+            }
         }
 
         [Test]

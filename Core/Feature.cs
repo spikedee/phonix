@@ -177,6 +177,26 @@ namespace Phonix
 
         public readonly IMatchable ExistsValue;
 
+        public IEnumerable<Feature> NonNodeDescendants
+        {
+            get
+            {
+                var flist = new List<Feature>();
+                foreach (var f in Children)
+                {
+                    if (f is NodeFeature)
+                    {
+                        flist.AddRange((f as NodeFeature).NonNodeDescendants);
+                    }
+                    else
+                    {
+                        flist.Add(f);
+                    }
+                }
+                return flist;
+            }
+        }
+
         public NodeFeature(string name, IEnumerable<Feature> children)
             : base(name)
         {
@@ -206,21 +226,7 @@ namespace Phonix
 
             public bool Matches(RuleContext ctx, FeatureMatrix matrix)
             {
-                foreach (var feature in _node.Children)
-                {
-                    if (feature is NodeFeature)
-                    {
-                        if ((feature as NodeFeature).ExistsValue.Matches(ctx, matrix))
-                        {
-                            return true;
-                        }
-                    }
-                    else if (matrix[feature] != feature.NullValue)
-                    {
-                        return true;
-                    }
-                }
-                return false;
+                return !_node.NullValue.Matches(ctx, matrix);
             }
         }
 
@@ -282,7 +288,7 @@ namespace Phonix
                 else
                 {
                     var list = new List<FeatureValue>();
-                    foreach (var feature in _node.Children)
+                    foreach (var feature in _node.NonNodeDescendants)
                     {
                         list.Add(matrix[feature]);
                     }

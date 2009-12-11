@@ -50,7 +50,7 @@ catch (RecognitionException re)
 {
     _parseError = true;
     Console.Error.WriteLine(String.Format(
-        "couldn't parse {0} at {1} line {2} char {3}", 
+        "Couldn't parse {0} at {1} line {2} char {3}", 
         GetTokenErrorDisplay(re.Token), 
         _currentFile, 
         re.Line,
