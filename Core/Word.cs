@@ -283,17 +283,14 @@ namespace Phonix
             {
                 if (this == Word.LeftBoundary)
                 {
-                    if (segment.MoveNext() && segment.IsFirst)
-                    {
-                        // move back to undo this move
-                        segment.MovePrev();
-                        return true;
-                    }
-                    return false;
+                    segment.MoveNext();
+                    return !segment.MovePrev();
                 }
                 else if (this == Word.RightBoundary)
                 {
-                    return segment.IsLast && !segment.MoveNext();
+                    bool match = !segment.MoveNext();
+                    segment.MovePrev();
+                    return match;
                 }
                 return false;
             }

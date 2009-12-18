@@ -377,5 +377,44 @@ namespace Phonix.UnitTest
             Assert.AreSame(FeatureMatrixTest.MatrixC, sliceIter.Current, "next iter is C");
             Assert.IsTrue(Word.RightBoundary.Matches(null, sliceIter), "right boundary matches at last segment");
         }
+
+        [Test]
+        public void LeftBoundaryFiltered()
+        {
+            var word = GetTestWord();
+            var fs = FeatureSetTest.GetTestSet();
+            var filter = new MatrixMatcher(new IMatchable[] { fs.Get<Feature>("bn2").NullValue });
+
+            var iter = word.GetSliceEnumerator(Direction.Rightward, filter);
+            iter.MoveNext();
+
+            var slice = iter.Current;
+            var sliceIter = slice.GetEnumerator();
+
+            Assert.IsTrue(Word.LeftBoundary.Matches(null, sliceIter), "left boundary matches at first segment");
+            Assert.IsTrue(sliceIter.MoveNext(), "first MoveNext()");
+            Assert.AreSame(FeatureMatrixTest.MatrixB, sliceIter.Current, "next iter is B");
+            Assert.IsFalse(Word.LeftBoundary.Matches(null, sliceIter), "left boundary doesn't match after first segment");
+        }
+
+        [Test]
+        public void RightBoundaryFiltered()
+        {
+            var word = GetTestWord();
+            var fs = FeatureSetTest.GetTestSet();
+            var filter = new MatrixMatcher(new IMatchable[] { fs.Get<BinaryFeature>("bn").PlusValue });
+
+            var iter = word.GetSliceEnumerator(Direction.Rightward, filter);
+            iter.MoveNext(); // get one segment into the slice
+
+            var slice = iter.Current;
+            var sliceIter = slice.GetEnumerator();
+            sliceIter.MoveNext();
+
+            Assert.IsFalse(Word.RightBoundary.Matches(null, sliceIter), "right boundary doesn't match before last segment");
+            Assert.IsTrue(sliceIter.MoveNext(), "first MoveNext()");
+            Assert.AreSame(FeatureMatrixTest.MatrixB, sliceIter.Current, "next iter is B");
+            Assert.IsTrue(Word.RightBoundary.Matches(null, sliceIter), "right boundary matches at last segment");
+        }
     }
 }
