@@ -89,7 +89,7 @@ namespace Phonix
 
         private void LogSymbolRedefined(Symbol old, Symbol newer)
         {
-            Log(Level.Warning, "symbol {0} overwrites {1}", newer, old);
+            Log(Level.Warning, "symbol {0} changed from {1} to {2}", old.Label, old.FeatureMatrix, newer.FeatureMatrix);
         }
 
         private void LogSymbolDuplicate(Symbol old, Symbol newer)
@@ -104,7 +104,7 @@ namespace Phonix
 
         private void LogRuleRedefined(Rule old, Rule newer)
         {
-            Log(Level.Warning, "rule {0} overwrites {1}", newer, old);
+            Log(Level.Warning, "rule {0} redefined", newer, old);
         }
 
         private void LogRuleEntered(Rule rule, Word word)
