@@ -13,8 +13,6 @@ namespace Phonix
         public readonly string Label;
         public readonly FeatureMatrix FeatureMatrix;
 
-        private readonly MatrixMatcher _matcher;
-
         public Symbol(string label, FeatureMatrix fm)
         {
             if (label == null || fm == null)
@@ -24,7 +22,6 @@ namespace Phonix
 
             Label = label;
             FeatureMatrix = fm;
-            _matcher = new MatrixMatcher(fm);
         }
 
         public override string ToString()
@@ -34,7 +31,7 @@ namespace Phonix
 
         public bool Matches(RuleContext ctx, FeatureMatrix matrix)
         {
-            return _matcher.Matches(ctx, matrix);
+            return FeatureMatrix.Equals(matrix);
         }
 
         public FeatureMatrix Combine(RuleContext ctx, FeatureMatrix matrix)
@@ -42,7 +39,7 @@ namespace Phonix
             return FeatureMatrix;
         }
 
-#region IEnumerable(AbstractFeatureValue) members
+#region IEnumerable members
 
         IEnumerator<IMatchable> IEnumerable<IMatchable>.GetEnumerator()
         {
@@ -105,24 +102,14 @@ namespace Phonix
 
         public Symbol Spell(FeatureMatrix matrix)
         {
-            int hiweight = 0;
-            Symbol match = null;
-
             foreach (var s in this.Values)
             {
-                if (s.Matches(null, matrix) && s.FeatureMatrix.Weight >= hiweight)
+                if (s.Matches(null, matrix))
                 {
-                    hiweight = s.FeatureMatrix.Weight;
-                    match = s;
+                    return s;
                 }
             }
-
-            if (match == null)
-            {
-                throw new SpellingException("Unable to match any symbol to " + matrix);
-            }
-
-            return match;
+            throw new SpellingException("Unable to match any symbol to " + matrix);
         }
 
         public List<Symbol> Spell(IEnumerable<FeatureMatrix> segments)

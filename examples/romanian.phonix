@@ -28,10 +28,10 @@ symbol u' [+syll -cons +son +hi -lo -fr +bk +ro +stress]
 symbol 1' [+syll -cons +son +hi -lo -fr -bk +stress]
 
 # Non-syllabic vocoids
-symbol e` [-syll -cons +son -hi -lo +fr -bk]
-symbol o` [-syll -cons +son -hi -lo -fr +bk +ro]
-symbol j  [-syll -cons +son +hi -lo +fr -bk]
-symbol w  [-syll -cons +son +hi -lo -fr +bk +ro]
+symbol e` [-syll -cons +son -hi -lo +fr -bk -stress]
+symbol o` [-syll -cons +son -hi -lo -fr +bk +ro -stress]
+symbol j  [-syll -cons +son +hi -lo +fr -bk -stress]
+symbol w  [-syll -cons +son +hi -lo -fr +bk +ro -stress]
 
 # Labials
 symbol p  [+cons +ro -son]
@@ -68,7 +68,7 @@ symbol h  [+cons -son +hi +cont]
 
 # Reduce i/u to semivowels where appropriate
 rule make-semivowels
-[+hi] => [-syll] / [+syll] _
+[+hi +syll] => [-syll] / [+syll] _
 
 # Stress all penult syllables. This rule illustrates two interesting
 # techniques. First, it specifies a filter of [+syll], which means that the
@@ -88,7 +88,7 @@ rule initial-iotacization
 
 # Palatalize velars before front vowels
 rule palatalize-velars
-[+cons +hi] => [-ant +dist +dr] / _ [+fr]
+[+cons +hi] => [-ant +dist +dr *hi] / _ [+fr]
 
 # Palatalize dental fricatives before high front vowels
 rule palatalize-dentals
@@ -100,7 +100,7 @@ rule assimilate-palatals
 
 # Affricate dental stops before /i/
 rule affricate-dentals
-[+cons +ant] => [+dr] / _ i
+[+cons +ant -son] => [+dr] / _ i
 
 # Simplify /dz/
 rule simplify-dz
@@ -149,7 +149,7 @@ a' => @' / _m $
 # Break stressed mid vowels into semivowel + a when the next syllable contains
 # a non-high vowel
 rule breaking (filter=[+syll])
-[-hi -lo +stress] * => [-syll *stress] a' / _ [-hi *ro]
+[-hi -lo +stress] * => [-syll -stress] a' / _ [-hi *ro]
 
 # Assimilate /ea/ followed by /e/
 rule assimilate-ea (filter=[-cons])
