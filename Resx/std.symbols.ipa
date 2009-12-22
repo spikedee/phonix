@@ -1,0 +1,171 @@
+### CONSONANTS ###
+
+## Obstruents ##
+
+# Labial #
+
+symbol p   [+cons -son -cont -str -vc -ro]
+symbol ɸ   [+cons -son +cont -str -vc -ro]
+symbol f   [+cons -son +cont +str -vc -ro]
+symbol b   [+cons -son -cont -str +vc -ro]
+symbol β   [+cons -son +cont -str +vc -ro]
+symbol v   [+cons -son +cont +str +vc -ro]
+
+# Dental #
+
+symbol t̪   [+cons -son -cont -str -vc +ant +dist]
+symbol θ   [+cons -son +cont -str -vc +ant +dist]
+symbol s̪   [+cons -son +cont +str -vc +ant +dist]
+symbol d̪   [+cons -son -cont -str +vc +ant +dist]
+symbol ð   [+cons -son +cont -str +vc +ant +dist]
+symbol z̪   [+cons -son +cont +str +vc +ant +dist]
+
+# Alveolar #
+
+symbol t   [+cons -son -cont -str -vc +ant -dist]
+symbol s   [+cons -son +cont +str -vc +ant -dist]
+symbol d   [+cons -son -cont -str +vc +ant -dist]
+symbol z   [+cons -son +cont +str +vc +ant -dist]
+
+# Palatal #
+
+symbol c   [+cons -son -cont -str -vc -ant +dist]
+symbol ç   [+cons -son +cont -str -vc -ant +dist]
+symbol ʃ   [+cons -son +cont +str -vc -ant +dist]
+symbol ɟ   [+cons -son -cont -str +vc -ant +dist]
+symbol ʝ   [+cons -son +cont -str +vc -ant +dist]
+symbol ʒ   [+cons -son +cont +str +vc -ant +dist]
+
+# Retroflex #
+
+symbol ʈ   [+cons -son -cont -str -vc -ant -dist]
+symbol ʂ   [+cons -son +cont +str -vc -ant -dist]
+symbol ɖ   [+cons -son -cont -str +vc -ant -dist]
+symbol ʐ   [+cons -son +cont +str +vc -ant -dist]
+
+# Velar #
+
+symbol k   [+cons -son -cont -str -vc +bk -lo +hi]
+symbol x   [+cons -son +cont -str -vc +bk -lo +hi]
+symbol g   [+cons -son -cont -str +vc +bk -lo +hi]
+symbol ɣ   [+cons -son +cont -str +vc +bk -lo +hi]
+
+# Uvular #
+
+symbol q   [+cons -son -cont -str -vc +bk -lo -hi]
+symbol χ   [+cons -son +cont -str -vc +bk -lo -hi]
+symbol ɢ   [+cons -son -cont -str +vc +bk -lo -hi]
+symbol ʁ   [+cons -son +cont -str +vc +bk -lo -hi]
+
+# Pharyngeal #
+
+symbol ħ   [+cons -son +cont -str -vc +bk +lo -hi]
+symbol ʕ   [+cons -son +cont -str +vc +bk +lo -hi]
+
+# Glottal #
+
+symbol ʔ   [+cons -son -cont -str -vc]
+symbol h   [+cons -son +cont -str -vc]
+symbol ɦ   [+cons -son +cont -str +vc]
+
+## Sonorants ##
+
+# Labial #
+
+symbol m   [+cons +son -cont +nas -lat -ro]
+symbol β̞   [-cons +son +cont -nas -lat -ro]
+symbol ʙ   [+cons +son +cont -nas -lat -ro]
+
+# Dental #
+
+symbol n̪   [+cons +son -cont +nas -lat +ant +dist]
+symbol l̪   [+cons +son -cont -nas +lat +ant +dist]
+
+# Alveolar #
+
+symbol n   [+cons +son -cont +nas -lat +ant -dist]
+symbol l   [+cons +son -cont -nas +lat +ant -dist]
+symbol ɾ   [+cons +son -cont -nas -lat +ant -dist]
+symbol r   [+cons +son +cont -nas -lat +ant -dist]
+symbol ɹ   [-cons +son +cont -nas -lat +ant -dist]
+
+# Retroflex #
+
+symbol ɳ   [+cons +son -cont +nas -lat -ant -dist]
+symbol ɭ   [+cons +son -cont -nas +lat -ant -dist]
+
+# Postalveolar #
+
+symbol ɲ   [+cons +son -cont +nas -lat -ant +dist]
+symbol ʎ   [+cons +son -cont -nas +lat -ant +dist]
+
+# Velar #
+
+symbol ŋ   [+cons +son -cont +nas -lat +bk -lo +hi]
+symbol ʟ   [+cons +son -cont -nas +lat +bk -lo +hi]
+
+# Uvular #
+
+symbol ɴ   [+cons +son -cont +nas -lat +bk -lo -hi]
+symbol ʀ   [+cons +son +cont -nas -lat +bk -lo -hi]
+
+### Vocoids ###
+
+## Vowels ##
+
+# High tense #
+
+symbol i   [-cons +son +syll +fr -bk +hi -lo +str]
+symbol y   [-cons +son +syll +fr -bk +hi -lo +ro +str]
+symbol ɨ   [-cons +son +syll -fr -bk +hi -lo +str]
+symbol ʉ   [-cons +son +syll -fr -bk +hi -lo +ro +str]
+symbol ɯ   [-cons +son +syll -fr +bk +hi -lo +str]
+symbol u   [-cons +son +syll -fr +bk +hi -lo +ro +str]
+
+# High lax #
+
+symbol ɪ   [-cons +son +syll +fr -bk +hi -lo -str]
+symbol ʏ   [-cons +son +syll +fr -bk +hi -lo +ro -str]
+symbol ᵻ   [-cons +son +syll -fr -bk +hi -lo -str]
+symbol ᵿ   [-cons +son +syll -fr -bk +hi -lo +ro -str]
+symbol ʊ   [-cons +son +syll -fr +bk +hi -lo +ro -str]
+
+# High mid #
+
+symbol e   [-cons +son +syll +fr -bk -hi -lo +str]
+symbol ø   [-cons +son +syll +fr -bk -hi -lo +ro +str]
+symbol ɘ   [-cons +son +syll -fr -bk -hi -lo +str]
+symbol ɵ   [-cons +son +syll -fr -bk -hi -lo +ro +str]
+symbol ɤ   [-cons +son +syll -fr +bk -hi -lo +str]
+symbol o   [-cons +son +syll -fr +bk -hi -lo +ro +str]
+
+# Schwa #
+
+symbol ə   [-cons +son +syll -fr -bk -hi -lo -str]
+
+# Open mid #
+
+symbol ɛ   [-cons +son +syll +fr -bk -hi -lo -str]
+symbol œ   [-cons +son +syll +fr -bk -hi -lo +ro -str]
+# Omitted: /ɜ/, which is identical, feature-wise to /ə/
+symbol ɞ   [-cons +son +syll -fr -bk -hi -lo +ro -str]
+symbol ʌ   [-cons +son +syll -fr +bk -hi -lo -str]
+symbol ɔ   [-cons +son +syll -fr +bk -hi -lo +ro -str]
+
+# Open lax #
+
+symbol æ   [-cons +son +syll -fr -bk -hi +lo -str]
+symbol ɐ   [-cons +son +syll -fr +bk -hi +lo -str]
+
+# Open #
+
+symbol a   [-cons +son +syll -fr -bk -hi +lo +str]
+symbol ɶ   [-cons +son +syll -fr -bk -hi +lo -ro +str]
+symbol ɑ   [-cons +son +syll -fr +bk -hi +lo +str]
+symbol ɒ   [-cons +son +syll -fr +bk -hi +lo -ro +str]
+
+## Semivowels ##
+
+symbol j   [-cons +son -syll +fr -bk +hi -lo +str]
+symbol ɥ   [-cons +son -syll +fr -bk +hi -lo +ro +str]
+symbol w   [-cons +son -syll -fr +bk +hi -lo +ro +str]

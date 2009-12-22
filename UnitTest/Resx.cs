@@ -62,5 +62,12 @@ namespace Phonix.UnitTest
             ParseResource("std.features", "std.symbols");
         }
 
+        [Test]
+        public void ParseStdSymbolsIpa()
+        {
+            ParseResource("std.features", "std.symbols.ipa");
+        }
+
+
     }
 }
