@@ -157,6 +157,11 @@ namespace Phonix
                 {
                     str.Append("> ");
                 }
+                else
+                {
+                    str.Append("  ");
+                }
+
                 Symbol symbol;
                 try
                 {
