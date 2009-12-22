@@ -214,9 +214,9 @@ namespace Phonix.Parse
             if (left.Count != right.Count)
             {
                 var msg = String.Format(
-                        "unbalanced rule action ({0} segments on before '=>', {1} segments after)", 
-                        left, 
-                        right);
+                        "unbalanced rule action ({0} segments before '=>', {1} segments after)", 
+                        left.Count, 
+                        right.Count);
                 throw new RuleException(msg);
             }
 
