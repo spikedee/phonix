@@ -4,57 +4,57 @@
 
 # Labial #
 
-symbol p   [+cons -son -cont -str -vc -ro]
+symbol p   [+cons -son -cont -vc -ro]
 symbol p\  [+cons -son +cont -str -vc -ro]
 symbol f   [+cons -son +cont +str -vc -ro]
-symbol b   [+cons -son -cont -str +vc -ro]
+symbol b   [+cons -son -cont +vc -ro]
 symbol B   [+cons -son +cont -str +vc -ro]
 symbol v   [+cons -son +cont +str +vc -ro]
 
 # Dental #
 
-symbol t_d [+cons -son -cont -str -vc +ant +dist]
+symbol t_d [+cons -son -cont -vc +ant +dist]
 symbol T   [+cons -son +cont -str -vc +ant +dist]
 symbol s_d [+cons -son +cont +str -vc +ant +dist]
-symbol d_d [+cons -son -cont -str +vc +ant +dist]
+symbol d_d [+cons -son -cont +vc +ant +dist]
 symbol D   [+cons -son +cont -str +vc +ant +dist]
 symbol z_d [+cons -son +cont +str +vc +ant +dist]
 
 # Alveolar #
 
-symbol t   [+cons -son -cont -str -vc +ant -dist]
+symbol t   [+cons -son -cont -vc +ant -dist]
 symbol s   [+cons -son +cont +str -vc +ant -dist]
-symbol d   [+cons -son -cont -str +vc +ant -dist]
+symbol d   [+cons -son -cont +vc +ant -dist]
 symbol z   [+cons -son +cont +str +vc +ant -dist]
 
 # Palatal #
 
-symbol c   [+cons -son -cont -str -vc -ant +dist]
+symbol c   [+cons -son -cont -vc -ant +dist]
 symbol C   [+cons -son +cont -str -vc -ant +dist]
 symbol S   [+cons -son +cont +str -vc -ant +dist]
-symbol J\  [+cons -son -cont -str +vc -ant +dist]
+symbol J\  [+cons -son -cont +vc -ant +dist]
 symbol j\  [+cons -son +cont -str +vc -ant +dist]
 symbol Z   [+cons -son +cont +str +vc -ant +dist]
 
 # Retroflex #
 
-symbol t`  [+cons -son -cont -str -vc -ant -dist]
+symbol t`  [+cons -son -cont -vc -ant -dist]
 symbol s`  [+cons -son +cont +str -vc -ant -dist]
-symbol d`  [+cons -son -cont -str +vc -ant -dist]
+symbol d`  [+cons -son -cont +vc -ant -dist]
 symbol z`  [+cons -son +cont +str +vc -ant -dist]
 
 # Velar #
 
-symbol k   [+cons -son -cont -str -vc +bk -lo +hi]
+symbol k   [+cons -son -cont -vc +bk -lo +hi]
 symbol x   [+cons -son +cont -str -vc +bk -lo +hi]
-symbol g   [+cons -son -cont -str +vc +bk -lo +hi]
+symbol g   [+cons -son -cont +vc +bk -lo +hi]
 symbol G   [+cons -son +cont -str +vc +bk -lo +hi]
 
 # Uvular #
 
-symbol q   [+cons -son -cont -str -vc +bk -lo -hi]
+symbol q   [+cons -son -cont -vc +bk -lo -hi]
 symbol X   [+cons -son +cont -str -vc +bk -lo -hi]
-symbol G\  [+cons -son -cont -str +vc +bk -lo -hi]
+symbol G\  [+cons -son -cont +vc +bk -lo -hi]
 symbol R   [+cons -son +cont -str +vc +bk -lo -hi]
 
 # Pharyngeal #
@@ -64,7 +64,7 @@ symbol ?\  [+cons -son +cont -str +vc +bk +lo -hi]
 
 # Glottal #
 
-symbol ?   [+cons -son -cont -str -vc]
+symbol ?   [+cons -son -cont -vc]
 symbol h   [+cons -son +cont -str -vc]
 symbol h\  [+cons -son +cont -str +vc]
 

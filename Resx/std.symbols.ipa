@@ -4,57 +4,57 @@
 
 # Labial #
 
-symbol p   [+cons -son -cont -str -vc -ro]
+symbol p   [+cons -son -cont -vc -ro]
 symbol ɸ   [+cons -son +cont -str -vc -ro]
 symbol f   [+cons -son +cont +str -vc -ro]
-symbol b   [+cons -son -cont -str +vc -ro]
+symbol b   [+cons -son -cont +vc -ro]
 symbol β   [+cons -son +cont -str +vc -ro]
 symbol v   [+cons -son +cont +str +vc -ro]
 
 # Dental #
 
-symbol t̪   [+cons -son -cont -str -vc +ant +dist]
+symbol t̪   [+cons -son -cont -vc +ant +dist]
 symbol θ   [+cons -son +cont -str -vc +ant +dist]
 symbol s̪   [+cons -son +cont +str -vc +ant +dist]
-symbol d̪   [+cons -son -cont -str +vc +ant +dist]
+symbol d̪   [+cons -son -cont +vc +ant +dist]
 symbol ð   [+cons -son +cont -str +vc +ant +dist]
 symbol z̪   [+cons -son +cont +str +vc +ant +dist]
 
 # Alveolar #
 
-symbol t   [+cons -son -cont -str -vc +ant -dist]
+symbol t   [+cons -son -cont -vc +ant -dist]
 symbol s   [+cons -son +cont +str -vc +ant -dist]
-symbol d   [+cons -son -cont -str +vc +ant -dist]
+symbol d   [+cons -son -cont +vc +ant -dist]
 symbol z   [+cons -son +cont +str +vc +ant -dist]
 
 # Palatal #
 
-symbol c   [+cons -son -cont -str -vc -ant +dist]
+symbol c   [+cons -son -cont -vc -ant +dist]
 symbol ç   [+cons -son +cont -str -vc -ant +dist]
 symbol ʃ   [+cons -son +cont +str -vc -ant +dist]
-symbol ɟ   [+cons -son -cont -str +vc -ant +dist]
+symbol ɟ   [+cons -son -cont +vc -ant +dist]
 symbol ʝ   [+cons -son +cont -str +vc -ant +dist]
 symbol ʒ   [+cons -son +cont +str +vc -ant +dist]
 
 # Retroflex #
 
-symbol ʈ   [+cons -son -cont -str -vc -ant -dist]
+symbol ʈ   [+cons -son -cont -vc -ant -dist]
 symbol ʂ   [+cons -son +cont +str -vc -ant -dist]
-symbol ɖ   [+cons -son -cont -str +vc -ant -dist]
+symbol ɖ   [+cons -son -cont +vc -ant -dist]
 symbol ʐ   [+cons -son +cont +str +vc -ant -dist]
 
 # Velar #
 
-symbol k   [+cons -son -cont -str -vc +bk -lo +hi]
+symbol k   [+cons -son -cont -vc +bk -lo +hi]
 symbol x   [+cons -son +cont -str -vc +bk -lo +hi]
-symbol g   [+cons -son -cont -str +vc +bk -lo +hi]
+symbol g   [+cons -son -cont +vc +bk -lo +hi]
 symbol ɣ   [+cons -son +cont -str +vc +bk -lo +hi]
 
 # Uvular #
 
-symbol q   [+cons -son -cont -str -vc +bk -lo -hi]
+symbol q   [+cons -son -cont -vc +bk -lo -hi]
 symbol χ   [+cons -son +cont -str -vc +bk -lo -hi]
-symbol ɢ   [+cons -son -cont -str +vc +bk -lo -hi]
+symbol ɢ   [+cons -son -cont +vc +bk -lo -hi]
 symbol ʁ   [+cons -son +cont -str +vc +bk -lo -hi]
 
 # Pharyngeal #
@@ -64,7 +64,7 @@ symbol ʕ   [+cons -son +cont -str +vc +bk +lo -hi]
 
 # Glottal #
 
-symbol ʔ   [+cons -son -cont -str -vc]
+symbol ʔ   [+cons -son -cont -vc]
 symbol h   [+cons -son +cont -str -vc]
 symbol ɦ   [+cons -son +cont -str +vc]
 

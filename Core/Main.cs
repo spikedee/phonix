@@ -114,7 +114,11 @@ namespace Phonix
                         case "-i":
                         case "--in":
                         {
-                            string file = args[++i];
+                            if (++i >= args.Length)
+                            {
+                                throw new ArgumentException("Argument required for " + arg);
+                            }
+                            string file = args[i];
                             rv.Reader = File.OpenText(file);
                             break;
                         }
@@ -122,7 +126,11 @@ namespace Phonix
                         case "-o":
                         case "--out":
                         {
-                            string file = args[++i];
+                            if (++i >= args.Length)
+                            {
+                                throw new ArgumentException("Argument required for " + arg);
+                            }
+                            string file = args[i];
                             rv.Writer = File.CreateText(file);
                             break;
                         }
