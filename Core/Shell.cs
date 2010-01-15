@@ -11,53 +11,67 @@ namespace Phonix
         public const string FileRevision = "$Revision$";
         public const string FileURL = "$HeadURL$";
 
+        private static StringBuilder _inputBuffer = new StringBuilder();
+
+        public enum ExitCodes : int
+        {
+            Success = 0,
+            BadArgument = 1,
+            ParseError = 2,
+            FileNotFound = 3,
+            UnhandledException = Int32.MaxValue
+        }
+
         public static int Main(string[] args)
         {
-            int rv = 0;
+            ExitCodes rv = ExitCodes.Success;
+
+            // set up our crash handler
+            AppDomain.CurrentDomain.UnhandledException += 
+                (src, exArgs) => CrashHandler.GetReport(exArgs, new StringReader(_inputBuffer.ToString()));
 
             PhonixConfig config = null;
+            Logger logger = null;
             try
             {
                 config = ParseArgs(args);
+
+                Phonology phono = new Phonology();
+                logger = new Logger(config.LogLevel, config.WarningLevel, Console.Error, phono);
+                logger.Start();
+
+                Parse.Util.ParseFile(phono, config.PhonixFile, config.PhonixFile);
+                InputLoop(phono, config.Reader, config.Writer, Console.Error);
             }
             catch (ArgumentException ex)
             {
                 Console.Error.WriteLine(ex.Message);
-                Environment.Exit(2);
-            }
-
-            Phonology phono = new Phonology();
-            var logger = new Logger(config.LogLevel, config.WarningLevel, Console.Error, phono);
-            logger.Start();
-
-            try
-            {
-                Parse.Util.ParseFile(phono, config.PhonixFile, config.PhonixFile);
-                InputLoop(phono, config.Reader, config.Writer, Console.Error);
+                rv = ExitCodes.BadArgument;
             }
             catch (ParseException px)
             {
                 Console.Error.WriteLine(px.Message);
-                rv = 1;
+                rv = ExitCodes.ParseError;
             }
             catch (FileNotFoundException fex)
             {
                 Console.Error.WriteLine("Could not find file '{0}'.", fex.Message);
-                rv = 2;
+                rv = ExitCodes.FileNotFound;
             }
-            catch (Exception ex)
+            finally
             {
-                // this should catch all unexpected errors
-                Console.Error.WriteLine(ex.ToString());
-                rv = Int32.MaxValue;
+                if (logger != null)
+                {
+                    logger.Stop();
+                }
+                if (config != null)
+                {
+                    config.Reader.Close();
+                    config.Writer.Close();
+                }
             }
 
-            logger.Stop();
-
-            config.Reader.Close();
-            config.Writer.Close();
-
-            return rv;
+            return (int) rv;
         }
 
         public static void InputLoop(Phonology phono, TextReader reader, TextWriter writer, TextWriter err)
@@ -65,6 +79,8 @@ namespace Phonix
             string line;
             while ((line = reader.ReadLine()) != null)
             {
+                _inputBuffer.AppendLine(line);
+
                 Word word;
                 try
                 {

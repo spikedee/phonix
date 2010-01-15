@@ -10,7 +10,7 @@ namespace Phonix.UnitTest
     [TestFixture]
     public class ResxTest
     {
-        private void ParseResource(params string[] resources)
+        private Phonology ParseResource(params string[] resources)
         {
             Action<Feature, Feature> traceFeatureRedef = (f1, f2) => 
             { 
@@ -48,6 +48,8 @@ namespace Phonix.UnitTest
                 Trace.OnSymbolRedefined -= traceSymbolRedef;
                 Trace.OnSymbolDuplicate -= traceSymbolDup;
             }
+
+            return phono;
         }
 
         [Test]
@@ -68,6 +70,37 @@ namespace Phonix.UnitTest
             ParseResource("std.features", "std.symbols.ipa");
         }
 
+        [Test]
+        public void SymbolEquivalence()
+        {
+            // this test exists to ensure that the symbols in the ascii set and
+            // the ipa set are the same
+
+            // set up two phonologies with the same features
+            var ascii = ParseResource("std.features");
+            var ipa = new Phonology();
+            foreach (var f in ascii.FeatureSet)
+            {
+                ipa.FeatureSet.Add(f);
+            }
+
+            Phonix.Parse.Util.ParseFile(ascii, "ascii", "std.symbols");
+            Phonix.Parse.Util.ParseFile(ipa, "ipa", "std.symbols.ipa");
+
+            Assert.AreEqual(ascii.SymbolSet.Count, ipa.SymbolSet.Count);
+            foreach (Symbol s in ascii.SymbolSet.Values)
+            {
+                try
+                {
+                    // just call Spell to ensure that an exact match exists
+                    ipa.SymbolSet.Spell(s.FeatureMatrix);
+                }
+                catch (SpellingException)
+                {
+                    Assert.Fail("No match in ipa for {0} {1}", s, s.FeatureMatrix);
+                }
+            }
+        }
 
     }
 }

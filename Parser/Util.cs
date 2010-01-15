@@ -276,14 +276,11 @@ namespace Phonix.Parse
                 {
                     // look for an embedded resource. Exceptions thrown here are allowed to propagate.
                     var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(filename);
+                    if (stream == null)
+                    {
+                        throw new FileNotFoundException(filename);
+                    }
                     parser = GetParserForStream(new StreamReader(stream));
-                }
-            }
-            finally
-            {
-                if (parser == null)
-                {
-                    throw new FileNotFoundException(filename);
                 }
             }
 
