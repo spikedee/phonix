@@ -152,8 +152,8 @@ this argument is not given, Phonix writes to standard output.
 
 @item -q
 @itemx --quiet
-When this option, Phonix doesn't print any errors except for fatal error
-messages.
+When this option is present, Phonix doesn't print any errors except for fatal
+error messages.
 
 @item -d
 @itemx --debug
@@ -202,8 +202,7 @@ This section covers the syntax and meaning of all aspects of a Phonix file in
 detail. The Phonix language is simple but powerful, and it should be very easy
 for people who are familiar with basic phonological concepts and rule notation.
 If you are not familiar with the basics of generative phonology, you may find
-this section tough going--I recommend that you read up on distinctive feature
-theory and transformational phonology before going further.
+this section tough going.
 
 The Phonix language is @dfn{declarative}: you use Phonix to create a
 description of your phonology, and @code{phonix} reads your description and
@@ -882,6 +881,7 @@ covered in this section.
 * Importing files::
 * std.features::
 * std.symbols::
+* std.symbols.ipa::
 @end menu
 
 @node Importing files
@@ -980,6 +980,23 @@ ASCII characters and is based on the X-SAMPA IPA encoding.
 
 @example
 @verbatiminclude Resx/std.symbols
+@end example
+
+@node std.symbols.ipa
+@subsection std.symbols.ipa
+
+The IPA symbol set contains the same notional symbols as @code{std.symbols},
+but it uses IPA Unicode characters instead of ASCII X-SAMPA. To use the IPA
+symbol set, write @code{import std.features} and @code{import std.symbols.ipa}
+at the top of your file.
+
+@iftex
+Unfortunately, not all IPA symbols used in this set are present in the fonts
+used in this PDF, so some of these symbols may appear to have blank symbols.
+@end iftex
+
+@example
+@verbatiminclude Resx/std.symbols.ipa
 @end example
 
 @node Comments

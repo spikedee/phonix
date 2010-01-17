@@ -179,7 +179,7 @@ namespace Phonix
 
         private void LogUndefinedVariableUsed(AbstractFeatureValue fv)
         {
-            Log(Level.Warning, "variable {0} used without being defined", fv);
+            Log(Level.Warning, "variable {0} used in rule action without appearing in rule context", fv);
         }
     }
 }
