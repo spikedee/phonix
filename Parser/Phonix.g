@@ -133,7 +133,7 @@ phonixDecl:
         importDecl
     |   featureDecl { _phono.FeatureSet.Add($featureDecl.f); }
     |   symbolDecl { _phono.SymbolSet.Add($symbolDecl.s); }
-    |   ruleDecl { _phono.RuleSet.Add($ruleDecl.r); }
+    |   ruleDecl /* Adding to the RuleSet is handled by ruleDecl itself */
     ;
 
 /* File import */
@@ -192,7 +192,7 @@ symbolStr returns [List<Symbol> slist]
 
 ruleDecl returns [Rule r]: 
     RULE str paramList? rule
-    { $r = Util.MakeRule($str.text, $rule.action, $rule.context, $rule.excluded, $paramList.list); }
+    { $r = Util.MakeAndAddRule($str.text, $rule.action, $rule.context, $rule.excluded, $paramList.list, _phono.RuleSet); }
     ;
 
 rule returns [List<IRuleSegment> action, RuleContext context, RuleContext excluded]:

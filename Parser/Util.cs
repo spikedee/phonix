@@ -118,7 +118,7 @@ namespace Phonix.Parse
             return f;
         }
 
-        public static Rule MakeRule(string name, IEnumerable<IRuleSegment> action, RuleContext context, RuleContext excluded, ParamList plist)
+        public static Rule MakeAndAddRule(string name, IEnumerable<IRuleSegment> action, RuleContext context, RuleContext excluded, ParamList plist, RuleSet ruleSet)
         {
             var contextSegs = new List<IRuleSegment>();
             var excludedSegs = new List<IRuleSegment>();
@@ -199,11 +199,29 @@ namespace Phonix.Parse
                         }
                         break;
 
+                        case "persist":
+                            // no-op, persistent rules are handled below
+                            break;
+
                         default:
                             throw new UnknownParameterException(key);
                     }
                 }
             }
+
+            if (plist != null && plist.ContainsKey("persist"))
+            {
+                if (plist["persist"] != null)
+                {
+                    throw new InvalidParameterValueException("persist", plist["persist"].ToString());
+                }
+                ruleSet.AddPersistent(rule);
+            }
+            else
+            {
+                ruleSet.Add(rule);
+            }
+
             return rule;
         }
 

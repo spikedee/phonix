@@ -118,13 +118,51 @@ namespace Phonix.UnitTest
     [TestFixture]
     public class RuleSetTest
     {
-        // EMPTY for now
-        
         public static RuleSet GetTestSet()
         {
             var rs = new RuleSet();
             rs.Add(RuleTest.TestRule);
             return rs;
+        }
+
+        [Test]
+        public void Add()
+        {
+            var rs = new RuleSet();
+            var rule1 = new Rule("rule1", new IRuleSegment[] { new MockSegment() }, new IRuleSegment[] { new MockSegment() });
+            var rule2 = new Rule("rule2", new IRuleSegment[] { new MockSegment() }, new IRuleSegment[] { new MockSegment() });
+
+            rs.Add(rule1);
+            Assert.AreEqual(1, rs.OrderedRules.Count());
+            Assert.IsTrue(rs.OrderedRules.Contains(rule1));
+            Assert.IsFalse(rs.OrderedRules.Contains(rule2));
+
+            rs.Add(rule2);
+            Assert.AreEqual(2, rs.OrderedRules.Count());
+            Assert.IsTrue(rs.OrderedRules.Contains(rule1));
+            Assert.IsTrue(rs.OrderedRules.Contains(rule2));
+
+            Assert.AreEqual(0, rs.PersistentRules.Count());
+        }
+
+        [Test]
+        public void AddPersistent()
+        {
+            var rs = new RuleSet();
+            var rule1 = new Rule("rule1", new IRuleSegment[] { new MockSegment() }, new IRuleSegment[] { new MockSegment() });
+            var rule2 = new Rule("rule2", new IRuleSegment[] { new MockSegment() }, new IRuleSegment[] { new MockSegment() });
+
+            rs.AddPersistent(rule1);
+            Assert.AreEqual(1, rs.PersistentRules.Count());
+            Assert.IsTrue(rs.PersistentRules.Contains(rule1));
+            Assert.IsFalse(rs.PersistentRules.Contains(rule2));
+
+            rs.AddPersistent(rule2);
+            Assert.AreEqual(2, rs.PersistentRules.Count());
+            Assert.IsTrue(rs.PersistentRules.Contains(rule1));
+            Assert.IsTrue(rs.PersistentRules.Contains(rule2));
+
+            Assert.AreEqual(0, rs.OrderedRules.Count());
         }
     }
 }

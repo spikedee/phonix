@@ -104,12 +104,24 @@ namespace Phonix
 
     }
 
-    public class RuleSet : List<Rule>
+    public class RuleSet
     {
-        new public void Add(Rule r)
+        private List<Rule> _persistent = new List<Rule>();
+        public IEnumerable<Rule> PersistentRules
+        { 
+            get { return _persistent; }
+        }
+
+        private List<Rule> _ordered = new List<Rule>();
+        public IEnumerable<Rule> OrderedRules
+        { 
+            get { return _ordered; }
+        }
+
+        public void Add(Rule r)
         {
             Trace.RuleDefined(r);
-            foreach (Rule existing in this)
+            foreach (Rule existing in OrderedRules)
             {
                 if (existing.Name.Equals(r.Name))
                 {
@@ -117,16 +129,62 @@ namespace Phonix
                 }
             }
 
-            base.Add(r);
+            _ordered.Add(r);
+        }
+
+        public void AddPersistent(Rule r)
+        {
+            Trace.RuleDefined(r);
+            foreach (Rule existing in PersistentRules)
+            {
+                if (existing.Name.Equals(r.Name))
+                {
+                    Trace.RuleRedefined(existing, r);
+                }
+            }
+
+            _persistent.Add(r);
         }
 
         public void ApplyAll(Word word)
         {
-            foreach (var rule in this)
+            // Set up the delegate hook for our persistent rules
+            bool inPersistent = false;
+            Action<Rule, Word, IWordSlice> ruleApplied = (rule, innerWord, slice) => 
+            {
+                if (!inPersistent)
+                {
+                    inPersistent = true;
+                    ApplyPersistentRules(innerWord); 
+                    inPersistent = false;
+                }
+            };
+
+            // apply persistent rules once at the beginning of execution
+            ApplyPersistentRules(word);
+
+            try
+            {
+                Trace.OnRuleApplied += ruleApplied;
+                foreach (var rule in OrderedRules)
+                {
+                    rule.Apply(word);
+                }
+            }
+            finally
+            {
+                Trace.OnRuleApplied -= ruleApplied;
+            }
+        }
+
+        private void ApplyPersistentRules(Word word)
+        {
+            foreach (var rule in PersistentRules)
             {
                 rule.Apply(word);
             }
         }
+
     }
 
 }

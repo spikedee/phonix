@@ -218,5 +218,12 @@ namespace Phonix.UnitTest
             phono = ParseWithStdImports("rule delete a => * / bb _");
             ApplyRules(phono, "bba", "bb");
         }
+
+        [Test]
+        public void RulePersist()
+        {
+            var phono = ParseWithStdImports("rule persist-b-a (persist) b => a   rule a-b a => b");
+            ApplyRules(phono, "baa", "aaa");
+        }
     }
 }
