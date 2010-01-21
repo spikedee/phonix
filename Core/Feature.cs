@@ -74,10 +74,9 @@ namespace Phonix
                 }
                 else
                 {
-                    // the user tried to set a variable that hasn't been
+                    // the user tried to use a variable that hasn't been
                     // defined. Warn them and leave the variable alone.
-                    Trace.UndefinedVariableUsed(this);
-                    return new FeatureValue[] {};
+                    throw new UndefinedFeatureVariableException(this);
                 }
             }
         }
@@ -305,8 +304,7 @@ namespace Phonix
                 }
                 else
                 {
-                    Trace.UndefinedVariableUsed(this);
-                    return new FeatureValue[] {};
+                    throw new InvalidOperationException("undefined variable used");
                 }
             }
         }
@@ -316,6 +314,16 @@ namespace Phonix
     {
         private Dictionary<string, Feature> _dict = new Dictionary<string, Feature>();
 
+        public event Action<Feature> FeatureDefined;
+        public event Action<Feature, Feature> FeatureRedefined;
+
+        public FeatureSet()
+        {
+            // add null event handlers
+            FeatureDefined += (f) => {};
+            FeatureRedefined += (f1, f2) => {};
+        }
+
         private void AddImpl(string name, Feature f)
         {
             if (_dict.ContainsKey(name))
@@ -323,7 +331,7 @@ namespace Phonix
                 var dup = _dict[name];
                 if (dup.GetType() != f.GetType())
                 {
-                    Trace.FeatureRedefined(dup, f);
+                    FeatureRedefined(dup, f);
                     _dict[f.Name] = f;
                 }
             }
@@ -339,7 +347,7 @@ namespace Phonix
             {
                 throw new ArgumentNullException("f");
             }
-            Trace.FeatureDefined(f);
+            FeatureDefined(f);
             AddImpl(f.Name, f);
         }
 

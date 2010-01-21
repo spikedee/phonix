@@ -225,5 +225,55 @@ namespace Phonix.UnitTest
             // added, plus the three nodes.
             Assert.AreEqual(Features.Length + 1 + 3, flist.Count);
         }
+
+        [Test]
+        public void FeatureDefined()
+        {
+            int calledDefined = 0;
+            Feature gotFeature = null;
+            var fs = new FeatureSet();
+
+            fs.FeatureDefined += f => { calledDefined++; gotFeature = f; };
+
+            var bf = new BinaryFeature("test", "alt1", "alt2");
+            fs.Add(bf);
+
+            Assert.AreEqual(1, calledDefined);
+            Assert.AreSame(bf, gotFeature);
+        }
+
+        [Test]
+        public void FeatureRedefined()
+        {
+            int calledRedefined = 0;
+            Feature gotFeature = null;
+            bool gotTest = false;
+
+            var fs = new FeatureSet();
+            var oldTest = new UnaryFeature("test");
+            var bf = new BinaryFeature("test");
+            var bf2 = new BinaryFeature("test");
+
+            fs.FeatureRedefined += (old, newer) => 
+            { 
+                calledRedefined++; 
+                gotFeature = newer; 
+                if (old == oldTest)
+                    gotTest = true;
+            };
+
+            fs.Add(oldTest);
+            fs.Add(bf);
+
+            Assert.AreEqual(1, calledRedefined);
+            Assert.IsTrue(gotTest);
+            Assert.AreSame(bf, gotFeature);
+
+            // check that adding an identical feature doesn't result in overwrite
+            fs.Add(bf2);
+
+            Assert.AreEqual(1, calledRedefined);
+            Assert.AreSame(fs.Get<Feature>(bf.Name), bf);
+        }
     }
 }

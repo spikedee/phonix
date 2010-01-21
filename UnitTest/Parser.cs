@@ -48,6 +48,7 @@ namespace Phonix.UnitTest
             ApplyRules(phono, "sz", "zz");
         }
 
+        /*
         [Test]
         public void RuleWithVariableUndefined()
         {
@@ -72,6 +73,7 @@ namespace Phonix.UnitTest
                 Trace.OnUndefinedVariableUsed -= tracer;
             }
         }
+        */
 
         [Test]
         public void RuleDirectionRightward()

@@ -29,32 +29,37 @@ namespace Phonix
 
         public void Start()
         {
-            Trace.OnFeatureDefined += this.LogFeatureDefined;
-            Trace.OnFeatureRedefined += this.LogFeatureRedefined;
-            Trace.OnSymbolDefined += this.LogSymbolDefined;
-            Trace.OnSymbolRedefined += this.LogSymbolRedefined;
-            Trace.OnSymbolDuplicate += this.LogSymbolDuplicate;
-            Trace.OnRuleDefined += this.LogRuleDefined;
-            Trace.OnRuleRedefined += this.LogRuleRedefined;
-            Trace.OnRuleEntered += this.LogRuleEntered;
-            Trace.OnRuleExited += this.LogRuleExited;
-            Trace.OnRuleApplied += this.LogRuleApplied;
-            Trace.OnUndefinedVariableUsed += this.LogUndefinedVariableUsed;
+            _phono.FeatureSet.FeatureDefined += this.LogFeatureDefined;
+            _phono.FeatureSet.FeatureRedefined += this.LogFeatureRedefined;
+
+            _phono.SymbolSet.SymbolDefined += this.LogSymbolDefined;
+            _phono.SymbolSet.SymbolRedefined += this.LogSymbolRedefined;
+            _phono.SymbolSet.SymbolDuplicate += this.LogSymbolDuplicate;
+
+            _phono.RuleSet.RuleDefined += this.LogRuleDefined;
+            _phono.RuleSet.RuleRedefined += this.LogRuleRedefined;
+            _phono.RuleSet.RuleEntered += this.LogRuleEntered;
+            _phono.RuleSet.RuleExited += this.LogRuleExited;
+            _phono.RuleSet.RuleApplied += this.LogRuleApplied;
+            _phono.RuleSet.UndefinedVariableUsed += this.LogUndefinedVariableUsed;
         }
 
         public void Stop()
         {
-            Trace.OnFeatureDefined -= this.LogFeatureDefined;
-            Trace.OnFeatureRedefined -= this.LogFeatureRedefined;
-            Trace.OnSymbolDefined -= this.LogSymbolDefined;
-            Trace.OnSymbolRedefined -= this.LogSymbolRedefined;
-            Trace.OnSymbolDuplicate -= this.LogSymbolDuplicate;
-            Trace.OnRuleDefined -= this.LogRuleDefined;
-            Trace.OnRuleRedefined -= this.LogRuleRedefined;
-            Trace.OnRuleEntered -= this.LogRuleEntered;
-            Trace.OnRuleExited -= this.LogRuleExited;
-            Trace.OnRuleApplied -= this.LogRuleApplied;
-            Trace.OnUndefinedVariableUsed -= this.LogUndefinedVariableUsed;
+            _phono.FeatureSet.FeatureDefined -= this.LogFeatureDefined;
+            _phono.FeatureSet.FeatureRedefined -= this.LogFeatureRedefined;
+
+            _phono.SymbolSet.SymbolDefined -= this.LogSymbolDefined;
+            _phono.SymbolSet.SymbolRedefined -= this.LogSymbolRedefined;
+            _phono.SymbolSet.SymbolDuplicate -= this.LogSymbolDuplicate;
+
+            _phono.RuleSet.RuleDefined -= this.LogRuleDefined;
+            _phono.RuleSet.RuleRedefined -= this.LogRuleRedefined;
+            _phono.RuleSet.RuleEntered -= this.LogRuleEntered;
+            _phono.RuleSet.RuleExited -= this.LogRuleExited;
+            _phono.RuleSet.RuleApplied -= this.LogRuleApplied;
+
+            //Trace.OnUndefinedVariableUsed -= this.LogUndefinedVariableUsed;
 
             Writer.Flush();
         }
@@ -177,9 +182,9 @@ namespace Phonix
             }
         }
 
-        private void LogUndefinedVariableUsed(AbstractFeatureValue fv)
+        private void LogUndefinedVariableUsed(Rule rule, IMatchCombine var)
         {
-            Log(Level.Warning, "variable {0} used in rule action without appearing in rule context", fv);
+            Log(Level.Warning, "variable {0} used in rule {1} without appearing in rule context", var, rule);
         }
     }
 }

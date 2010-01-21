@@ -113,6 +113,38 @@ namespace Phonix.UnitTest
             Assert.AreEqual(0, exclude[1].CombineCalled);
             Assert.AreEqual(0, exclude[2].CombineCalled);
         }
+
+        [Test]
+        public void RuleApplication()
+        {
+            int entered = 0;
+            int exited = 0;
+            int applied = 0;
+            Rule ruleEntered = null;
+            Rule ruleExited = null;
+            Word wordEntered = null;
+            Word wordExited = null;
+            Rule rule = new Rule(
+                    "test", 
+                    new IRuleSegment[] { new ActionSegment(MatrixMatcher.AlwaysMatches, MatrixCombiner.NullCombiner) },
+                    new IRuleSegment[] { new ActionSegment(MatrixMatcher.NeverMatches, MatrixCombiner.NullCombiner) }
+                    );
+            Word word = WordTest.GetTestWord();
+
+            rule.Entered += (r, w) => { entered++; ruleEntered = r; wordEntered = w; };
+            rule.Exited += (r, w) => { exited++; ruleExited = r; wordExited = w; };
+            rule.Applied += (r, w, s) => { applied++; };
+
+            rule.Apply(word);
+
+            Assert.AreEqual(1, entered);
+            Assert.AreEqual(1, exited);
+            Assert.AreEqual(3, applied);
+            Assert.AreSame(rule, ruleEntered);
+            Assert.AreSame(rule, ruleExited);
+            Assert.AreSame(word, wordEntered);
+            Assert.AreSame(word, wordExited);
+        }
     }
 
     [TestFixture]
@@ -164,5 +196,133 @@ namespace Phonix.UnitTest
 
             Assert.AreEqual(0, rs.OrderedRules.Count());
         }
+
+        [Test]
+        public void RuleDefined()
+        {
+            int calledDefined = 0;
+            Rule gotRule = null;
+            var rs = new RuleSet();
+
+            rs.RuleDefined += r => { calledDefined++; gotRule = r; };
+
+            rs.Add(RuleTest.TestRule);
+
+            Assert.AreEqual(1, calledDefined);
+            Assert.AreSame(RuleTest.TestRule, gotRule);
+        }
+
+        [Test]
+        public void RuleRedefined()
+        {
+            int calledRedefined = 0;
+            Rule newRule = null;
+            Rule oldRule = null;
+            var rs = new RuleSet();
+
+            rs.RuleRedefined += (old, newer) => { calledRedefined++; oldRule = old; newRule = newer; };
+
+            var or = new Rule("test", new IRuleSegment[] {}, new IRuleSegment[] {});
+            var nr = new Rule("test", new IRuleSegment[] {}, new IRuleSegment[] {});
+            rs.Add(or);
+            rs.Add(nr);
+
+            Assert.AreEqual(1, calledRedefined);
+            Assert.AreSame(or, oldRule);
+            Assert.AreSame(nr, newRule);
+        }
+
+        [Test]
+        public void RuleApplied()
+        {
+            int entered = 0;
+            int exited = 0;
+            int applied = 0;
+            Rule ruleEntered = null;
+            Rule ruleExited = null;
+            Word wordEntered = null;
+            Word wordExited = null;
+            Rule rule = new Rule(
+                    "test", 
+                    new IRuleSegment[] { new ActionSegment(MatrixMatcher.AlwaysMatches, MatrixCombiner.NullCombiner) },
+                    new IRuleSegment[] { new ActionSegment(MatrixMatcher.NeverMatches, MatrixCombiner.NullCombiner) }
+                    );
+            Word word = WordTest.GetTestWord();
+            RuleSet rs = new RuleSet();
+
+            rs.RuleEntered += (r, w) => { entered++; ruleEntered = r; wordEntered = w; };
+            rs.RuleExited += (r, w) => { exited++; ruleExited = r; wordExited = w; };
+            rs.RuleApplied += (r, w, s) => { applied++; };
+
+            rs.Add(rule);
+            rs.ApplyAll(word);
+
+            Assert.AreEqual(1, entered);
+            Assert.AreEqual(1, exited);
+            Assert.AreEqual(3, applied);
+            Assert.AreSame(rule, ruleEntered);
+            Assert.AreSame(rule, ruleExited);
+            Assert.AreSame(word, wordEntered);
+            Assert.AreSame(word, wordExited);
+        }
+
+        [Test]
+        public void RuleAppliedUndefinedVariable()
+        {
+            int undefUsed = 0;
+            var fs = FeatureSetTest.GetTestSet();
+            Rule ruleInUndef = null;
+            IMatchCombine varInUndef = null;
+            var combo = new MatrixCombiner(new ICombinable[] { fs.Get<Feature>("un").VariableValue });
+
+            Rule rule = new Rule(
+                    "test", 
+                    new IRuleSegment[] { new ActionSegment(MatrixMatcher.AlwaysMatches, combo) },
+                    new IRuleSegment[] { new ActionSegment(MatrixMatcher.NeverMatches, MatrixCombiner.NullCombiner) }
+                    );
+            Word word = WordTest.GetTestWord();
+            RuleSet rs = new RuleSet();
+
+            rs.UndefinedVariableUsed += (r, v) => { undefUsed++; ruleInUndef = r; varInUndef = v; };
+
+            rs.Add(rule);
+            rs.ApplyAll(word);
+
+            Assert.AreEqual(word.Count(), undefUsed);
+            Assert.AreSame(rule, ruleInUndef);
+            Assert.AreSame(fs.Get<Feature>("un").VariableValue, varInUndef);
+        }
+
+        [Test]
+        public void PersistentRule()
+        {
+            int ruleCount = 0;
+            int persistentCount = 0;
+
+            Rule rule = new Rule(
+                    "test", 
+                    new IRuleSegment[] { new ActionSegment(MatrixMatcher.AlwaysMatches, MatrixCombiner.NullCombiner) },
+                    new IRuleSegment[] { new ActionSegment(MatrixMatcher.NeverMatches, MatrixCombiner.NullCombiner) }
+                    );
+            Rule persistent = new Rule(
+                    "test", 
+                    new IRuleSegment[] { new ActionSegment(MatrixMatcher.AlwaysMatches, MatrixCombiner.NullCombiner) },
+                    new IRuleSegment[] { new ActionSegment(MatrixMatcher.NeverMatches, MatrixCombiner.NullCombiner) }
+                    );
+
+            rule.Entered += (r, w) => { ruleCount++; };
+            persistent.Entered += (r, w) => { persistentCount++; };
+
+            Word word = WordTest.GetTestWord();
+            RuleSet rs = new RuleSet();
+            rs.Add(rule);
+            rs.AddPersistent(persistent);
+
+            rs.ApplyAll(word);
+
+            Assert.AreEqual(4, persistentCount);
+            Assert.AreEqual(1, ruleCount);
+        }
+
     }
 }

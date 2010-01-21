@@ -190,5 +190,64 @@ namespace Phonix.UnitTest
             Assert.Fail("Shouldn't have gotten " + list);
         }
 
+        [Test]
+        public void SymbolDefined()
+        {
+            int calledDefined = 0;
+            Symbol gotSymbol = null;
+
+            var ss = new SymbolSet();
+            var ts = new Symbol("test", FeatureMatrixTest.MatrixA);
+
+            ss.SymbolDefined += s => { calledDefined++; gotSymbol = s; };
+
+            ss.Add(ts);
+
+            Assert.AreEqual(1, calledDefined);
+            Assert.AreSame(ts, gotSymbol);
+        }
+
+        [Test]
+        public void SymbolRedefined()
+        {
+            int calledRedefined = 0;
+            Symbol newSymbol = null;
+            Symbol oldSymbol = null;
+
+            var ss = new SymbolSet();
+            var os = new Symbol("test", FeatureMatrixTest.MatrixA);
+            var ns = new Symbol("test", FeatureMatrixTest.MatrixB);
+
+            ss.SymbolRedefined += (old, newer) => { calledRedefined++; oldSymbol = old; newSymbol = newer; };
+
+            ss.Add(os);
+            ss.Add(ns);
+
+            Assert.AreEqual(1, calledRedefined);
+            Assert.AreSame(os, oldSymbol);
+            Assert.AreSame(ns, newSymbol);
+        }
+
+        [Test]
+        public void SymbolDuplicate()
+        {
+            int calledDuplicate = 0;
+            Symbol newSymbol = null;
+            Symbol oldSymbol = null;
+
+            var ss = new SymbolSet();
+            var os = new Symbol("y", FeatureMatrixTest.MatrixA);
+            var ns = new Symbol("x", FeatureMatrixTest.MatrixA);
+
+            ss.SymbolDuplicate += (old, newer) => { calledDuplicate++; oldSymbol = old; newSymbol = newer; };
+
+            ss.Add(os);
+            ss.Add(ns);
+
+            Assert.AreEqual(1, calledDuplicate);
+            Assert.AreNotSame(oldSymbol, newSymbol);
+            Assert.IsTrue(oldSymbol == os || oldSymbol == ns);
+            Assert.IsTrue(newSymbol == os || newSymbol == ns);
+        }
     }
 }

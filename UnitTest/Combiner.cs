@@ -111,6 +111,7 @@ namespace Phonix.UnitTest
         }
 
         [Test]
+        [ExpectedException(typeof(UndefinedFeatureVariableException))]
         public void CombineVariableUndefined()
         {
             var fs = FeatureSetTest.GetTestSet();
@@ -119,23 +120,7 @@ namespace Phonix.UnitTest
             var test = new MatrixCombiner(new ICombinable[] { un.VariableValue, sc.VariableValue });
             var ctx = new RuleContext();
 
-            uint gotTrace = 0;
-            var undef = new List<Feature>();
-            Action<AbstractFeatureValue> tracer = (fv) => 
-            {
-                gotTrace++;
-                undef.Add(fv.Feature);
-            };
-            Trace.OnUndefinedVariableUsed += tracer;
-
-            var fm = test.Combine(ctx, FeatureMatrixTest.MatrixB);
-
-            Assert.AreEqual(FeatureMatrixTest.MatrixB, fm);
-            Assert.AreEqual(2, gotTrace);
-            Assert.IsTrue(undef.Contains(un));
-            Assert.IsTrue(undef.Contains(sc));
-
-            Trace.OnUndefinedVariableUsed -= tracer;
+            test.Combine(ctx, FeatureMatrixTest.MatrixB);
         }
 
         [Test]

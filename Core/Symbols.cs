@@ -75,6 +75,18 @@ namespace Phonix
 
     public class SymbolSet : Dictionary<string, Symbol>
     {
+        public event Action<Symbol> SymbolDefined;
+        public event Action<Symbol, Symbol> SymbolRedefined;
+        public event Action<Symbol, Symbol> SymbolDuplicate;
+
+        public SymbolSet()
+        {
+            // add null event handlers
+            SymbolDefined += (s) => {};
+            SymbolRedefined += (s1, s2) => {};
+            SymbolDuplicate += (s1, s2) => {};
+        }
+
         public void Add(Symbol s)
         {
             if (s == null)
@@ -82,18 +94,18 @@ namespace Phonix
                 throw new ArgumentNullException();
             }
 
-            Trace.SymbolDefined(s);
+            SymbolDefined(s);
 
             if (this.ContainsKey(s.Label))
             {
-                Trace.SymbolRedefined(this[s.Label], s);
+                SymbolRedefined(this[s.Label], s);
             }
 
             foreach (var existing in Values)
             {
                 if (existing.FeatureMatrix.Equals(s.FeatureMatrix))
                 {
-                    Trace.SymbolDuplicate(existing, s);
+                    SymbolDuplicate(existing, s);
                 }
             }
 

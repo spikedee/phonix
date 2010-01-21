@@ -62,6 +62,17 @@ namespace Phonix
         }
     }
 
+    public class UndefinedFeatureVariableException : PhonixException
+    {
+        public readonly IMatchCombine Variable;
+
+        public UndefinedFeatureVariableException(IMatchCombine var)
+            : base("Undefined variable used: " + var)
+        {
+            Variable = var;
+        }
+    }
+
     public class ParseException : Exception
     {
         public ParseException(string file)

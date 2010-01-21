@@ -25,6 +25,11 @@ namespace Phonix
 
         public Direction Direction { get; set; }
 
+        public event Action<Rule, Word> Entered;
+        public event Action<Rule, Word, IWordSlice> Applied;
+        public event Action<Rule, Word> Exited;
+        public event Action<Rule, IMatchCombine> UndefinedVariableUsed;
+
         public Rule(string name, IEnumerable<IRuleSegment> segments, IEnumerable<IRuleSegment> excluded)
         {
             if (name == null || segments == null || excluded == null)
@@ -35,6 +40,12 @@ namespace Phonix
             Name = name;
             Segments = segments;
             ExcludedSegments = excluded;
+
+            // add empty event handlers
+            Entered += (r, w) => {};
+            Applied += (r, w, s) => {};
+            Exited += (r, w) => {};
+            UndefinedVariableUsed += (r, v) => {};
         }
 
         public override string ToString()
@@ -46,7 +57,7 @@ namespace Phonix
 
         public void Apply(Word word)
         {
-            Trace.RuleEntered(this, word);
+            Entered(this, word);
 
             var slice = word.GetSliceEnumerator(Direction, Filter);
 
@@ -93,13 +104,20 @@ namespace Phonix
                 var wordSegment = slice.Current.GetMutableEnumerator();
                 foreach (var segment in Segments)
                 {
-                    segment.Combine(context, wordSegment);
+                    try
+                    {
+                        segment.Combine(context, wordSegment);
+                    }
+                    catch (UndefinedFeatureVariableException ex)
+                    {
+                        UndefinedVariableUsed(this, ex.Variable);
+                    }
                 }
                 wordSegment.Dispose();
-                Trace.RuleApplied(this, word, slice.Current);
+                Applied(this, word, slice.Current);
             }
 
-            Trace.RuleExited(this, word);
+            Exited(this, word);
         }
 
     }
@@ -118,62 +136,82 @@ namespace Phonix
             get { return _ordered; }
         }
 
-        public void Add(Rule r)
-        {
-            Trace.RuleDefined(r);
-            foreach (Rule existing in OrderedRules)
-            {
-                if (existing.Name.Equals(r.Name))
-                {
-                    Trace.RuleRedefined(existing, r);
-                }
-            }
+        public event Action<Rule> RuleDefined;
+        public event Action<Rule, Rule> RuleRedefined;
+        public event Action<Rule, Word> RuleEntered;
+        public event Action<Rule, Word, IWordSlice> RuleApplied;
+        public event Action<Rule, Word> RuleExited;
+        public event Action<Rule, IMatchCombine> UndefinedVariableUsed;
 
-            _ordered.Add(r);
+        public RuleSet()
+        {
+            RuleDefined += (r) => {};
+            RuleRedefined += (r1, r2) => {};
+            RuleEntered += (r, w) => {};
+            RuleApplied += (r, w, s) => {};
+            RuleExited += (r, w) => {};
+            UndefinedVariableUsed += (r, v) => {};
         }
 
-        public void AddPersistent(Rule r)
+        public void Add(Rule rule)
         {
-            Trace.RuleDefined(r);
-            foreach (Rule existing in PersistentRules)
+            RuleDefined(rule);
+            foreach (Rule existing in OrderedRules)
             {
-                if (existing.Name.Equals(r.Name))
+                if (existing.Name.Equals(rule.Name))
                 {
-                    Trace.RuleRedefined(existing, r);
+                    RuleRedefined(existing, rule);
                 }
             }
 
-            _persistent.Add(r);
+            rule.Entered += (r, w) => RuleEntered(r, w);
+            rule.Exited += (r, w) => RuleExited(r, w);
+            rule.Applied += (r, w, s) => RuleApplied(r, w, s);
+            rule.UndefinedVariableUsed += (r, v) => UndefinedVariableUsed(r, v);
+
+            _ordered.Add(rule);
+        }
+
+        public void AddPersistent(Rule rule)
+        {
+            RuleDefined(rule);
+            foreach (Rule existing in PersistentRules)
+            {
+                if (existing.Name.Equals(rule.Name))
+                {
+                    RuleRedefined(existing, rule);
+                }
+            }
+
+            rule.Entered += (r, w) => RuleEntered(r, w);
+            rule.Exited += (r, w) => RuleExited(r, w);
+            rule.Applied += (r, w, s) => RuleApplied(r, w, s);
+            rule.UndefinedVariableUsed += (r, v) => UndefinedVariableUsed(r, v);
+
+            _persistent.Add(rule);
         }
 
         public void ApplyAll(Word word)
         {
-            // Set up the delegate hook for our persistent rules
-            bool inPersistent = false;
-            Action<Rule, Word, IWordSlice> ruleApplied = (rule, innerWord, slice) => 
-            {
-                if (!inPersistent)
-                {
-                    inPersistent = true;
-                    ApplyPersistentRules(innerWord); 
-                    inPersistent = false;
-                }
-            };
-
             // apply persistent rules once at the beginning of execution
             ApplyPersistentRules(word);
 
-            try
+            foreach (var rule in OrderedRules)
             {
-                Trace.OnRuleApplied += ruleApplied;
-                foreach (var rule in OrderedRules)
+                Action<Rule, Word, IWordSlice> applyPersistentRules = (innerRule, innerWord, slice) => 
+                {
+                    ApplyPersistentRules(innerWord); 
+                };
+                rule.Applied += applyPersistentRules;
+
+                try
                 {
                     rule.Apply(word);
                 }
-            }
-            finally
-            {
-                Trace.OnRuleApplied -= ruleApplied;
+                finally
+                {
+                    rule.Applied -= applyPersistentRules;
+                }
             }
         }
 
@@ -188,3 +226,13 @@ namespace Phonix
     }
 
 }
+/*
+ *1) Phonix.UnitTest.RuleSetTest.RuleAppliedUndefinedVariable : System.NullReferenceException : Object reference not set to an instance of an object
+ at Phonix.RuleSet.<Add>m__10 (Phonix.Rule r, Phonix.Word w) [0x00000] in /home/jaspax/phonix_root/trunk/Core/Rule.cs:162
+ at (wrapper delegate-invoke) System.Action`2:invoke_void__this___Rule_Word (Phonix.Rule,Phonix.Word)
+ at Phonix.Rule.Apply (Phonix.Word word) [0x00000] in /home/jaspax/phonix_root/trunk/Core/Rule.cs:59
+ at Phonix.RuleSet.ApplyAll (Phonix.Word word) [0x00057] in /home/jaspax/phonix_root/trunk/Core/Rule.cs:209
+ at Phonix.UnitTest.RuleSetTest.RuleAppliedUndefinedVariable () [0x000a4] in /home/jaspax/phonix_root/trunk/UnitTest/Rule.cs:289
+ at (wrapper managed-to-native) System.Reflection.MonoMethod:InternalInvoke (object,object[],System.Exception&)
+ at System.Reflection.MonoMethod.Invoke (System.Object obj, BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x00000]
+ */
