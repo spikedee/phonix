@@ -226,13 +226,3 @@ namespace Phonix
     }
 
 }
-/*
- *1) Phonix.UnitTest.RuleSetTest.RuleAppliedUndefinedVariable : System.NullReferenceException : Object reference not set to an instance of an object
- at Phonix.RuleSet.<Add>m__10 (Phonix.Rule r, Phonix.Word w) [0x00000] in /home/jaspax/phonix_root/trunk/Core/Rule.cs:162
- at (wrapper delegate-invoke) System.Action`2:invoke_void__this___Rule_Word (Phonix.Rule,Phonix.Word)
- at Phonix.Rule.Apply (Phonix.Word word) [0x00000] in /home/jaspax/phonix_root/trunk/Core/Rule.cs:59
- at Phonix.RuleSet.ApplyAll (Phonix.Word word) [0x00057] in /home/jaspax/phonix_root/trunk/Core/Rule.cs:209
- at Phonix.UnitTest.RuleSetTest.RuleAppliedUndefinedVariable () [0x000a4] in /home/jaspax/phonix_root/trunk/UnitTest/Rule.cs:289
- at (wrapper managed-to-native) System.Reflection.MonoMethod:InternalInvoke (object,object[],System.Exception&)
- at System.Reflection.MonoMethod.Invoke (System.Object obj, BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x00000]
- */

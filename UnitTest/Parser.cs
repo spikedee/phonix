@@ -32,7 +32,7 @@ namespace Phonix.UnitTest
             {
                 var word = new Word(phono.SymbolSet.Pronounce(input));
                 phono.RuleSet.ApplyAll(word);
-                var output = phono.SymbolSet.MakeString(word);
+                var output = Shell.SafeMakeString(phono, word, Console.Out);
                 Assert.AreEqual(expectedOutput, output);
             }
             finally
@@ -48,32 +48,25 @@ namespace Phonix.UnitTest
             ApplyRules(phono, "sz", "zz");
         }
 
-        /*
         [Test]
         public void RuleWithVariableUndefined()
         {
             bool gotTrace = false;
-            Feature undef = null;
-            Action<AbstractFeatureValue> tracer = (fv) => 
+            IMatchCombine undef = null;
+            Action<Rule, IMatchCombine> tracer = (r, fv) => 
             {
                 gotTrace = true;
-                undef = fv.Feature;
+                undef = fv;
             };
-            Trace.OnUndefinedVariableUsed += tracer;
 
-            try
-            {
-                var phono = ParseWithStdImports("rule voice-assimilate [] => [$vc] / _ []");
-                ApplyRules(phono, "sz", "sz");
-                Assert.IsTrue(gotTrace);
-                Assert.AreSame(phono.FeatureSet.Get<Feature>("vc"), undef);
-            }
-            finally
-            {
-                Trace.OnUndefinedVariableUsed -= tracer;
-            }
+            var phono = ParseWithStdImports("rule voice-assimilate [] => [$vc] / _ []");
+
+            phono.RuleSet.UndefinedVariableUsed += tracer;
+            ApplyRules(phono, "sz", "sz");
+
+            Assert.IsTrue(gotTrace);
+            Assert.AreSame(phono.FeatureSet.Get<Feature>("vc").VariableValue, undef);
         }
-        */
 
         [Test]
         public void RuleDirectionRightward()

@@ -80,7 +80,7 @@ namespace Phonix.UnitTest
             Phonix.Parse.Util.ParseFile(ipa, "ipa", "std.symbols.ipa");
 
             Assert.AreEqual(ascii.SymbolSet.Count, ipa.SymbolSet.Count);
-            foreach (Symbol s in ascii.SymbolSet.Values)
+            foreach (Symbol s in ascii.SymbolSet)
             {
                 try
                 {

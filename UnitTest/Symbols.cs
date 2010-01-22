@@ -99,9 +99,9 @@ namespace Phonix.UnitTest
             SymbolSet ss = new SymbolSet();
             ss.Add(SymbolTest.SymbolA);
 
-            Assert.IsTrue(ss.ContainsKey(SymbolTest.SymbolA.Label));
-            Assert.AreSame(SymbolTest.SymbolA, ss[SymbolTest.SymbolA.Label]);
-            Assert.IsTrue(ss.ContainsValue(SymbolTest.SymbolA));
+            Assert.IsTrue(ss.BaseSymbols.ContainsKey(SymbolTest.SymbolA.Label));
+            Assert.AreSame(SymbolTest.SymbolA, ss.BaseSymbols[SymbolTest.SymbolA.Label]);
+            Assert.IsTrue(ss.BaseSymbols.ContainsValue(SymbolTest.SymbolA));
         }
 
         [Test]
@@ -161,9 +161,9 @@ namespace Phonix.UnitTest
             var list = ss.Pronounce("az!b");
 
             Assert.AreEqual(3, list.Count);
-            Assert.AreSame(ss["a"].FeatureMatrix, list[0]);
-            Assert.AreSame(ss["z!"].FeatureMatrix, list[1]);
-            Assert.AreSame(ss["b"].FeatureMatrix, list[2]);
+            Assert.AreSame(ss.BaseSymbols["a"].FeatureMatrix, list[0]);
+            Assert.AreSame(ss.BaseSymbols["z!"].FeatureMatrix, list[1]);
+            Assert.AreSame(ss.BaseSymbols["b"].FeatureMatrix, list[2]);
         }
 
         [Test]
@@ -175,9 +175,9 @@ namespace Phonix.UnitTest
             var list = ss.Pronounce("z!ab");
 
             Assert.AreEqual(3, list.Count);
-            Assert.AreSame(ss["z!"].FeatureMatrix, list[0]);
-            Assert.AreSame(ss["a"].FeatureMatrix, list[1]);
-            Assert.AreSame(ss["b"].FeatureMatrix, list[2]);
+            Assert.AreSame(ss.BaseSymbols["z!"].FeatureMatrix, list[0]);
+            Assert.AreSame(ss.BaseSymbols["a"].FeatureMatrix, list[1]);
+            Assert.AreSame(ss.BaseSymbols["b"].FeatureMatrix, list[2]);
         }
 
         [Test]
