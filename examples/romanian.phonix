@@ -18,20 +18,15 @@ symbol i  [+syll -cons +son +hi -lo +fr -bk -stress]
 symbol u  [+syll -cons +son +hi -lo -fr +bk +ro -stress]
 symbol 1  [+syll -cons +son +hi -lo -fr -bk -stress]
 
-# Stressed vowels
-symbol a' [+syll -cons +son -hi +lo -fr -bk +stress]
-symbol e' [+syll -cons +son -hi -lo +fr -bk +stress]
-symbol o' [+syll -cons +son -hi -lo -fr +bk +ro +stress]
-symbol @' [+syll -cons +son -hi -lo -fr -bk +stress]
-symbol i' [+syll -cons +son +hi -lo +fr -bk +stress]
-symbol u' [+syll -cons +son +hi -lo -fr +bk +ro +stress]
-symbol 1' [+syll -cons +son +hi -lo -fr -bk +stress]
+# Stress diacritic
+symbol "'"  (diacritic) [+stress]
 
 # Non-syllabic vocoids
-symbol e` [-syll -cons +son -hi -lo +fr -bk -stress]
-symbol o` [-syll -cons +son -hi -lo -fr +bk +ro -stress]
 symbol j  [-syll -cons +son +hi -lo +fr -bk -stress]
 symbol w  [-syll -cons +son +hi -lo -fr +bk +ro -stress]
+
+# Non-syllabic diacritic
+symbol `  (diacritic) [-syll]
 
 # Labials
 symbol p  [+cons +ro -son]

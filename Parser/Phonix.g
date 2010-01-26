@@ -132,7 +132,7 @@ parseRoot[string currentFile, Phonology phono]
 phonixDecl:
         importDecl
     |   featureDecl { _phono.FeatureSet.Add($featureDecl.f); }
-    |   symbolDecl { _phono.SymbolSet.Add($symbolDecl.s); }
+    |   symbolDecl /* Adding to the SymbolSet is handled by ruleDecl itself */
     |   ruleDecl /* Adding to the RuleSet is handled by ruleDecl itself */
     ;
 
@@ -177,9 +177,9 @@ nodeFeature returns [NodeFeature f]:
 
 /* Symbol declarations and usage */
 
-symbolDecl returns [Symbol s]: 
+symbolDecl: 
     SYMBOL str paramList? matrix
-    { $s = new Symbol($str.text, $matrix.fm); }
+    { Util.MakeAndAddSymbol($str.text, $matrix.fm, $paramList.list, _phono.SymbolSet); }
     ;
 
 symbolStr returns [List<Symbol> slist]
@@ -190,9 +190,9 @@ symbolStr returns [List<Symbol> slist]
 
 /* Rule declarations */
 
-ruleDecl returns [Rule r]: 
+ruleDecl: 
     RULE str paramList? rule
-    { $r = Util.MakeAndAddRule($str.text, $rule.action, $rule.context, $rule.excluded, $paramList.list, _phono.RuleSet); }
+    { Util.MakeAndAddRule($str.text, $rule.action, $rule.context, $rule.excluded, $paramList.list, _phono.RuleSet); }
     ;
 
 rule returns [List<IRuleSegment> action, RuleContext context, RuleContext excluded]:

@@ -76,27 +76,5 @@ namespace Phonix
 
             return new FeatureMatrix(comboValues);
         }
-
-#if false
-                // get variable values from the context. other values are added
-                // directly to the list which creates the new matrix.
-
-                if (fv == (AbstractFeatureValue)fv.Feature.VariableValue)
-                {
-                    if (ctx == null)
-                    {
-                        throw new InvalidOperationException("context cannot be null for combine with variables");
-                    }
-
-                }
-                else
-                {
-                    Debug.Assert(fv is FeatureValue, "fv is FeatureValue");
-                    comboValues.Add(fv as FeatureValue);
-                }
-
-            return new FeatureMatrix(comboValues);
-#endif
-
     }
 }

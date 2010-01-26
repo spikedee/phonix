@@ -8,12 +8,6 @@ using System;
 
 namespace Phonix.Parse
 {
-    public struct Param
-    {
-        public string Name;
-        public string Value;
-    }
-
     public class ParamList : Dictionary<string, object>
     {
     }
@@ -118,7 +112,23 @@ namespace Phonix.Parse
             return f;
         }
 
-        public static Rule MakeAndAddRule(string name, IEnumerable<IRuleSegment> action, RuleContext context, RuleContext excluded, ParamList plist, RuleSet ruleSet)
+        public static void MakeAndAddSymbol(string label, FeatureMatrix matrix, ParamList plist, SymbolSet symbolSet)
+        {
+            if (plist != null && plist.ContainsKey("diacritic"))
+            {
+                if (plist["diacritic"] != null)
+                {
+                    throw new InvalidParameterValueException("diacritic", plist["diacritic"].ToString());
+                }
+                symbolSet.AddDiacritic(new Diacritic(label, matrix));
+            }
+            else
+            {
+                symbolSet.Add(new Symbol(label, matrix));
+            }
+        }
+
+        public static void MakeAndAddRule(string name, IEnumerable<IRuleSegment> action, RuleContext context, RuleContext excluded, ParamList plist, RuleSet ruleSet)
         {
             var contextSegs = new List<IRuleSegment>();
             var excludedSegs = new List<IRuleSegment>();
@@ -221,8 +231,6 @@ namespace Phonix.Parse
             {
                 ruleSet.Add(rule);
             }
-
-            return rule;
         }
 
         public static List<IRuleSegment> MakeRuleAction(

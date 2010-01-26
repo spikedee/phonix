@@ -91,6 +91,9 @@ namespace Phonix
         internal readonly SymbolTable BaseSymbols = new SymbolTable();
         internal readonly SymbolTable Diacritics = new SymbolTable();
 
+        private readonly Dictionary<FeatureMatrix, Symbol> _symbolCache = new Dictionary<FeatureMatrix, Symbol>();
+        private SymbolSet _diacriticSymbolCache;
+
         public event Action<Symbol> SymbolDefined;
         public event Action<Symbol, Symbol> SymbolRedefined;
         public event Action<Symbol, Symbol> SymbolDuplicate;
@@ -142,25 +145,33 @@ namespace Phonix
 
 #endregion
 
-
         public void Add(Symbol s)
         {
             BaseSymbols.Add(s);
+            _symbolCache[s.FeatureMatrix] = s;
         }
 
-        public void AddDiacritic(Symbol s)
+        public void AddDiacritic(Diacritic d)
         {
-            Diacritics.Add(s);
+            Diacritics.Add(d);
         }
 
         public Symbol Spell(FeatureMatrix matrix)
         {
-            // TODO: this is the hard one
-            foreach (var s in BaseSymbols.Values)
+            if (_symbolCache.Count > 0)
             {
-                if (s.Matches(null, matrix))
+                if (_symbolCache.ContainsKey(matrix))
                 {
-                    return s;
+                    return _symbolCache[matrix];
+                }
+                else if (_diacriticSymbolCache != null)
+                {
+                    return _diacriticSymbolCache.Spell(matrix);
+                }
+                else if (Diacritics.Count > 0)
+                {
+                    _diacriticSymbolCache = BuildDiacriticSymbolSet(BaseSymbols, Diacritics);
+                    return _diacriticSymbolCache.Spell(matrix);
                 }
             }
             throw new SpellingException("Unable to match any symbol to " + matrix);
@@ -169,6 +180,47 @@ namespace Phonix
         public List<Symbol> Spell(IEnumerable<FeatureMatrix> segments)
         {
             return segments.ToList().ConvertAll(fm => this.Spell(fm));
+        }
+
+        private SymbolSet BuildDiacriticSymbolSet(SymbolTable baseSymbols, SymbolTable diacritics)
+        {
+            var symbolSet = new SymbolSet();
+            
+            // create a symbol set that contains every base symbol combined
+            // with every diacritic.
+            foreach (Symbol sym in baseSymbols.Values)
+            {
+                var compositeBase = sym as CompositeSymbol;
+                foreach (Diacritic dia in diacritics.Values)
+                {
+                    if (compositeBase != null && compositeBase.Diacritics.Contains(dia))
+                    {
+                        // we've already added this diacritic to this symbol
+                        continue;
+                    }
+
+                    var compos = new CompositeSymbol(sym, dia);
+
+                    // don't add composite symbols that result in a feature
+                    // matrix that already exists in this set or in the set
+                    // that we're building
+                    if (symbolSet._symbolCache.ContainsKey(compos.FeatureMatrix)
+                        || this._symbolCache.ContainsKey(compos.FeatureMatrix))
+                    {
+                        continue;
+                    }
+
+                    symbolSet.Add(compos);
+                }
+            }
+
+            // add the diacritics in
+            foreach (Diacritic dia in Diacritics.Values)
+            {
+                symbolSet.AddDiacritic(dia);
+            }
+
+            return symbolSet;
         }
 
         public List<Symbol> SplitSymbols(string word)
@@ -190,7 +242,11 @@ namespace Phonix
 
                 if (word.Length > 0)
                 {
-                    list.AddRange(Diacritics.TakeSymbols(word, out word));
+                    var lastSymbol = list.Last();
+                    list.Remove(lastSymbol);
+
+                    var diacritics = Diacritics.TakeSymbols(word, out word).ConvertAll(s => s as Diacritic);
+                    list.Add(new CompositeSymbol(lastSymbol, diacritics.ToArray()));
                 }
             }
 

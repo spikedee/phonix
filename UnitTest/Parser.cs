@@ -220,5 +220,13 @@ namespace Phonix.UnitTest
             var phono = ParseWithStdImports("rule persist-b-a (persist) b => a   rule a-b a => b");
             ApplyRules(phono, "baa", "aaa");
         }
+
+        [Test]
+        public void SymbolDiacritic()
+        {
+            var phono = ParseWithStdImports("symbol ~ (diacritic) [+nas]");
+            Assert.AreEqual(1, phono.SymbolSet.Diacritics.Count);
+            Assert.IsTrue(phono.SymbolSet.Diacritics.ContainsKey("~"));
+        }
     }
 }
