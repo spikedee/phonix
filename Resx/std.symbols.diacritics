@@ -1,0 +1,53 @@
+## Consonant place modifiers ##
+
+# Labialized
+symbol '_w'    (diacritic) [-ro]
+
+# Linguolabial
+symbol '_N'    (diacritic) [-ro +ant]
+
+# Dental
+symbol '_d'    (diacritic) [+ant +dist]
+
+# Palatalized
+symbol '_j'    (diacritic) [-ant +dist]
+
+# Velarized
+symbol '_G'    (diacritic) [+bk +hi]
+
+# Pharyngealized
+symbol '_?\'   (diacritic) [+bk +lo]
+
+## Vocoid modifiers ##
+
+# Advanced
+symbol '_+'    (diacritic) [+fr]
+
+# Retracted
+symbol '_-'    (diacritic) [+bk]
+
+# Lowered
+symbol '_o'    (diacritic) [+lo]
+
+# Raised
+symbol '_r'    (diacritic) [+hi]
+
+# Centralized
+symbol '_"'    (diacritic) [-hi -lo -fr -bk]
+
+## Manner modifiers ##
+
+# Voiceless
+symbol '_0'    (diacritic) [-vc]
+
+# Voiced
+symbol '_v'    (diacritic) [+vc]
+
+# Syllabic
+symbol '='     (diacritic) [+syll]
+
+# Non-syllabic
+symbol '_^'    (diacritic) [-syll]
+
+# Nasalized
+symbol ~       (diacritic) [+nas]

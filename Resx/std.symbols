@@ -13,12 +13,8 @@ symbol v   [+cons -son +cont +str +vc -ro]
 
 # Dental #
 
-symbol t_d [+cons -son -cont -vc +ant +dist]
 symbol T   [+cons -son +cont -str -vc +ant +dist]
-symbol s_d [+cons -son +cont +str -vc +ant +dist]
-symbol d_d [+cons -son -cont +vc +ant +dist]
 symbol D   [+cons -son +cont -str +vc +ant +dist]
-symbol z_d [+cons -son +cont +str +vc +ant +dist]
 
 # Alveolar #
 
@@ -73,13 +69,7 @@ symbol h\  [+cons -son +cont -str +vc]
 # Labial #
 
 symbol m   [+cons +son -cont +nas -lat -ro]
-symbol B_o [-cons +son +cont -nas -lat -ro]
 symbol B\  [+cons +son +cont -nas -lat -ro]
-
-# Dental #
-
-symbol n_d [+cons +son -cont +nas -lat +ant +dist]
-symbol l_d [+cons +son -cont -nas +lat +ant +dist]
 
 # Alveolar #
 

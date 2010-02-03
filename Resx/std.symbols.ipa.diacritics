@@ -1,0 +1,53 @@
+## Consonant place modifiers ##
+
+# Labialized
+symbol ʷ       (diacritic) [-ro]
+
+# Linguolabial
+symbol ̼        (diacritic) [-ro +ant]
+
+# Dental
+symbol ̪        (diacritic) [+ant +dist]
+
+# Palatalized
+symbol ʲ       (diacritic) [-ant +dist]
+
+# Velarized
+symbol ̴        (diacritic) [+bk +hi]
+
+# Pharyngealized
+symbol ˤ       (diacritic) [+bk +lo]
+
+## Vocoid modifiers ##
+
+# Advanced
+symbol ̟        (diacritic) [+fr]
+
+# Retracted
+symbol ̠        (diacritic) [+bk]
+
+# Lowered
+symbol ̞        (diacritic) [+lo]
+
+# Raised
+symbol ̝        (diacritic) [+hi]
+
+# Centralized
+symbol ̈        (diacritic) [-hi -lo -fr -bk]
+
+## Manner modifiers ##
+
+# Voiceless
+symbol ̥        (diacritic) [-vc]
+
+# Voiced
+symbol ̬        (diacritic) [+vc]
+
+# Syllabic
+symbol ̩        (diacritic) [+syll]
+
+# Non-syllabic
+symbol ̯        (diacritic) [-syll]
+
+# Nasalized
+symbol ̃        (diacritic) [+nas]

@@ -13,12 +13,8 @@ symbol v   [+cons -son +cont +str +vc -ro]
 
 # Dental #
 
-symbol t̪   [+cons -son -cont -vc +ant +dist]
 symbol θ   [+cons -son +cont -str -vc +ant +dist]
-symbol s̪   [+cons -son +cont +str -vc +ant +dist]
-symbol d̪   [+cons -son -cont +vc +ant +dist]
 symbol ð   [+cons -son +cont -str +vc +ant +dist]
-symbol z̪   [+cons -son +cont +str +vc +ant +dist]
 
 # Alveolar #
 
@@ -73,13 +69,7 @@ symbol ɦ   [+cons -son +cont -str +vc]
 # Labial #
 
 symbol m   [+cons +son -cont +nas -lat -ro]
-symbol β̞   [-cons +son +cont -nas -lat -ro]
 symbol ʙ   [+cons +son +cont -nas -lat -ro]
-
-# Dental #
-
-symbol n̪   [+cons +son -cont +nas -lat +ant +dist]
-symbol l̪   [+cons +son -cont -nas +lat +ant +dist]
 
 # Alveolar #
 
