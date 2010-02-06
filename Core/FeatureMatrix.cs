@@ -11,6 +11,7 @@ namespace Phonix
     {
         private readonly Dictionary<Feature, FeatureValue> _values = new Dictionary<Feature, FeatureValue>();
         private readonly int _count = 0;
+        private int? _hashCode = null;
 
         public FeatureMatrix(IEnumerable<FeatureValue> values)
         {
@@ -24,6 +25,7 @@ namespace Phonix
                 _values[val.Feature] = val;
             }
             _count = this.Count();
+            _hashCode = GetHashCode();
         }
 
         public FeatureMatrix(FeatureMatrix matrix)
@@ -67,14 +69,17 @@ namespace Phonix
                 {
                     throw new InvalidOperationException("Can't directly access node values");
                 }
-                else if (_values.ContainsKey(f))
-                {
-                    return _values[f];
-                }
                 else
                 {
-                    // a FeatureValue is guaranteed to only return a single value
-                    return f.NullValue.GetValues(null).First();
+                    try
+                    {
+                        return _values[f];
+                    }
+                    catch (KeyNotFoundException)
+                    {
+                        // a FeatureValue is guaranteed to only return a single value
+                        return f.NullValue.GetValues(null).First();
+                    }
                 }
             }
         }
@@ -109,6 +114,9 @@ namespace Phonix
 
         public bool Equals(FeatureMatrix fm)
         {
+            if (this._hashCode != fm._hashCode)
+                return false;
+
             if (this.Weight != fm.Weight)
                 return false;
             
@@ -135,12 +143,15 @@ namespace Phonix
 
         public override int GetHashCode()
         {
-            int hash = 0;
-            foreach (var fv in this)
+            if (_hashCode == null)
             {
-                hash += fv.GetHashCode();
+                _hashCode = 0;
+                foreach (var fv in this)
+                {
+                    _hashCode += fv.GetHashCode();
+                }
             }
-            return hash;
+            return _hashCode.Value;
         }
 
         public override string ToString()

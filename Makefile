@@ -39,7 +39,8 @@ test: parser $(PHONIX_TEST) $(ANTLR)
 	mono --debug /usr/lib/nunit/nunit-console.exe $(PHONIX_TEST) -labels
 
 prof: $(PHONIX)
-	mono --profile $(PHONIX) $(EX_DIR)/romanian.phonix -i $(EX_DIR)/romanian.input -o $(EX_DIR)/romanian.output > prof.txt
+	mono --profile=logging:c,ts,o=phonix.mprof $(PHONIX) $(EX_DIR)/romanian.phonix -i $(EX_DIR)/romanian.input -o $(EX_DIR)/romanian.output
+	mprof-decoder phonix.mprof > prof.txt
 
 $(PARSER_FILES): $(PARSER_DIR)/Phonix.g
 	java -jar lib/antlr-3.1.3.jar -make $(PARSE_DEBUG) -print $< > $(BIN_DIR)/Phonix.parser.g

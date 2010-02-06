@@ -44,6 +44,11 @@ namespace Phonix
         {
             return _desc;
         }
+
+        public override int GetHashCode()
+        {
+            return this.ToString().GetHashCode();
+        }
     }
 
     public abstract class FeatureValue : AbstractFeatureValue, IMatchCombine

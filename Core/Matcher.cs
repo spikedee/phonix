@@ -88,22 +88,4 @@ namespace Phonix
             return true;
         }
     }
-
-    public class NegativeMatrixMatcher : MatrixMatcher
-    {
-        public NegativeMatrixMatcher(IMatrixMatcher match)
-            : base(match)
-        {
-        }
-
-        public NegativeMatrixMatcher(IEnumerable<IMatchable> vals)
-            : base(vals)
-        {
-        }
-
-        override public bool Matches(RuleContext ctx, FeatureMatrix matrix)
-        {
-            return !base.Matches(ctx, matrix);
-        }
-    }
 }
