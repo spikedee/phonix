@@ -11,6 +11,8 @@ namespace Phonix
         bool IsLast { get; }
         bool MovePrev();
         new FeatureMatrix Current { get; }
+        void Mark();
+        void Revert();
     }
 
     public interface MutableSegmentEnumerator : SegmentEnumerator
@@ -51,6 +53,11 @@ namespace Phonix
 
             private bool _beforeFirst = false;
             private bool _afterLast = false;
+
+            private LinkedListNode<FeatureMatrix> _markNode;
+            private bool _markBeforeFirst = false;
+            private bool _markAfterLast = false;
+            private bool _markValid = false;
 
             public WordSegment(LinkedListNode<FeatureMatrix> node, IMatrixMatcher filter)
             {
@@ -126,6 +133,7 @@ namespace Phonix
             {
             }
 
+
 #endregion
 
 #region SegmentEnumerator members
@@ -170,6 +178,26 @@ namespace Phonix
 
                 return !_beforeFirst;
             }
+
+            public void Mark()
+            {
+                _markNode = _node;
+                _markBeforeFirst = _beforeFirst;
+                _markAfterLast = _afterLast;
+                _markValid = true;
+            }
+
+            public void Revert()
+            {
+                if (!_markValid)
+                {
+                    throw new InvalidOperationException("Cannot call Revert() without calling Mark()");
+                }
+                _node = _markNode;
+                _beforeFirst = _markBeforeFirst;
+                _afterLast = _markAfterLast;
+            }
+
 
 #endregion
 

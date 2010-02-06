@@ -228,5 +228,65 @@ namespace Phonix.UnitTest
             Assert.AreEqual(1, phono.SymbolSet.Diacritics.Count);
             Assert.IsTrue(phono.SymbolSet.Diacritics.ContainsKey("~"));
         }
+
+        [Test]
+        public void SegmentRepeatZeroOrMore()
+        {
+            var phono = ParseWithStdImports("rule matchany a => c / _ (b)*$ ");
+            ApplyRules(phono, "a", "c");
+            ApplyRules(phono, "ab", "cb");
+            ApplyRules(phono, "abb", "cbb");
+            ApplyRules(phono, "ac", "ac");
+        }
+
+        [Test]
+        public void SegmentRepeatOneOrMore()
+        {
+            var phono = ParseWithStdImports("rule matchany a => c / _ (b)+$ ");
+            ApplyRules(phono, "a", "a");
+            ApplyRules(phono, "ab", "cb");
+            ApplyRules(phono, "abb", "cbb");
+            ApplyRules(phono, "ac", "ac");
+        }
+
+        [Test]
+        public void SegmentRepeatZeroOrOne()
+        {
+            var phono = ParseWithStdImports("rule matchany a => c / _ (b)$ ");
+            ApplyRules(phono, "a", "c");
+            ApplyRules(phono, "ab", "cb");
+            ApplyRules(phono, "abb", "abb");
+            ApplyRules(phono, "ac", "ac");
+        }
+
+        [Test]
+        public void MultipleSegmentOptional()
+        {
+            var phono = ParseWithStdImports("rule matchany a => c / _ (bc)c$ ");
+            ApplyRules(phono, "a", "a");
+            ApplyRules(phono, "ac", "cc");
+            ApplyRules(phono, "abc", "abc");
+            ApplyRules(phono, "abcc", "cbcc");
+        }
+
+        [Test]
+        public void SegmentOptional()
+        {
+            var phono = ParseWithStdImports("rule matchany a => c / _ (b)+c$ ");
+            ApplyRules(phono, "a", "a");
+            ApplyRules(phono, "ac", "ac");
+            ApplyRules(phono, "abc", "cbc");
+            ApplyRules(phono, "abbc", "cbbc");
+        }
+
+        [Test]
+        public void MultipleSegmentOptionalBacktrack()
+        {
+            var phono = ParseWithStdImports("rule matchany a => c / _ (bc)+b$ ");
+            ApplyRules(phono, "abc", "abc");
+            ApplyRules(phono, "abcb", "cbcb");
+            ApplyRules(phono, "abcbc", "abcbc");
+            ApplyRules(phono, "abcbcb", "cbcbcb");
+        }
     }
 }

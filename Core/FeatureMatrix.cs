@@ -10,6 +10,7 @@ namespace Phonix
     public class FeatureMatrix : IEnumerable<FeatureValue>
     {
         private readonly Dictionary<Feature, FeatureValue> _values = new Dictionary<Feature, FeatureValue>();
+        private readonly int _count = 0;
 
         public FeatureMatrix(IEnumerable<FeatureValue> values)
         {
@@ -22,6 +23,7 @@ namespace Phonix
             {
                 _values[val.Feature] = val;
             }
+            _count = this.Count();
         }
 
         public FeatureMatrix(FeatureMatrix matrix)
@@ -101,7 +103,7 @@ namespace Phonix
         {
             get
             {
-                return this.Count();
+                return _count;
             }
         }
 

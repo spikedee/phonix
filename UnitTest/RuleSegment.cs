@@ -286,5 +286,65 @@ namespace Phonix.UnitTest
             {
             }
         }
+
+        [Test]
+        public void MultiSegmentMatchZeroOrOne()
+        {
+            var match = MatrixMatcher.AlwaysMatches;
+            var seg = new MultiSegment(new IRuleSegment[] { new ContextSegment(match) }, 0, 1);
+
+            VerifyMatches(
+                    seg, 
+                    true, FeatureMatrixTest.MatrixA, 
+                    true, FeatureMatrixTest.MatrixB, 
+                    true, FeatureMatrixTest.MatrixC,
+                    true
+                    );
+        }
+
+        [Test]
+        public void MultiSegmentMatchZeroOrMore()
+        {
+            var match = MatrixMatcher.AlwaysMatches;
+            var seg = new MultiSegment(new IRuleSegment[] { new ContextSegment(match) }, 0, null);
+
+            VerifyMatches(
+                    seg, 
+                    true, null,
+                    true, null,
+                    true, null,
+                    true
+                    );
+        }
+
+        [Test]
+        public void MultiSegmentMatchOneOrMore()
+        {
+            var match = MatrixMatcher.AlwaysMatches;
+            var seg = new MultiSegment(new IRuleSegment[] { new ContextSegment(match) }, 1, null);
+
+            VerifyMatches(
+                    seg, 
+                    true, null,
+                    false, null,
+                    false, null,
+                    false
+                    );
+        }
+
+        [Test]
+        public void MultiSegmentMatchOneOrTwo()
+        {
+            var match = MatrixMatcher.AlwaysMatches;
+            var seg = new MultiSegment(new IRuleSegment[] { new ContextSegment(match) }, 1, 2);
+
+            VerifyMatches(
+                    seg, 
+                    true, FeatureMatrixTest.MatrixB,
+                    true, FeatureMatrixTest.MatrixC,
+                    false, null,
+                    false
+                    );
+        }
     }
 }
