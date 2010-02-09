@@ -11,7 +11,7 @@ namespace Phonix
     {
         private readonly Dictionary<Feature, FeatureValue> _values = new Dictionary<Feature, FeatureValue>();
         private readonly int _count = 0;
-        private int? _hashCode = null;
+        private int _hashCode = 0;
 
         public FeatureMatrix(IEnumerable<FeatureValue> values)
         {
@@ -24,8 +24,11 @@ namespace Phonix
             {
                 _values[val.Feature] = val;
             }
-            _count = this.Count();
-            _hashCode = GetHashCode();
+            foreach (var fv in this)
+            {
+                _count++;
+                _hashCode ^= fv.GetHashCode();
+            }
         }
 
         public FeatureMatrix(FeatureMatrix matrix)
@@ -114,7 +117,7 @@ namespace Phonix
 
         public bool Equals(FeatureMatrix fm)
         {
-            if (this._hashCode != fm._hashCode)
+            if (this.GetHashCode() != fm.GetHashCode())
                 return false;
 
             if (this.Weight != fm.Weight)
@@ -143,15 +146,7 @@ namespace Phonix
 
         public override int GetHashCode()
         {
-            if (_hashCode == null)
-            {
-                _hashCode = 0;
-                foreach (var fv in this)
-                {
-                    _hashCode += fv.GetHashCode();
-                }
-            }
-            return _hashCode.Value;
+            return _hashCode;
         }
 
         public override string ToString()

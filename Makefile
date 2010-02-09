@@ -41,6 +41,8 @@ test: parser $(PHONIX_TEST) $(ANTLR)
 prof: $(PHONIX)
 	mono --profile=logging:c,ts,o=phonix.mprof $(PHONIX) $(EX_DIR)/romanian.phonix -i $(EX_DIR)/romanian.input -o $(EX_DIR)/romanian.output
 	mprof-decoder phonix.mprof > prof.txt
+	mono --profile=logging:c,ts,o=parse.mprof $(PHONIX) $(EX_DIR)/romanian.phonix -i /dev/null
+	mprof-decoder parse.mprof > parse_profile.txt
 
 $(PARSER_FILES): $(PARSER_DIR)/Phonix.g
 	java -jar lib/antlr-3.1.3.jar -make $(PARSE_DEBUG) -print $< > $(BIN_DIR)/Phonix.parser.g

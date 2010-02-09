@@ -69,10 +69,6 @@ namespace Phonix
 
         virtual public bool Matches(RuleContext ctx, FeatureMatrix matrix)
         {
-            if (matrix == null)
-            {
-                throw new ArgumentNullException("matrix");
-            }
             if (this == NeverMatches)
             {
                 return false;
