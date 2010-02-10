@@ -7,6 +7,7 @@ TEST_DIR=UnitTest
 BIN_DIR=bin
 DOC_DIR=doc
 EX_DIR=examples
+PERF_DIR=perf
 ANTLR_DLL=Antlr3.Runtime.dll
 
 PHONIX=$(BIN_DIR)/phonix.exe
@@ -39,9 +40,9 @@ test: parser $(PHONIX_TEST) $(ANTLR)
 	mono --debug /usr/lib/nunit/nunit-console.exe $(PHONIX_TEST) -labels
 
 prof: $(PHONIX)
-	mono --profile=logging:c,ts,o=phonix.mprof $(PHONIX) $(EX_DIR)/romanian.phonix -i $(EX_DIR)/romanian.input -o $(EX_DIR)/romanian.output
+	mono --profile=logging:c,ts,o=phonix.mprof $(PHONIX) $(PERF_DIR)/perf.phonix -i $(PERF_DIR)/perf.lex -o $(PERF_DIR)/perf.out
 	mprof-decoder phonix.mprof > prof.txt
-	mono --profile=logging:c,ts,o=parse.mprof $(PHONIX) $(EX_DIR)/romanian.phonix -i /dev/null
+	mono --profile=logging:c,ts,o=parse.mprof $(PHONIX) $(PERF_DIR)/perf.phonix -i /dev/null
 	mprof-decoder parse.mprof > parse_profile.txt
 
 $(PARSER_FILES): $(PARSER_DIR)/Phonix.g

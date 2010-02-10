@@ -1,0 +1,152 @@
+import std.features
+import std.symbols.ipa
+
+# Input Phonology
+#       t   k   
+#   b   d   g
+#   f   s   x
+#       z
+#   m   n
+#       l r
+#   w   j
+#
+#   i       u
+#    e      o
+#       a
+#
+# All syllables CV(C)
+
+# Add stress feature
+feature stress (type=unary)
+
+# Add diacritic for stressed vowels
+symbol "'" (diacritic) [stress]
+
+#
+# Persistent rules
+#
+
+rule fix-rounding (persist)
+[+syll -ro] => [+ro]
+
+rule fix-stressed-strident (persist)
+[stress -str] => [+str]
+
+rule fix-cont-strident (persist)
+[+cont -str *bk Place] => [+str]
+
+rule degeminate-coronals (persist)
+[Coronal $Manner $cons] => * / _ [Coronal $Manner $cons]
+
+# 
+# Rules start here
+#
+
+rule stress-penult (filter=[+syll])
+[] => [stress] / _ [*stress] $
+
+rule stress-monosyllable (filter=[+syll])
+[] => [stress] / $ _ $
+
+rule dental-palatalize
+[+ant -son] => [-ant +dist] / _ [+fr +hi]
+
+rule velar-palatalize
+[Dorsal -son] => [*Dorsal -ant +dist] / _ [+fr]
+
+rule palatal-spreading
+[-son] => [$Coronal] / _ [Coronal $Coronal]
+
+rule final-apocope
+[+syll *stress] => * / [+syll][] _ $
+
+rule lenition-a
+[+syll *stress] => [-lo -bk -fr *ro]
+
+rule prevelar-raising
+[+syll *stress] => [$Dorsal] / _ [$Dorsal Dorsal]
+
+rule front-harmony (filter=[-cons] direction=right-to-left)
+[+syll *stress] => [$fr $bk] / _ [$fr $bk]
+
+rule postlabial-rounding
+[+syll *stress] => [$Labial] / [$Labial] _
+
+rule destress (filter=[+syll])
+[] => [*stress]
+
+rule initial-stress (filter=[+syll])
+[] => [stress] / $ _
+
+rule syncope (direction=right-to-left)
+[+syll *stress] => * / [+syll][] _ [][+syll]
+
+rule final-delete
+[-cont -son] => * / _ $
+
+rule coda-spirantize
+[-cont -son] => [+cont -str] / _ [+cons]
+
+rule f-to-h
+f => x
+
+rule v-to-w
+v => w
+
+rule lenition-b
+[+syll *stress] => [-str -lo]
+
+rule stop-deletion
+[-son -cont] => * / _ [-son]
+
+rule voice-assimilation
+[-son] => [$vc] / _ [-son $vc]
+
+rule preliquid-denasalization
+[+nas] => [*nas *lat -son +vc] / _ [+son +cons -nas]
+
+rule G-to-j
+ɣ => j / [+syll] _
+
+rule final-nasal-leveling
+[+nas] => n / _ $
+
+rule Z-to-z
+ʒ => z
+
+rule height-dissimilate-coda
+[+syll +hi] => [-hi] / _ [-cons -syll +hi]
+
+rule affricate-intervocalic-j
+j => ɟ  / [+syll] _ [+syll]
+
+rule height-dissimilate-onset
+[+syll +hi] => [-hi] / [-cons -syll +hi] _
+
+rule fix-fronting
+[+syll +ro] => [-fr +bk -lo]
+
+rule fix-noncentral
+[+syll *ro -fr] => [+fr -bk]
+
+rule fix-noncentral-rounded
+[+syll +ro -bk] => [-fr +bk]
+
+rule fix-low-nonfront
+[+syll +lo +fr] => [-fr]
+
+rule merge-O-@
+ɔ => ə / _ [-cons -syll +hi]
+
+rule merge-O-U
+ɔ => ʊ
+
+rule nasal-place-assimilation
+[+nas] => [$Place] / _ [+cons $Place]
+
+rule w-to-v
+w => v
+
+rule liquid-leveling
+r => l // _ [+syll]
+
