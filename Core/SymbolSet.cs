@@ -243,7 +243,7 @@ namespace Phonix
                 if (word.Length > 0)
                 {
                     var lastSymbol = list.Last();
-                    list.Remove(lastSymbol);
+                    list.RemoveAt(list.Count - 1);
 
                     var diacritics = Diacritics.TakeSymbols(word, out word).ConvertAll(s => s as Diacritic);
                     list.Add(new CompositeSymbol(lastSymbol, diacritics.ToArray()));

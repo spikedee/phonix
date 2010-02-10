@@ -217,6 +217,26 @@ namespace Phonix.UnitTest
         }
 
         [Test]
+        public void PronounceDiacriticThree()
+        {
+                SymbolSet ss = GetTestSet();
+                ss.AddDiacritic(new Diacritic("+", FeatureMatrix.Empty));
+
+                var list = ss.SplitSymbols("acac+");
+
+                Assert.AreEqual(4, list.Count);
+                Assert.IsTrue(list[3] is CompositeSymbol);
+
+                var compos = list[3] as CompositeSymbol;
+                Assert.AreSame(ss.BaseSymbols["c"].FeatureMatrix, compos.BaseSymbol.FeatureMatrix);
+                Assert.IsTrue(compos.Diacritics.Contains(ss.Diacritics["+"] as Diacritic));
+
+                Assert.AreSame(ss.BaseSymbols["a"], list[0]);
+                Assert.AreSame(ss.BaseSymbols["c"], list[1]);
+                Assert.AreEqual(ss.BaseSymbols["a"], list[2]);
+        }
+
+        [Test]
         public void SpellDiacritic()
         {
             SymbolSet ss = GetTestSet();
