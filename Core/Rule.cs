@@ -46,6 +46,22 @@ namespace Phonix
 
         public Direction Direction { get; set; }
 
+        // Application rate should vary from 0 to 1000
+        private int _applicationRate = 1000;
+        public double ApplicationRate
+        {
+            get { return ((double)_applicationRate) / 1000; }
+            set { 
+                if (value < 0 || value > 1)
+                {
+                    throw new ArgumentException("ApplicationRate must be between zero and one");
+                }
+                _applicationRate = (int)(value * 1000);
+            }
+        }
+
+        private Random _random = new Random();
+
         public event Action<Rule, Word> Entered;
         public event Action<Rule, Word, IWordSlice> Applied;
         public event Action<Rule, Word> Exited;
@@ -73,72 +89,85 @@ namespace Phonix
         {
             // TODO
             return Name;
-            //return String.Format("{0}: {1} => {2}", Name, Condition, Action);
         }
 
         public void Apply(Word word)
         {
             Entered(this, word);
 
-            var slice = word.GetSliceEnumerator(Direction, Filter);
-
-            while (slice.MoveNext())
+            try
             {
-                // match all of the segments
-                var context = new RuleContext();
-                var matrix = slice.Current.GetEnumerator();
-                bool matchedAll = true;
-                foreach (var segment in Segments)
-                {
-                    if (!segment.Matches(context, matrix))
-                    {
-                        matchedAll = false;
-                        break;
-                    }
-                }
-                matrix.Dispose();
+                var slice = word.GetSliceEnumerator(Direction, Filter);
 
-                if (!matchedAll)
+                while (slice.MoveNext())
                 {
-                    continue;
-                }
-
-                // ensure that we don't match the excluded segments
-                matrix = slice.Current.GetEnumerator();
-                bool matchedExcluded = true;
-                foreach (var segment in ExcludedSegments)
-                {
-                    if (!segment.Matches(context, matrix))
+                    if (_applicationRate < 1000)
                     {
-                        matchedExcluded = false;
-                        break;
+                        if (_random.Next(0, 1000) > _applicationRate)
+                        {
+                            // skip this potential application of the rule
+                            continue;
+                        }
                     }
-                }
-                matrix.Dispose();
 
-                if (matchedExcluded)
-                {
-                    continue;
-                }
+                    // match all of the segments
+                    var context = new RuleContext();
+                    var matrix = slice.Current.GetEnumerator();
+                    bool matchedAll = true;
+                    foreach (var segment in Segments)
+                    {
+                        if (!segment.Matches(context, matrix))
+                        {
+                            matchedAll = false;
+                            break;
+                        }
+                    }
+                    matrix.Dispose();
 
-                // apply all of the segments
-                var wordSegment = slice.Current.GetMutableEnumerator();
-                foreach (var segment in Segments)
-                {
-                    try
+                    if (!matchedAll)
                     {
-                        segment.Combine(context, wordSegment);
+                        continue;
                     }
-                    catch (UndefinedFeatureVariableException ex)
+
+                    // ensure that we don't match the excluded segments
+                    matrix = slice.Current.GetEnumerator();
+                    bool matchedExcluded = true;
+                    foreach (var segment in ExcludedSegments)
                     {
-                        UndefinedVariableUsed(this, ex.Variable);
+                        if (!segment.Matches(context, matrix))
+                        {
+                            matchedExcluded = false;
+                            break;
+                        }
                     }
+                    matrix.Dispose();
+
+                    if (matchedExcluded)
+                    {
+                        continue;
+                    }
+
+                    // apply all of the segments
+                    var wordSegment = slice.Current.GetMutableEnumerator();
+                    foreach (var segment in Segments)
+                    {
+                        try
+                        {
+                            segment.Combine(context, wordSegment);
+                        }
+                        catch (UndefinedFeatureVariableException ex)
+                        {
+                            UndefinedVariableUsed(this, ex.Variable);
+                        }
+                    }
+                    wordSegment.Dispose();
+                    Applied(this, word, slice.Current);
                 }
-                wordSegment.Dispose();
-                Applied(this, word, slice.Current);
             }
-
-            Exited(this, word);
+            finally
+            {
+                Exited(this, word);
+            }
         }
 
     }

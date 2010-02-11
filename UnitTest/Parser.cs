@@ -288,5 +288,21 @@ namespace Phonix.UnitTest
             ApplyRules(phono, "abcbc", "abcbc");
             ApplyRules(phono, "abcbcb", "cbcbcb");
         }
+
+        [Test]
+        public void RuleApplicationRate()
+        {
+            var phono = ParseWithStdImports("rule sporadic (applicationRate=0.25) a => b");
+            var rule = phono.RuleSet.OrderedRules.First();
+            Assert.AreEqual(0.25, rule.ApplicationRate);
+        }
+
+        [Test]
+        [ExpectedException(typeof(ParseException))]
+        public void RuleApplicationRateOutOfRange()
+        {
+            ParseWithStdImports("rule sporadic (applicationRate=1.25) a => b");
+            Assert.Fail("Shouldn't reach this line");
+        }
     }
 }

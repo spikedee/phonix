@@ -145,6 +145,32 @@ namespace Phonix.UnitTest
             Assert.AreSame(word, wordEntered);
             Assert.AreSame(word, wordExited);
         }
+
+        [Test]
+        public void ApplicationRate()
+        {
+            Rule rule = new Rule(
+                    "test", 
+                    new IRuleSegment[] { new ActionSegment(MatrixMatcher.AlwaysMatches, MatrixCombiner.NullCombiner) },
+                    new IRuleSegment[] { new ActionSegment(MatrixMatcher.NeverMatches, MatrixCombiner.NullCombiner) }
+                    );
+            rule.ApplicationRate = 0.5;
+
+            Assert.AreEqual(0.5, rule.ApplicationRate);
+
+            int appliedCount = 0;
+            int callCount = 10000;
+            rule.Applied += (r, w, s) => appliedCount++;
+
+            var word = WordTest.GetTestWord();
+            for (int i = 0; i < callCount; i++)
+            {
+                rule.Apply(word);
+            }
+
+            Assert.IsTrue(appliedCount > (callCount * word.Count() * 0.49), "appliedCount: " + appliedCount);
+            Assert.IsTrue(appliedCount < (callCount * word.Count() * 0.51), "appliedCount: " + appliedCount);
+        }
     }
 
     [TestFixture]

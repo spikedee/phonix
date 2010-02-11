@@ -209,6 +209,25 @@ namespace Phonix.Parse
                         }
                         break;
 
+                        case "applicationRate":
+                        {
+                            double rate;
+                            string strRate = val as string;
+                            if (!double.TryParse(strRate, out rate))
+                            {
+                                throw new InvalidParameterValueException(key, strRate + " (value was not a decimal)");
+                            }
+                            try
+                            {
+                                rule.ApplicationRate = rate;
+                            }
+                            catch (ArgumentException)
+                            {
+                                throw new InvalidParameterValueException(key, strRate + " (value was not between 0 and 1)");
+                            }
+                        }
+                        break;
+
                         case "persist":
                             // no-op, persistent rules are handled below
                             break;
