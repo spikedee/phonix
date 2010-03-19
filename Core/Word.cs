@@ -65,10 +65,6 @@ namespace Phonix
                 {
                     throw new ArgumentNullException("node");
                 }
-                if (filter == null)
-                {
-                    throw new ArgumentNullException("filter");
-                }
                 if (node.List == null)
                 {
                     throw new SegmentDeletedException();
@@ -89,7 +85,7 @@ namespace Phonix
                 {
                     _node = _node.Next;
                 }
-                while (_node != null && !_filter.Matches(ctx, _node.Value))
+                while (_node != null && _filter != null && !_filter.Matches(ctx, _node.Value))
                 {
                     _node = _node.Next;
                 }
@@ -164,7 +160,7 @@ namespace Phonix
                 {
                     _node = _node.Previous;
                 }
-                while (_node != null && !_filter.Matches(ctx, _node.Value))
+                while (_node != null && _filter != null && !_filter.Matches(ctx, _node.Value))
                 {
                     _node = _node.Previous;
                 }
@@ -349,17 +345,13 @@ namespace Phonix
             {
                 currNode = _list.Last;
             }
-            if (filter == null)
-            {
-                filter = MatrixMatcher.AlwaysMatches;
-            }
 
             while (currNode != null)
             {
                 var nextNodePre = (dir == Direction.Rightward ? currNode.Next : currNode.Previous);
                 RuleContext ctx = new RuleContext();
 
-                if (filter.Matches(ctx, currNode.Value))
+                if (filter == null || filter.Matches(ctx, currNode.Value))
                 {
                     yield return new WordSlice(currNode, filter);
                 }

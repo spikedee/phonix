@@ -40,10 +40,10 @@ test: parser $(PHONIX_TEST) $(ANTLR)
 	mono --debug /usr/lib/nunit/nunit-console.exe $(PHONIX_TEST) -labels
 
 prof: $(PHONIX)
-	mono --profile=logging:c,ts,o=phonix.mprof $(PHONIX) $(PERF_DIR)/perf.phonix -i $(PERF_DIR)/perf.lex -o $(PERF_DIR)/perf.out
-	mprof-decoder phonix.mprof > prof.txt
-	mono --profile=logging:c,ts,o=parse.mprof $(PHONIX) $(PERF_DIR)/perf.phonix -i /dev/null
-	mprof-decoder parse.mprof > parse_profile.txt
+	time -o prof.txt mono --profile=logging:c,ts,o=phonix.mprof $(PHONIX) $(PERF_DIR)/perf.phonix -i $(PERF_DIR)/perf.lex -o $(PERF_DIR)/perf.out
+	mprof-decoder phonix.mprof >> prof.txt
+	time -o parse_prof.txt mono --profile=logging:c,ts,o=parse.mprof $(PHONIX) $(PERF_DIR)/perf.phonix -i /dev/null
+	mprof-decoder parse.mprof >> parse_prof.txt
 
 $(PARSER_FILES): $(PARSER_DIR)/Phonix.g
 	java -jar lib/antlr-3.1.3.jar -make $(PARSE_DEBUG) -print $< > $(BIN_DIR)/Phonix.parser.g
