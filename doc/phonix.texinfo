@@ -271,7 +271,7 @@ feature @var{feature-name} (@var{parameter-name}=@var{parameter-value})
 
 @end example
 
-Note that the parenthesis around the parameter list is part of the syntax and
+Note that the parentheses around the parameter list are part of the syntax and
 cannot be omitted. Currently the only parameters allowed on feature
 declarations are @code{type}, which may have the values @code{unary},
 @code{binary}, @code{scalar}, or @code{node}, and @code{children}, which is
@@ -332,25 +332,24 @@ case they are written @code{*sc}.
 @node Node Features
 @subsection Node Features
 
-Node features are used to represent @emph{feature trees}, as used in many
-phonologcal theories. All of the other feature types are single features with
-their own values. A node feature, on the other hand, represents a collection of
-child features, and the value of a node feature is the value of all of its
+Node features are used to represent @emph{feature trees}, which are used  in
+many phonological models. A node feature represents a collection of child
+features, and the value of a node feature is the set of values of all of its
 children.
 
 A node feature is declared with the parameter @code{type=node} and the
 @code{children} parameter. For example:
 
 @example
-feature nd (type=node children=a,b.c)
+feature nd (type=node children=a,b,c)
 @end example
 
 The @code{children} parameter is required for node features, and forbidden on
 all other feature types. Its value is a list of the child features, separated
 by commas. You cannot put spaces after the commas unless you put the whole list
-in quotes, e.g. @code{children=a,b,c} or @code{children="a, b, c"}. The
-features that you declare as children must have been declared before you
-declare the node feature.
+in quotes, i.e. either @code{children=a,b,c} or @code{children="a, b, c"}. The
+features that are named as children must be declared before you declare the
+node feature.
 
 Feature nodes can have any kind of feature as a child, including other nodes.
 This allows you to create a multi-level hierarchies. For an example of such a
@@ -359,19 +358,26 @@ feature tree, see @ref{std.features}.
 Feature nodes are @dfn{present} if any of their child features are present
 (i.e. if any child feature has a value other than @code{*feature}), otherwise
 they are @dfn{absent}. Feature nodes are written the same way as unary
-features, with @code{nd} for present and @code{*nd} for absent. Note that there
-are some restrictions on where you can use node feature values.
+features, so that @code{nd} indicates that a node is present and @code{*nd}
+that it is absent. Note that there are some restrictions on where you can use
+node feature values:
 
 @itemize
 
 @item Node feature values can't be used at all in symbol declarations. Symbols
-can only contain leaf features.
+can only contain non-node features.
 
-@item Present values can only be used in the @dfn{match} and @dfn{context}
-portions of a rule. This is because it isn't meaningful to assign a "present"
-value directly to a node.
+@item Node feature values that test for the presence of a node (such as
+@code{nd}) can only be used in the @dfn{match} and @dfn{context} portions of a
+rule. This is because it isn't meaningful to assign a "present" value directly
+to a node.
+
+@item Node feature values that test for the absence of a node (such as
+@code{*nd}) can be used anywhere within a rule. Assigning a null value to a
+node within a rule implies assigning a null value to all children of that node.
 
 @end itemize
+
 @node Feature Matrices
 @section Feature Matrices
 
@@ -395,7 +401,9 @@ and variable feature values cannot be used in symbol declarations.
 @section Symbols
 
 A @dfn{symbol} in Phonix is a string of text that corresponds to a given
-feature matrix. Symbols are used for three things:
+feature matrix. 
+
+Symbols in Phonix are used for three things:
 
 @enumerate
 
@@ -409,30 +417,47 @@ phonemes.
 
 @end enumerate
 
-A symbol declaration looks like this:
+@menu
+* Basic Symbols::
+* Diacritic Symbols::
+@end menu
+
+@node Basic Symbols
+@subsection Basic symbols
+
+A basic symbol declaration looks like this:
 
 @example
-
 symbol @var{symbol-string} @var{feature-matrix}
-
 @end example
 
 For example, this is the declaration of the symbol @samp{s} in the standard
 symbol set:
 
 @example
-
 symbol s [+cons -son +cont +str -vc +ant -dist]
-
 @end example
+
+Having this symbol declaration does three things:
+
+@enumerate
+@item Allows you to use the string "s" in your lexicon files or other input to Phonix
+@item Allows you to use "s" as a shorthand for [+cons -son +cont +str -vc +ant -dist] in your rules
+@item Causes the feature matrix [+cons -son +cont +str -vc +ant -dist] to be translated to "s" in your rule output.
+@end enumerate
+
+It is an error to use any character that isn't part of a symbol in your lexicon
+file, and Phonix will quit with an error message if you try to do so. If your
+rules create a feature matrix for which there is no symbol, Phonix will print a
+warning and insert the dummy symbol @code{[?]} as a placeholder in your output.
 
 Any Unicode character that doesn't have a special meaning in Phonix can be used
 in a symbol. So if you want to define ☃ (Unicode snowman) as a symbol in your
-phonology, you go ahead and do that.
+phonology, you're welcome to do so.
 
-Symbols are not limited to single characters, either. The only caveat for
-multi-character symbols is that Phonix always maps your input to the longest
-matching symbol. For example, say you define the following symbols:
+Symbols can have any number of characters in them. Phonix always maps input
+strings to the longest matching symbol, however. For example, say you define
+the following symbols:
 
 @example
 symbol s  [...]
@@ -443,9 +468,51 @@ symbol sk [...]
 If your input or rules contain the characters @samp{sk}, these will be mapped
 to the symbol /sk/, and not to the sequence /s/+/k/. To disambiguate such
 strings in your rules, you can add spaces. The string @code{s k} appearing in a
-rule will always be interpreted as /s/+/k/.
+rule will be interpreted as /s/+/k/.
 
 For many examples of symbol definitions, see @ref{std.symbols}.
+
+@node Diacritic Symbols
+@subsection Diacritic Symbols
+
+Phonix allows you to define certain symbols as @dfn{diacritics}, which are
+modifiers applied to other symbols. Diacritics are defined like this:
+
+@example
+symbol @var{diacritic-string} (diacritic) @var{feature-matrix}
+@end example
+
+For example, the following is the declaration of the nasality diacritic in the
+standard diacritic set:
+
+@example
+symbol ~ (diacritic) [+nas]
+@end example
+
+Diacritics differ from basic symbols in several ways:
+
+@enumerate
+
+@item A diacritic is not a segment of its own, but rather adds its features to
+the symbol that it modifies. Take the symbol /s/ defined above, together with
+the nasality diacritic /~/. The combination of these symbols /s~/ results in a
+single feature matrix with the features @code{[+cons -son +cont +str -vc +ant
+-dist +nas]}. These are the feature values for /s/, with the @code{+nas} value
+of /~/ added to them.
+
+@item Because of this, diacritics must follow a base symbol in your input. If
+/s/ is a base symbol and /~/ is a diacritic, then "s" is a valid input string,
+as is "s~". However, "~" and "~s" are not valid input. Phonix will quit with an
+error if it encounters such a string.
+
+@item When representing the output of your rules with symbols, Phonix will
+first look for a base symbol that matches the output feature matrix. It then
+adds diacritics as necessary. Phonix will try to find the fewest number of
+diacritics necessary to represent your output.
+
+@end enumerate
+
+For many examples of diacritic definitions, see @ref{std.symbols.diacritics}.
 
 @node Rules
 @section Rules
@@ -458,7 +525,7 @@ another.
 * Parts of a rule::
 * Basic transformations::
 * Inserting and deleting::
-* Variable feature values::
+* Rule variables::
 * Node feature values::
 * Assimilation and gemination::
 * Rule parameters::
@@ -642,16 +709,15 @@ rule sk-coalescence sk => S*
 
 This rule will compile and function as expected.
 
-@node Variable feature values
-@subsection Variable feature values
+@node Rule variables
+@subsection Rule variables
 
-It is common for linguistic rules to require that features on related segments
-be the same without specifying what the particular value is. The linguistic
-literature traditionally indicates such values with Greek letters to represent
-the variables. Phonix allows you to indicate such rules without the Greek using
-@dfn{variable feature values}, which are indicated by @code{$}. In general, a
-variable feature value indicated by @code{$@var{feature-name}} means that
-@var{feature-name} must have the same value everywhere it appears.
+It is common for linguistic rules to operate when two segments share the same
+value for some feature, regardless of what the particular value of that feature
+is. The linguistic literature traditionally indicates such values with Greek
+letters to represent the variables. Phonix allows you to indicate such rules
+without the Greek using @dfn{variable feature values}, which are indicated by
+@code{$} preceding a feature name.
 
 Consider the following rule:
 
@@ -661,15 +727,15 @@ rule cluster-spirantization [$vc -son] => [+cont] / _ [$vc -son]
 
 This rule in English reads as "spirantize any non-sonorant when followed by
 another non-sonorant of the same voicing". The feature values @code{-son} and
-@code{+cont} are ordinary feature values and indicate that both the matched
-segment and the following context segment must be non-sonorants, and that the
-matched segment becomes a continuant. The feature value @code{$vc} is
+@code{+cont} are ordinary feature values. The feature value @code{$vc} is
 different: it doesn't stipulate @code{+vc} or @code{-vc}, but rather requires
 that the value for @code{vc} be the same in both the match and context
-segments. 
+segments. This rule will change @code{apta} into @code{afta} and @code{abda}
+into @code{avda}, but it won't change @code{abta} at all, because the segments
+in that word are of different voicing.
 
-This extends to rule actions, which is perhaps a more common case. The
-following illustrates a nasal assimilation rule:
+This extends to rule actions. The following illustrates a nasal assimilation
+rule:
 
 @example
 rule nasal-assimilate [-cont] => [$nas $son] / _ [-cont $nas $son]
@@ -688,12 +754,11 @@ least twice in a rule. Consider the following modified example:
 rule nasal-assimilate-mod [-cont] => [$nas] / _ [-cont $nas $son]
 @end example
 
-This rule parses and executes without any warning, but the value @code{$son}
-has no effect, because it has to occur in at least two places in order to match
-or transform anything.
+This rule parses and executes without any warning, but the value @code{$son} in
+the rule context has no effect, since there is no other instance of @code{$son}
+to match against.
 
-The following example, however, will generate a warning whenever the rule
-applies:
+The following example, however, will generate a warning message:
 
 @example
 rule nasal-assimilate-mod [-cont] => [$nas $son] / _ [-cont $nas]
@@ -701,8 +766,8 @@ rule nasal-assimilate-mod [-cont] => [$nas $son] / _ [-cont $nas]
 
 In this case we are trying to set the value of @code{son} in the rule action,
 but the value the value for @code{son} is not defined anywhere else in the
-rule. Since this usually indicates a mistake, Phonix issues a warning and leave
-the value of @code{son} unchanged.
+rule. Since this usually indicates a mistake, Phonix issues a warning and
+leaves the value of @code{son} unchanged.
 
 @node Node feature values
 @subsection Node feature values
@@ -733,6 +798,11 @@ rule nonlabial-centralization
 [+fr -bk] => [-fr] / [*Coronal] _
 @end example
 
+This rule will apply whenever the action segment is preceded by something that
+has no non-null @code{Coronal} features. The @code{[*Coronal]} segment could
+also be written @code{[*ant *dist]}--these two forms have exactly the same
+meaning.
+
 Within the action portion of a rule, you can use this syntax to set an entire
 group of segments to their absent values. For example, the following rule
 reduces all stops in final position to /?/ by removing all of their segments
@@ -752,15 +822,14 @@ one of its children.
 @node Assimilation and gemination
 @subsection Assimilation and gemination
 
-Node features (@pxref{Node Features}) are especially useful for assimilation and
-gemination rules. One of the most common phonological processes
-cross-linguistically is @emph{nasal place assimilation}, by which nasals in
-coda positions take on the place of the following segments. These rules can be
-written with a flat feature set by using several different variable values, for
-every feature that represents a part of the notion of "place". However, this
-can get very cumbersome--consider that to write a @emph{total} assimilation
-rule, you would need to mention write every single feature in your phonology as
-a variable in your rule.
+Node features (@pxref{Node Features}) are especially useful for assimilation
+and gemination rules. One common phonological process is @emph{nasal place
+assimilation}, by which nasals in coda positions take on the place of the
+following segments. These rules can be written with a flat feature set by
+writing a complex rule that assigns every feature value correspending to the
+notion of "place". However, this can get very cumbersome--consider that to
+write a @emph{total} assimilation rule, you would need to have every single
+feature in your phonology as a variable in your rule.
 
 However, these processes are considerably simplified by using node features.
 For example, using @ref{std.features}, we can write a nasal place assimilation
@@ -772,9 +841,14 @@ rule nasal-place-assimilation
 @end example
 
 This rule is greatly simplified by using the @code{Place} node, which has as
-its children all of the features that contribute to place of articulation. You
-can extend this even further for a gemination rule that duplicates @emph{all}
-of the features for a given segment:
+its children all of the features that contribute to place of articulation. The
+effect of the @code{$Place} variable is the same as any other rule variable: it
+copies the value of @code{Place} from the context to the action segment.
+However, because @code{Place} is a node, every single feature value under
+@code{Place} in the feature hierarchy is copied as well.
+
+You can extend this even further for a gemination rule that duplicates
+@emph{all} of the features for a given segment:
 
 @example
 rule intervocalic-gemination
@@ -799,6 +873,10 @@ parameters:
 @example
 rule leftward-example (direction=right-to-left filter=[+cons]) s => z
 @end example
+
+There are two different parameters given in this example:
+@code{direction=left-to-right} and @code{filter=[+cons]}. Note that the
+parameters are separated by a space, not by a comma.
 
 Supported rule parameters are discussed below.
 
@@ -828,7 +906,7 @@ rule voicing-agreement
 @end example
 
 Given an input word like @code{astga}, the output of this rule will be
-@code{asdga}---only the second consonant in the cluster is affected. This is
+@code{asdga}---only the middle consonant in the cluster is affected! This is
 because the default rule direction is to the right. First the /s/ is evaluated,
 but this /s/ is followed by /t/, so the rule does not apply. Then the /t/
 followed by /g/ is evaluated. This does match the required context, so /t/
@@ -840,19 +918,19 @@ rule voicing-agreement (direction=right-to-left)
 [+cons] => [+vc] / _ [+cons +vc]
 @end example
 
-This rule will transform @code{astga} into @code{azdga}. First /t/ followed by
-/g/ is evaluated, transforming the /t/ into /d/, then /s/ followed by /d/ is
-evaluated, giving /z/.
+This rule will transform @code{astga} into @code{azdga} as expected. First /t/
+followed by /g/ is evaluated, transforming the /t/ into /d/. Then /s/ followed
+by /d/ is evaluated, and the /s/ becomes /z/.
 
 @node Filter
 @subsubsection Filter
 
 Rule filters are a powerful way to express rules that only apply to certain
-classes of segments and ignore intervening segments. The most familiar
-real-world example of this is vowel harmony, which typically works on vowels
-regardless of intervening consonants. To add a filter to a rule, specify the
-parameter @code{filter=@var{filter-value}}, where the filter value may be a feature
-matrix or a symbol.
+classes of segments and ignore intervening segments. A familiar real-world
+example of this kind of rule is @emph{vowel harmony}, which typically works on
+vowels regardless of intervening consonants. To add a filter to a rule, specify
+the parameter @code{filter=@var{filter-value}}, where the filter value may be a
+feature matrix or a symbol.
 
 When you apply a filter, the rule acts as if those segments not matching the
 filter were not present at all in the input. Take the following vowel harmony
@@ -881,7 +959,9 @@ covered in this section.
 * Importing files::
 * std.features::
 * std.symbols::
+* std.symbols.diacritics::
 * std.symbols.ipa::
+* std.symbols.ipa.diacritics::
 @end menu
 
 @node Importing files
@@ -982,6 +1062,17 @@ ASCII characters and is based on the X-SAMPA IPA encoding.
 @verbatiminclude Resx/std.symbols
 @end example
 
+@node std.symbols.diacritics
+@subsection std.symbols.diacritics
+
+The standard diacritic set includes diacritics intended for use with
+@code{std.symbols}. These diacritics are 7-bit ASCII characters based on the
+X-SAMPA IPA encoding.
+
+@example
+@verbatiminclude Resx/std.symbols.diacritics
+@end example
+
 @node std.symbols.ipa
 @subsection std.symbols.ipa
 
@@ -992,11 +1083,22 @@ at the top of your file.
 
 @iftex
 Unfortunately, not all IPA symbols used in this set are present in the fonts
-used in this PDF, so some of these symbols may appear to have blank symbols.
+used in this PDF, so many of these symbols may appear to be blank.
 @end iftex
 
 @example
 @verbatiminclude Resx/std.symbols.ipa
+@end example
+
+@node std.symbols.ipa.diacritics
+@subsection std.symbols.ipa.diacritics
+
+This set contains IPA diacritics for use with @code{std.symbols.ipa}. The
+diacritics contained here are the same as those in
+@code{std.symbols.diacritics}, but rendered in IPA Unicode.
+
+@example
+@verbatiminclude Resx/std.symbols.ipa.diacritics
 @end example
 
 @node Comments

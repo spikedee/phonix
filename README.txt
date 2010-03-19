@@ -1,8 +1,8 @@
 This file contains build instructions and requirements for building Phonix.
 
-The Phonix build assumes that you have the usual suite of Linux and GNU utils,
-which are standard on almost any distribution of Linux or POSIX these days.
-Aside from those, you need the following:
+The Phonix build assumes that you have the usual suite of Linux and GNU dev
+utils, which are standard on almost any distribution of Linux or POSIX these
+days. Aside from those, you need the following:
 
 * A Java Runtime v. 1.5 or greater
 

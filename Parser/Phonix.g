@@ -198,8 +198,8 @@ ruleDecl:
 rule returns [List<IRuleSegment> action, RuleContext context, RuleContext excluded]:
     ruleAction { $action = $ruleAction.val; }
     (
-        SLASH ( ruleContext { $context = $ruleContext.val; } SLASH? )?
-        ( SLASH excludedContext { $excluded = $excludedContext.val; } )?
+        SLASH ( ctx=ruleContext { $context = $ctx.val; } SLASH? )?
+        ( SLASH excl=ruleContext { $excluded = $excl.val; } )?
     )?
     ;
 
@@ -228,24 +228,11 @@ actionTerm returns [IEnumerable<IMatrixCombiner> val]:
 
 ruleContext returns [RuleContext val]
     @init { $val = new RuleContext(); }:
-    (lBound { $val.Left.Add($lBound.val); })? 
-    (leftContextTerm { $val.Left.AddRange($leftContextTerm.val); })* 
+    (BOUNDARY { $val.Left.Add(Word.LeftBoundary); })? 
+    (left=contextTerm { $val.Left.AddRange($left.val); })* 
     UNDERSCORE
-    (rightContextTerm { $val.Right.AddRange($rightContextTerm.val); })* 
-    (rBound { $val.Right.Add($rBound.val); })?
-    ;
-
-excludedContext returns [RuleContext val]:
-    ruleContext
-    { $val = $ruleContext.val; }
-    ;
-
-leftContextTerm returns [IEnumerable<IRuleSegment> val]:
-    contextTerm { $val = $contextTerm.val; }
-    ;
-
-rightContextTerm returns [IEnumerable<IRuleSegment> val]:
-    contextTerm { $val = $contextTerm.val; }
+    (right=contextTerm { $val.Right.AddRange($right.val); })* 
+    (BOUNDARY { $val.Right.Add(Word.RightBoundary); })?
     ;
 
 contextTerm returns [IEnumerable<IRuleSegment> val]
@@ -268,12 +255,6 @@ multiTerm returns [MultiSegment val]
     |   PLUS { $val = new MultiSegment(inner, 1, null); }
     )?
     ;
-
-lBound returns [IRuleSegment val]: 
-    BOUNDARY { $val = Word.LeftBoundary; } ;
-
-rBound returns [IRuleSegment val]: 
-    BOUNDARY { $val = Word.RightBoundary; } ;
 
 /* Feature matrices */
 
