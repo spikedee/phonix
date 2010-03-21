@@ -528,6 +528,7 @@ another.
 * Rule variables::
 * Node feature values::
 * Assimilation and gemination::
+* Optional and repeated segments::
 * Rule parameters::
 @end menu
 
@@ -860,6 +861,71 @@ non-consonantal segments. The feature @code{ROOT} has as its children every
 feature in @code{std.features}, and so the inserted segment copies every value
 from the preceding segment.
 
+@node Optional and repeated segments
+@subsection Optional and repeated segments
+
+You often need to make some segments in your rule @emph{optional}. In
+traditional linguistic notation, this is indicated by enclosing the optional
+segment(s) in parenthesis, and the same convention is followed by Phonix.
+
+@example
+rule optional-r
+a => i / k(r) _
+@end example
+
+This rule will take the sequences /ka/ and /kra/ and convert them to /ki/ and
+/kri/ respectively. The @code{(r)} in the rule context indicates that the /r/
+optionally follows the /k/.
+
+This syntax can be extended to indicated that a segment is repeated @emph{zero
+or more times} or @emph{one or more times}. These are indicated by using the
+operators @code{*} or @code{+} together with the parentheses.
+
+The operator @code{*} following a parenthesized segment indicates that the
+segment may appear zero or more times.
+
+@example
+rule multiple-r
+a => i / k(r)* _
+@end example
+
+This rule will match against /ka/ and /kra/, as the one above, but it also
+matches /krra/ or /krrrrrrrrrra/ or any number of other repetitions of /r/. 
+
+The operator @code{+} following a parenthesized segment indicates that the
+segment may appear one or more times.
+
+@example
+rule at-least-one-r
+a => i / k(r)+ _
+@end example
+
+This rule, unlike the ones above, does @emph{not} match /ka/. It does, however,
+match /kra/, /krra/, and any other input with at least one /r/.
+
+@subsubsection Differences from regular expressions
+
+The @code{*} and @code{+} operators are similar to the equivalent regular
+expression operators. However, Phonix is @emph{not} a regular expression
+engine, and there are important differences between regular expressions and the
+Phonix engine.
+
+@itemize
+
+@item The parentheses around segment(s) preceding the @code{*} or @code{+} are
+not optional.
+
+@item Phonix does not do @dfn{backtracking}, so a rule context involving
+multiple @code{*} or @code{+} expressions may not work correctly.
+
+@item Phonix matches are always greedy (taking in as many segments as they
+can). There are no non-greedy match operators in Phonix.
+
+@end itemize
+
+Many rules using multiple match segments can be expressed more succinctly by
+using a filter instead. @xref{Filter}.
+
 @node Rule parameters
 @subsection Rule parameters
 
@@ -883,6 +949,8 @@ Supported rule parameters are discussed below.
 @menu
 * Direction::
 * Filter::
+* Persistent rules::
+* Sporadic rules::
 @end menu
 
 @node Direction
@@ -947,6 +1015,62 @@ intervene between the vowels. The filter @code{[+syll]} effectively removes all
 non-syllabic constants from the input for the duration of the rule. Therefore,
 the context of the rule is written as if the front vowel that triggers vowel
 harmony immediately follows the matching vowel.
+
+@node Persistent rules
+@subsubsection Persistent rules
+
+A @dfn{persistent rule} is a rule that applies at all stages of the phonology,
+rather than at a specific point in the derivation of the output form.
+Persistent rules in Phonix are indicated with the rule parameter
+@code{persist}, which does not take any value. The usual purpose of a
+persistent rule is to ensure that redundant features values are maintained. For
+example, in most languages all segments that are @code{+syll} are also
+@code{+vc}. If we wanted to enforce this redundancy, we could do so with the
+following persistent rule:
+
+@example
+rule voiced-syllabics (persist)
+[+syll] => [+vc]
+@end example
+
+Of course, this rule only serves some purpose if there are other processes
+which might make a voiceless segment syllabic.
+
+Persistent rules are applied once at the start of rule application, and
+thereafter every time that some other rule changes the input. This is true
+regardless of where in your Phonix file the persistent rule is
+defined--persistent rules ignore normal rule ordering. However, the ordering of
+persistent rules relative to each other is maintained.
+
+@node Sporadic rules
+@subsubsection Sporadic rules
+
+A @dfn{sporadic rule} is a rule which does not apply to every word in the input
+lexicon, but rather applies randomly to some words and not others. Phonix
+allows you to create this kind of rule with the rule parameter
+@code{applicationRate=@var{ratio}}. The @var{ratio} parameter to
+@code{applicationRate} must be a decimal between 0 and 1. Examples:
+
+@example
+# This rule deletes /b/ 25% of the time
+rule sometimes-delete (applicationRate=0.25) b => *
+
+# With applicationRate=1, the rule applies 100% of the time. This is equivalent
+# to omitting the applicationRate parameter entirely.
+rule always-delete (applicationRate=1) a => *
+
+# With applictionRate=0, the rule applies 0% of the time. This is equivalent to
+# leaving the rule out.
+rule never-delete (applicationRate=0) c => * 
+@end example
+
+Setting the value for @code{applicationRate} to less than 0 or more than 1 will
+cause Phonix to print an error message and quit.
+
+Note that if you create sporadic rules in this fashion, Phonix's output will no
+longer be predictable or consistent from run to run. There is no way to ensure
+that a sporadic rule will always apply to given word, nor can you predict which
+words will be affected by which rules in any given invocation.
 
 @node Imports
 @section Imports
