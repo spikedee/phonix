@@ -16,7 +16,7 @@ ANTLR=$(BIN_DIR)/$(ANTLR_DLL)
 
 DOC_SRC=$(DOC_DIR)/phonix.texinfo
 DOC_PDF=$(DOC_DIR)/PhonixManual.pdf
-DOC_HTML=$(DOC_DIR)/phonix_manual.html
+DOC_HTML=$(DOC_DIR)/PhonixManual.html
 DOC_INFO=$(DOC_DIR)/phonix.info
 
 RESX_FILES=$(wildcard $(RESOURCE_DIR)/*)
