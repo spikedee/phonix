@@ -9,7 +9,7 @@ namespace Phonix
 
     public class FeatureMatrix : IEnumerable<FeatureValue>
     {
-        private readonly Dictionary<Feature, FeatureValue> _values = new Dictionary<Feature, FeatureValue>();
+        private readonly List<FeatureValue> _values;
         private readonly int _count = 0;
         private int _hashCode = 0;
 
@@ -17,12 +17,20 @@ namespace Phonix
         {
             if (values == null)
             {
-                throw new ArgumentNullException();
+                throw new ArgumentNullException("values");
             }
+            _values = new List<FeatureValue>(new FeatureValue[Feature.InstanceCount]);
 
             foreach (var val in values)
             {
-                _values[val.Feature] = val;
+                if (val != null)
+                {
+                    if (val.Feature.Index >= _values.Count)
+                    {
+                        _values.AddRange(new FeatureValue[(val.Feature.Index + 1) - _values.Count]);
+                    }
+                    _values[val.Feature.Index] = val;
+                }
             }
             foreach (var fv in this)
             {
@@ -32,7 +40,7 @@ namespace Phonix
         }
 
         public FeatureMatrix(FeatureMatrix matrix)
-            : this(matrix._values.Values)
+            : this(matrix._values)
         {
         }
 
@@ -54,9 +62,9 @@ namespace Phonix
 
         public IEnumerator<FeatureValue> GetEnumerator(bool enumerateNullValues)
         {
-            foreach (FeatureValue fv in _values.Values)
+            foreach (FeatureValue fv in _values)
             {
-                if (enumerateNullValues || fv != fv.Feature.NullValue)
+                if (fv != null && (enumerateNullValues || fv != fv.Feature.NullValue))
                 {
                     yield return fv;
                 }
@@ -72,17 +80,16 @@ namespace Phonix
                 {
                     throw new InvalidOperationException("Can't directly access node values");
                 }
-                else
+
+                try
                 {
-                    try
-                    {
-                        return _values[f];
-                    }
-                    catch (KeyNotFoundException)
-                    {
-                        // a FeatureValue is guaranteed to only return a single value
-                        return f.NullValue.GetValues(null).First();
-                    }
+                    return _values[f.Index] ?? f.NullValue.GetValues(null).First();
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    // extend the list to include the new value
+                    _values.AddRange(new FeatureValue[(f.Index + 1) - _values.Count]);
+                    return this[f];
                 }
             }
         }

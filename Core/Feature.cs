@@ -2,11 +2,20 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 
 namespace Phonix
 {
     public abstract class Feature
     {
+        private static int _instanceCount = 0;
+        internal static int InstanceCount
+        {
+            get { return _instanceCount; }
+        }
+
+        public readonly int Index;
+
         public readonly string Name;
 
         protected Feature(string name)
@@ -14,6 +23,7 @@ namespace Phonix
             Name = name;
             NullValue = GetNullValue();
             VariableValue = GetVariableValue();
+            Index = Interlocked.Increment(ref _instanceCount);
         }
 
         protected virtual IMatchCombine GetVariableValue()
