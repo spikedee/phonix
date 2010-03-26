@@ -24,10 +24,29 @@ namespace Phonix
         }
     }
 
+    public class InvalidScalarOpException : PhonixException
+    {
+        public InvalidScalarOpException(string desc)
+            : base(desc)
+        {
+        }
+    }
+
+    public class ScalarValueRangeException : PhonixException
+    {
+        public ScalarValueRangeException(string name, int min, int max, int actual)
+            : base(String.Format("value {0} for {1} was not in the range ({2}, {3})",
+                        actual, name, min, max))
+        {
+        }
+    }
+
     public class SpellingException : PhonixException 
     {
         public SpellingException(string desc) 
-            : base(desc) {}
+            : base(desc) 
+        {
+        }
     }
 
     public class RuleException : PhonixException
@@ -85,7 +104,8 @@ namespace Phonix
     {
         public FatalWarningException(string message)
             : base(message)
-        {}
+        {
+        }
     }
 
 }

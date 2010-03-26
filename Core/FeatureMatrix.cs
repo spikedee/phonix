@@ -21,6 +21,7 @@ namespace Phonix
             }
             _values = new List<FeatureValue>(new FeatureValue[Feature.InstanceCount]);
 
+            // copy feature values from the input enumeration into our value array
             foreach (var val in values)
             {
                 if (val != null)
@@ -32,6 +33,8 @@ namespace Phonix
                     _values[val.Feature.Index] = val;
                 }
             }
+
+            // build the hash code based on the enumerated values
             foreach (var fv in this)
             {
                 _count++;
@@ -83,7 +86,7 @@ namespace Phonix
 
                 try
                 {
-                    return _values[f.Index] ?? f.NullValue.GetValues(null).First();
+                    return _values[f.Index] ?? f.NullValue.GetValues(null, this).First();
                 }
                 catch (ArgumentOutOfRangeException)
                 {

@@ -72,7 +72,7 @@ namespace Phonix
                 return matrix[Feature] == ctx.VariableFeatures[Feature];
             }
 
-            public IEnumerable<FeatureValue> GetValues(RuleContext ctx)
+            public IEnumerable<FeatureValue> GetValues(RuleContext ctx, FeatureMatrix matrix)
             {
                 if (ctx == null)
                 {
@@ -134,7 +134,7 @@ namespace Phonix
         public readonly FeatureValue PlusValue;
         public readonly FeatureValue MinusValue;
 
-        public BinaryFeature(string name, params string[] altNames) 
+        public BinaryFeature(string name) 
             : base(name)
         {
             PlusValue = new BinaryFeatureValue(this, "+");
@@ -144,26 +144,43 @@ namespace Phonix
 
     public class ScalarFeature : Feature
     {
-        public ScalarFeature(string name, params string[] altNames) 
+        private readonly List<ScalarFeatureValue> _list = new List<ScalarFeatureValue>();
+        private readonly int? _min;
+        private readonly int? _max;
+
+        public ScalarFeature(string name) 
             : base(name)
         {
         }
 
+        public ScalarFeature(string name, int min, int max)
+            : base(name)
+        {
+            _min = min;
+            _max = max;
+        }
+
         private class ScalarFeatureValue : FeatureValue
         {
+            public readonly int Value;
+
             public ScalarFeatureValue(ScalarFeature f, int val)
                 : base(f, String.Format("{0}={1}", f.Name, val))
             {
                 Value = val;
             }
-
-            public readonly int Value;
         }
-
-        private readonly List<ScalarFeatureValue> _list = new List<ScalarFeatureValue>();
 
         public FeatureValue Value(int val)
         {
+            if (_min != null && _max != null)
+            {
+                if (val < _min || val > _max)
+                {
+                    throw new ScalarValueRangeException(this.Name, _min.Value, _max.Value, val);
+                }
+            }
+
             foreach (var fv in _list)
             {
                 if (fv.Value == val)
@@ -178,12 +195,80 @@ namespace Phonix
             return scalarVal;
         }
 
+        private bool GetIntValue(FeatureMatrix fm, out int val)
+        {
+            var fv = fm[this];
+            if (fv != this.NullValue)
+            {
+                val = (fv as ScalarFeatureValue).Value;
+                return true;
+            }
+            else
+            {
+                val = -1;
+                return false;
+            }
+        }
+
+        public IMatchable NotEqual(int cmp)
+        {
+            // Note: !GetIntValue is true when the value is null. A null value
+            // should evaluated to TRUE under the NotEqual operator.
+            return new DelegateMatcher((ctx, fm) => { int val; return !GetIntValue(fm, out val) || val != cmp; });
+        }
+
+        public IMatchable GreaterThan(int cmp)
+        {
+            return new DelegateMatcher((ctx, fm) => { int val; return GetIntValue(fm, out val) && val > cmp; });
+        }
+
+        public IMatchable LessThan(int cmp)
+        {
+            return new DelegateMatcher((ctx, fm) => { int val; return GetIntValue(fm, out val) && val < cmp; });
+        }
+
+        public IMatchable GreaterThanOrEqual(int cmp)
+        {
+            return new DelegateMatcher((ctx, fm) => { int val; return GetIntValue(fm, out val) && val >= cmp; });
+        }
+
+        public IMatchable LessThanOrEqual(int cmp)
+        {
+            return new DelegateMatcher((ctx, fm) => { int val; return GetIntValue(fm, out val) && val <= cmp; });
+        }
+
+        public ICombinable Add(int addend)
+        {
+            DelegateCombiner.ComboFunc func = (ctx, fm) =>
+            {
+                int val;
+                if (!GetIntValue(fm, out val))
+                {
+                    throw new InvalidScalarOpException("cannot add to a null scalar value");
+                }
+                return new FeatureValue[] { this.Value(val + addend) };
+            };
+            return new DelegateCombiner(func);
+        }
+
+        public ICombinable Subtract(int diminuend)
+        {
+            DelegateCombiner.ComboFunc func = (ctx, fm) =>
+            {
+                int val;
+                if (!GetIntValue(fm, out val))
+                {
+                    throw new InvalidScalarOpException("cannot subtract from a null scalar value");
+                }
+                return new FeatureValue[] { this.Value(val - diminuend) };
+            };
+            return new DelegateCombiner(func);
+        }
     }
 
     public class NodeFeature : Feature
     {
         public readonly IEnumerable<Feature> Children;
-
         public readonly IMatchable ExistsValue;
 
         public IEnumerable<Feature> NonNodeDescendants
@@ -261,12 +346,12 @@ namespace Phonix
                 return true;
             }
 
-            public IEnumerable<FeatureValue> GetValues(RuleContext ctx)
+            public IEnumerable<FeatureValue> GetValues(RuleContext ctx, FeatureMatrix matrix)
             {
                 var list = new List<FeatureValue>();
                 foreach (var feature in _node.Children)
                 {
-                    list.AddRange(feature.NullValue.GetValues(ctx));
+                    list.AddRange(feature.NullValue.GetValues(ctx, matrix));
                 }
                 return list;
             }
@@ -306,7 +391,7 @@ namespace Phonix
                 return true;
             }
 
-            public IEnumerable<FeatureValue> GetValues(RuleContext ctx)
+            public IEnumerable<FeatureValue> GetValues(RuleContext ctx, FeatureMatrix matrix)
             {
                 if (ctx.VariableNodes.ContainsKey(_node))
                 {

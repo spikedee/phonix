@@ -29,7 +29,7 @@ namespace Phonix.UnitTest
             Assert.AreEqual(f.Name, f.ToString());
 
             Assert.IsNotNull(f.NullValue);
-            Assert.AreSame(f, f.NullValue.GetValues(null).First().Feature);
+            Assert.AreSame(f, f.NullValue.GetValues(null, null).First().Feature);
             Assert.AreEqual("*" + TEST, f.NullValue.ToString());
 
             Assert.IsNotNull(f.VariableValue);
@@ -77,6 +77,36 @@ namespace Phonix.UnitTest
         }
 
         [Test]
+        public void ScalarBounds()
+        {
+            int min = 1;
+            int max = 3;
+            ScalarFeature f = new ScalarFeature(TEST, min, max);
+
+            for (int i = min - 1; i < max + 1; i++)
+            {
+                try
+                {
+                    var fv = f.Value(i);
+                    if (i < min || i > max)
+                    {
+                        Assert.Fail("should have thrown exception, i={0}", i);
+                    }
+                    Assert.IsNotNull(fv);
+                    Assert.AreSame(f, fv.Feature);
+                    Assert.AreEqual(String.Format("{0}={1}", TEST, i), fv.ToString());
+                }
+                catch (ScalarValueRangeException ex)
+                {
+                    if (i >= min && i <= max)
+                    {
+                        Assert.Fail("should not have thrown exception: {0}", ex.Message);
+                    }
+                }
+            }
+        }
+
+        [Test]
         public void Node()
         {
             var flist = new Feature[] 
@@ -92,7 +122,6 @@ namespace Phonix.UnitTest
             var exists = node.ExistsValue;
             Assert.IsNotNull(exists);
         }
-
     }
 
     [TestFixture]
@@ -235,7 +264,7 @@ namespace Phonix.UnitTest
 
             fs.FeatureDefined += f => { calledDefined++; gotFeature = f; };
 
-            var bf = new BinaryFeature("test", "alt1", "alt2");
+            var bf = new BinaryFeature("test");
             fs.Add(bf);
 
             Assert.AreEqual(1, calledDefined);

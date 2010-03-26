@@ -69,12 +69,12 @@ namespace Phonix.UnitTest
             var fs = FeatureSetTest.GetTestSet();
             var nullFm = new FeatureMatrix(new FeatureValue[] 
                     {
-                        fs.Get<UnaryFeature>("un").NullValue.GetValues(null).First(),
-                        fs.Get<UnaryFeature>("un2").NullValue.GetValues(null).First(),
-                        fs.Get<BinaryFeature>("bn").NullValue.GetValues(null).First(),
-                        fs.Get<BinaryFeature>("bn2").NullValue.GetValues(null).First(),
-                        fs.Get<ScalarFeature>("sc").NullValue.GetValues(null).First(),
-                        fs.Get<ScalarFeature>("sc2").NullValue.GetValues(null).First()
+                        fs.Get<UnaryFeature>("un").NullValue.GetValues(null, null).First(),
+                        fs.Get<UnaryFeature>("un2").NullValue.GetValues(null, null).First(),
+                        fs.Get<BinaryFeature>("bn").NullValue.GetValues(null, null).First(),
+                        fs.Get<BinaryFeature>("bn2").NullValue.GetValues(null, null).First(),
+                        fs.Get<ScalarFeature>("sc").NullValue.GetValues(null, null).First(),
+                        fs.Get<ScalarFeature>("sc2").NullValue.GetValues(null, null).First()
                     });
             var nullCombo = new MatrixCombiner(nullFm);
             var fm = nullCombo.Combine(null, FeatureMatrixTest.MatrixA);

@@ -112,5 +112,6 @@ namespace Phonix.UnitTest
             Assert.IsFalse(test.Matches(ctx, FeatureMatrixTest.MatrixB), "test matches B");
             Assert.IsFalse(test.Matches(ctx, FeatureMatrix.Empty), "test matches empty");
         }
+
     }
 }

@@ -66,7 +66,7 @@ namespace Phonix
             return this == matrix[this.Feature];
         }
 
-        virtual public IEnumerable<FeatureValue> GetValues(RuleContext ctx)
+        virtual public IEnumerable<FeatureValue> GetValues(RuleContext ctx, FeatureMatrix matrix)
         {
             return new FeatureValue[] { this };
         }

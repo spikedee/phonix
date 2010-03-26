@@ -12,7 +12,7 @@ namespace Phonix
 
     public interface ICombinable
     {
-        IEnumerable<FeatureValue> GetValues(RuleContext ctx);
+        IEnumerable<FeatureValue> GetValues(RuleContext ctx, FeatureMatrix matrix);
     }
 
     public class MatrixCombiner : IMatrixCombiner
@@ -71,10 +71,26 @@ namespace Phonix
 
             foreach (var combo in this)
             {
-                comboValues.AddRange(combo.GetValues(ctx));
+                comboValues.AddRange(combo.GetValues(ctx, matrix));
             }
 
             return new FeatureMatrix(comboValues);
+        }
+    }
+
+    internal class DelegateCombiner : ICombinable
+    {
+        public delegate IEnumerable<FeatureValue> ComboFunc(RuleContext ctx, FeatureMatrix fm);
+        private readonly ComboFunc _combo;
+
+        public DelegateCombiner(ComboFunc combo)
+        {
+            _combo = combo;
+        }
+
+        public IEnumerable<FeatureValue> GetValues(RuleContext ctx, FeatureMatrix matrix)
+        {
+            return _combo(ctx, matrix);
         }
     }
 }

@@ -337,7 +337,8 @@ bareVal returns [IMatchable val]:
     feature 
     {
         if ($feature.val is NodeFeature) $val = ($feature.val as NodeFeature).ExistsValue;
-        else $val = ($feature.val as UnaryFeature).Value;
+        else if ($feature.val is UnaryFeature) $val = ($feature.val as UnaryFeature).Value;
+        else throw new FeatureTypeException($feature.val.Name, "unary or node");
     }
     ;
 

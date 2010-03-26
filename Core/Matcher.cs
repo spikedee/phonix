@@ -84,4 +84,20 @@ namespace Phonix
             return true;
         }
     }
+
+    internal class DelegateMatcher : IMatchable
+    {
+        public delegate bool MatchFunc(RuleContext ctx, FeatureMatrix fm);
+        private readonly MatchFunc _match;
+
+        public DelegateMatcher(MatchFunc match)
+        {
+            _match = match;
+        }
+
+        public bool Matches(RuleContext ctx, FeatureMatrix matrix)
+        {
+            return _match(ctx, matrix);
+        }
+    }
 }

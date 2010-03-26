@@ -90,7 +90,7 @@ namespace Phonix.UnitTest
             Assert.IsFalse(node.VariableValue.Matches(ctx, FeatureMatrixTest.MatrixB));
             Assert.IsFalse(node.VariableValue.Matches(ctx, FeatureMatrixTest.MatrixC));
 
-            foreach (var fv in node.VariableValue.GetValues(ctx))
+            foreach (var fv in node.VariableValue.GetValues(ctx, null))
             {
                 Assert.AreSame(FeatureMatrixTest.MatrixA[fv.Feature], fv);
             }
@@ -103,7 +103,7 @@ namespace Phonix.UnitTest
             Assert.IsFalse(root.VariableValue.Matches(ctx, FeatureMatrixTest.MatrixB));
             Assert.IsFalse(root.VariableValue.Matches(ctx, FeatureMatrixTest.MatrixC));
 
-            foreach (var fv in root.VariableValue.GetValues(ctx))
+            foreach (var fv in root.VariableValue.GetValues(ctx, null))
             {
                 Assert.AreSame(FeatureMatrixTest.MatrixA[fv.Feature], fv);
             }
@@ -115,11 +115,166 @@ namespace Phonix.UnitTest
             var fs = FeatureSetTest.GetTestSet();
             var node = fs.Get<NodeFeature>("Node2");
 
-            var values = node.NullValue.GetValues(null);
+            var values = node.NullValue.GetValues(null, null);
             Assert.AreEqual(node.Children.Count(), values.Count());
             foreach (var child in values)
             {
                 Assert.AreEqual(child.Feature.NullValue, child);
+            }
+        }
+
+        [Test]
+        public void ScalarNotEqual()
+        {
+            var fs = FeatureSetTest.GetTestSet();
+            var sc = fs.Get<ScalarFeature>("sc");
+            var scNe = sc.NotEqual(1);
+            FeatureMatrix fm;
+
+            fm = new FeatureMatrix(new FeatureValue[] { sc.Value(0) });
+            Assert.IsTrue(scNe.Matches(null, fm));
+
+            fm = new FeatureMatrix(new FeatureValue[] { sc.Value(1) });
+            Assert.IsFalse(scNe.Matches(null, fm));
+
+            fm = new FeatureMatrix(new FeatureValue[] { sc.Value(2) });
+            Assert.IsTrue(scNe.Matches(null, fm));
+
+            fm = new FeatureMatrix(new FeatureValue[] {});
+            Assert.IsTrue(scNe.Matches(null, fm));
+        }
+
+        [Test]
+        public void ScalarGreaterThan()
+        {
+            var fs = FeatureSetTest.GetTestSet();
+            var sc = fs.Get<ScalarFeature>("sc");
+            var scGT = sc.GreaterThan(1);
+            FeatureMatrix fm;
+
+            fm = new FeatureMatrix(new FeatureValue[] { sc.Value(0) });
+            Assert.IsFalse(scGT.Matches(null, fm));
+
+            fm = new FeatureMatrix(new FeatureValue[] { sc.Value(1) });
+            Assert.IsFalse(scGT.Matches(null, fm));
+
+            fm = new FeatureMatrix(new FeatureValue[] { sc.Value(2) });
+            Assert.IsTrue(scGT.Matches(null, fm));
+
+            fm = new FeatureMatrix(new FeatureValue[] {});
+            Assert.IsFalse(scGT.Matches(null, fm));
+        }
+
+        [Test]
+        public void ScalarLessThan()
+        {
+            var fs = FeatureSetTest.GetTestSet();
+            var sc = fs.Get<ScalarFeature>("sc");
+            var scLT = sc.LessThan(1);
+            FeatureMatrix fm;
+
+            fm = new FeatureMatrix(new FeatureValue[] { sc.Value(0) });
+            Assert.IsTrue(scLT.Matches(null, fm));
+
+            fm = new FeatureMatrix(new FeatureValue[] { sc.Value(1) });
+            Assert.IsFalse(scLT.Matches(null, fm));
+
+            fm = new FeatureMatrix(new FeatureValue[] { sc.Value(2) });
+            Assert.IsFalse(scLT.Matches(null, fm));
+
+            fm = new FeatureMatrix(new FeatureValue[] {});
+            Assert.IsFalse(scLT.Matches(null, fm));
+        }
+
+        [Test]
+        public void ScalarGreaterThanOrEqual()
+        {
+            var fs = FeatureSetTest.GetTestSet();
+            var sc = fs.Get<ScalarFeature>("sc");
+            var scGTE = sc.GreaterThanOrEqual(1);
+            FeatureMatrix fm;
+
+            fm = new FeatureMatrix(new FeatureValue[] { sc.Value(0) });
+            Assert.IsFalse(scGTE.Matches(null, fm));
+
+            fm = new FeatureMatrix(new FeatureValue[] { sc.Value(1) });
+            Assert.IsTrue(scGTE.Matches(null, fm));
+
+            fm = new FeatureMatrix(new FeatureValue[] { sc.Value(2) });
+            Assert.IsTrue(scGTE.Matches(null, fm));
+
+            fm = new FeatureMatrix(new FeatureValue[] {});
+            Assert.IsFalse(scGTE.Matches(null, fm));
+        }
+
+        [Test]
+        public void ScalarLessThanOrEqual()
+        {
+            var fs = FeatureSetTest.GetTestSet();
+            var sc = fs.Get<ScalarFeature>("sc");
+            var scLTE = sc.LessThanOrEqual(1);
+            FeatureMatrix fm;
+
+            fm = new FeatureMatrix(new FeatureValue[] { sc.Value(0) });
+            Assert.IsTrue(scLTE.Matches(null, fm));
+
+            fm = new FeatureMatrix(new FeatureValue[] { sc.Value(1) });
+            Assert.IsTrue(scLTE.Matches(null, fm));
+
+            fm = new FeatureMatrix(new FeatureValue[] { sc.Value(2) });
+            Assert.IsFalse(scLTE.Matches(null, fm));
+
+            fm = new FeatureMatrix(new FeatureValue[] {});
+            Assert.IsFalse(scLTE.Matches(null, fm));
+        }
+
+        [Test]
+        public void ScalarAdd()
+        {
+            var fs = FeatureSetTest.GetTestSet();
+            var sc = fs.Get<ScalarFeature>("sc");
+            var scAdd = sc.Add(1);
+            FeatureMatrix fm;
+
+            fm = new FeatureMatrix(new FeatureValue[] { sc.Value(0) });
+            Assert.AreSame(scAdd.GetValues(null, fm).First(), sc.Value(1));
+
+            fm = new FeatureMatrix(new FeatureValue[] { sc.Value(1) });
+            Assert.AreSame(scAdd.GetValues(null, fm).First(), sc.Value(2));
+
+            try
+            {
+                fm = new FeatureMatrix(new FeatureValue[] {});
+                scAdd.GetValues(null, fm).First();
+                Assert.Fail("should have thrown exception combining with null value");
+            }
+            catch (InvalidScalarOpException)
+            {
+            }
+        }
+
+        [Test]
+        public void ScalarSubtract()
+        {
+            var fs = FeatureSetTest.GetTestSet();
+            var sc = fs.Get<ScalarFeature>("sc");
+            var scSubtract = sc.Subtract(1);
+            FeatureMatrix fm;
+
+            fm = new FeatureMatrix(new FeatureValue[] { sc.Value(0) });
+            Assert.AreSame(scSubtract.GetValues(null, fm).First(), sc.Value(-1));
+
+            fm = new FeatureMatrix(new FeatureValue[] { sc.Value(1) });
+            Assert.AreSame(scSubtract.GetValues(null, fm).First(), sc.Value(0));
+
+            try
+            {
+                fm = new FeatureMatrix(new FeatureValue[] {});
+                scSubtract.GetValues(null, fm).First();
+                Assert.Fail("should have thrown exception combining with null value");
+            }
+            catch (InvalidScalarOpException)
+            {
             }
         }
     }
