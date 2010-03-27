@@ -83,6 +83,9 @@ namespace Phonix.UnitTest
             int max = 3;
             ScalarFeature f = new ScalarFeature(TEST, min, max);
 
+            Assert.AreEqual(min, f.Min.Value);
+            Assert.AreEqual(max, f.Max.Value);
+
             for (int i = min - 1; i < max + 1; i++)
             {
                 try
@@ -103,6 +106,15 @@ namespace Phonix.UnitTest
                         Assert.Fail("should not have thrown exception: {0}", ex.Message);
                     }
                 }
+            }
+
+            try
+            {
+                f = new ScalarFeature(TEST, max, min);
+                Assert.Fail("should have thrown exception with " + f);
+            }
+            catch (ArgumentException)
+            {
             }
         }
 

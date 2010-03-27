@@ -29,8 +29,13 @@ namespace Phonix.Parse
         public static Feature MakeFeature(string name, ParamList plist, Phonology phono)
         {
             Feature f = null;
+
             bool isNode = false;
             IEnumerable<Feature> childList = null;
+
+            bool isScalar = false;
+            int? scalarMin = null;
+            int? scalarMax = null;
 
             if (plist == null)
             {
@@ -64,7 +69,7 @@ namespace Phonix.Parse
                                     break;
 
                                 case "scalar":
-                                    f = new ScalarFeature(name);
+                                    isScalar = true;
                                     break;
 
                                 case "node":
@@ -88,12 +93,35 @@ namespace Phonix.Parse
                         }
                         break;
 
+                        case "min":
+                        {
+                            int intVal;
+                            if (!Int32.TryParse(val as string, out intVal))
+                            {
+                                throw new InvalidParameterValueException(key, "not an integer");
+                            }
+                            scalarMin = intVal;
+                        }
+                        break;
+
+                        case "max":
+                        {
+                            int intVal;
+                            if (!Int32.TryParse(val as string, out intVal))
+                            {
+                                throw new InvalidParameterValueException(key, "not an integer");
+                            }
+                            scalarMax = intVal;
+                        }
+                        break;
+
                         default:
                             throw new UnknownParameterException(key);
                     }
                 }
             }
 
+            // resolve node features based on parameters
             if (isNode)
             {
                 if (childList == null)
@@ -105,6 +133,27 @@ namespace Phonix.Parse
             else if (childList != null)
             {
                 throw new InvalidParameterValueException("children", "not allowed except on feature nodes");
+            }
+
+            // resolve scalar features based on parameters
+            if (scalarMin.HasValue || scalarMax.HasValue)
+            {
+                if (!isScalar)
+                {
+                    throw new InvalidParameterValueException("min/max", "not allowed except on scalar features");
+                }
+                else if (!(scalarMin.HasValue && scalarMax.HasValue))
+                {
+                    throw new InvalidParameterValueException("min/max", "both min and max required");
+                }
+                else
+                {
+                    f = new ScalarFeature(name, scalarMin.Value, scalarMax.Value);
+                }
+            }
+            else if (isScalar)
+            {
+                f = new ScalarFeature(name);
             }
 
             Debug.Assert(f != null, "f != null");

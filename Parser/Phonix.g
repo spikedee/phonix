@@ -17,6 +17,8 @@ tokens
     RBRACE = ']';
     LPAREN = '(';
     RPAREN = ')';
+    LANGLE = '<';
+    RANGLE = '>';
     IMPORT = 'import';
     FEATURE = 'feature';
     SYMBOL = 'symbol';
@@ -94,8 +96,8 @@ fragment DIGIT: '0'..'9';
 fragment ALPHA: 'a'..'z' | 'A'..'Z';
 fragment SPACE: ' ' | '\t';
 fragment EOL: '\r' | '\n';
-fragment RESERVED_START: '+' | '-' | '*' | '=' | '[' | ']' | '(' | ')' | '/' | '#' | '_' | '$' | '"' | '\'';
-fragment RESERVED_MID: '[' | ']' | '(' | ')' | '=' | '$';
+fragment RESERVED_START: '+' | '-' | '*' | '=' | '[' | ']' | '(' | ')' | '<' | '>' | '/' | '#' | '_' | '$' | '"' | '\'';
+fragment RESERVED_MID: '[' | ']' | '(' | ')' | '<' | '>' | '=' | '$';
 fragment CHAR_START: ~( SPACE | EOL | RESERVED_START );
 fragment CHAR_MID: ~( SPACE | EOL | RESERVED_MID );
 fragment SQ: '\'';
@@ -298,6 +300,7 @@ featureVal returns [FeatureValue val]:
 
 matchableVal returns [IMatchable val]:
         scalarVal { $val = $scalarVal.val; }
+    |   scalarCmp { $val = $scalarCmp.val; }
     |   binaryVal { $val = $binaryVal.val; }
     |   bareVal { $val = $bareVal.val; }
     |   nullVal { $val = $nullVal.val; }
@@ -306,6 +309,7 @@ matchableVal returns [IMatchable val]:
 
 combinableVal returns [ICombinable val]:
         scalarVal { $val = $scalarVal.val; }
+    |   scalarOp { $val = $scalarOp.val; }
     |   binaryVal { $val = $binaryVal.val; }
     |   unaryVal { $val = $unaryVal.val; }
     |   nullVal { $val = $nullVal.val; }
@@ -314,6 +318,19 @@ combinableVal returns [ICombinable val]:
 
 scalarVal returns [FeatureValue val]: 
     scalarFeature EQ NUMBER { $val = $scalarFeature.val.Value(Int32.Parse($NUMBER.text)); }
+    ;
+
+scalarCmp returns [IMatchable val]:
+        scalarFeature LANGLE RANGLE NUMBER { $val = $scalarFeature.val.NotEqual(Int32.Parse($NUMBER.text)); }
+    |   scalarFeature LANGLE NUMBER { $val = $scalarFeature.val.LessThan(Int32.Parse($NUMBER.text)); }
+    |   scalarFeature LANGLE EQ NUMBER { $val = $scalarFeature.val.LessThanOrEqual(Int32.Parse($NUMBER.text)); }
+    |   scalarFeature RANGLE NUMBER { $val = $scalarFeature.val.GreaterThan(Int32.Parse($NUMBER.text)); }
+    |   scalarFeature RANGLE EQ NUMBER { $val = $scalarFeature.val.GreaterThanOrEqual(Int32.Parse($NUMBER.text)); }
+    ;
+
+scalarOp returns [ICombinable val]:
+        scalarFeature EQ PLUS NUMBER { $val = $scalarFeature.val.Add(Int32.Parse($NUMBER.text)); }
+    |   scalarFeature EQ MINUS NUMBER { $val = $scalarFeature.val.Subtract(Int32.Parse($NUMBER.text)); }
     ;
 
 binaryVal returns [FeatureValue val]: 

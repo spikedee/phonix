@@ -145,8 +145,8 @@ namespace Phonix
     public class ScalarFeature : Feature
     {
         private readonly List<ScalarFeatureValue> _list = new List<ScalarFeatureValue>();
-        private readonly int? _min;
-        private readonly int? _max;
+        public readonly int? Min;
+        public readonly int? Max;
 
         public ScalarFeature(string name) 
             : base(name)
@@ -156,8 +156,12 @@ namespace Phonix
         public ScalarFeature(string name, int min, int max)
             : base(name)
         {
-            _min = min;
-            _max = max;
+            if (min > max)
+            {
+                throw new ArgumentException("min must be less than or equal to max");
+            }
+            Min = min;
+            Max = max;
         }
 
         private class ScalarFeatureValue : FeatureValue
@@ -173,11 +177,11 @@ namespace Phonix
 
         public FeatureValue Value(int val)
         {
-            if (_min != null && _max != null)
+            if (Min != null && Max != null)
             {
-                if (val < _min || val > _max)
+                if (val < Min || val > Max)
                 {
-                    throw new ScalarValueRangeException(this.Name, _min.Value, _max.Value, val);
+                    throw new ScalarValueRangeException(this.Name, Min.Value, Max.Value, val);
                 }
             }
 

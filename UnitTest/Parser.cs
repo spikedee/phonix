@@ -304,5 +304,116 @@ namespace Phonix.UnitTest
             ParseWithStdImports("rule sporadic (applicationRate=1.25) a => b");
             Assert.Fail("Shouldn't reach this line");
         }
+
+        [Test]
+        public void ScalarRange()
+        {
+            var phono = ParseWithStdImports("feature scRange (type=scalar min=1 max=4)");
+            Assert.IsTrue(phono.FeatureSet.Has<ScalarFeature>("scRange"));
+
+            var sc = phono.FeatureSet.Get<ScalarFeature>("scRange");
+            Assert.AreEqual(1, sc.Min.Value);
+            Assert.AreEqual(4, sc.Max.Value);
+        }
+
+        [Test]
+        [ExpectedException(typeof(ParseException))]
+        public void ScalarMissingMin()
+        {
+            ParseWithStdImports("feature scRange (type=scalar max=4)");
+            Assert.Fail("Shouldn't reach this line");
+        }
+
+        [Test]
+        [ExpectedException(typeof(ParseException))]
+        public void ScalarMissingMax()
+        {
+            ParseWithStdImports("feature scRange (type=scalar min=1)");
+            Assert.Fail("Shouldn't reach this line");
+        }
+
+        private string scalarDefs = 
+            "feature sc (type=scalar) " +
+            "symbol sc0 [sc=0] " +
+            "symbol sc1 [sc=1] " +
+            "symbol sc2 [sc=2] " +
+            "symbol sc3 [sc=3] ";
+
+        [Test]
+        public void ScalarNotEq()
+        {
+            var phono = new Phonology();
+            Parse.Util.ParseString(phono, scalarDefs + "rule neq [sc<>0] => sc2");
+            ApplyRules(phono, "sc0", "sc0");
+            ApplyRules(phono, "sc1", "sc2");
+            ApplyRules(phono, "sc2", "sc2");
+            ApplyRules(phono, "sc3", "sc2");
+        }
+
+        [Test]
+        public void ScalarGT()
+        {
+            var phono = new Phonology();
+            Parse.Util.ParseString(phono, scalarDefs + "rule gt [sc>1] => sc0");
+            ApplyRules(phono, "sc0", "sc0");
+            ApplyRules(phono, "sc1", "sc1");
+            ApplyRules(phono, "sc2", "sc0");
+            ApplyRules(phono, "sc3", "sc0");
+        }
+
+        [Test]
+        public void ScalarGTOrEq()
+        {
+            var phono = new Phonology();
+            Parse.Util.ParseString(phono, scalarDefs + "rule gte [sc>=2] => sc0");
+            ApplyRules(phono, "sc0", "sc0");
+            ApplyRules(phono, "sc1", "sc1");
+            ApplyRules(phono, "sc2", "sc0");
+            ApplyRules(phono, "sc3", "sc0");
+        }
+
+        [Test]
+        public void ScalarLT()
+        {
+            var phono = new Phonology();
+            Parse.Util.ParseString(phono, scalarDefs + "rule lt [sc<2] => sc3");
+            ApplyRules(phono, "sc0", "sc3");
+            ApplyRules(phono, "sc1", "sc3");
+            ApplyRules(phono, "sc2", "sc2");
+            ApplyRules(phono, "sc3", "sc3");
+        }
+
+        [Test]
+        public void ScalarLTOrEq()
+        {
+            var phono = new Phonology();
+            Parse.Util.ParseString(phono, scalarDefs + "rule lte [sc<=1] => sc3");
+            ApplyRules(phono, "sc0", "sc3");
+            ApplyRules(phono, "sc1", "sc3");
+            ApplyRules(phono, "sc2", "sc2");
+            ApplyRules(phono, "sc3", "sc3");
+        }
+
+        [Test]
+        public void ScalarAdd()
+        {
+            var phono = new Phonology();
+            Parse.Util.ParseString(phono, scalarDefs + "rule add [sc<3] => [sc=+1]");
+            ApplyRules(phono, "sc0", "sc1");
+            ApplyRules(phono, "sc1", "sc2");
+            ApplyRules(phono, "sc2", "sc3");
+            ApplyRules(phono, "sc3", "sc3");
+        }
+
+        [Test]
+        public void ScalarSubtract()
+        {
+            var phono = new Phonology();
+            Parse.Util.ParseString(phono, scalarDefs + "rule subtract [sc>0] => [sc=-1]");
+            ApplyRules(phono, "sc0", "sc0");
+            ApplyRules(phono, "sc1", "sc0");
+            ApplyRules(phono, "sc2", "sc1");
+            ApplyRules(phono, "sc3", "sc2");
+        }
     }
 }
