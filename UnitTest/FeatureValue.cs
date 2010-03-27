@@ -231,8 +231,7 @@ namespace Phonix.UnitTest
         [Test]
         public void ScalarAdd()
         {
-            var fs = FeatureSetTest.GetTestSet();
-            var sc = fs.Get<ScalarFeature>("sc");
+            var sc = new ScalarFeature("sc", 0, 2);
             var scAdd = sc.Add(1);
             FeatureMatrix fm;
 
@@ -251,21 +250,30 @@ namespace Phonix.UnitTest
             catch (InvalidScalarOpException)
             {
             }
+
+            try
+            {
+                fm = new FeatureMatrix(new FeatureValue[] { sc.Value(2) });
+                scAdd.GetValues(null, fm);
+                Assert.Fail("should have thrown exception going out of range");
+            }
+            catch (ScalarValueRangeException)
+            {
+            }
         }
 
         [Test]
         public void ScalarSubtract()
         {
-            var fs = FeatureSetTest.GetTestSet();
-            var sc = fs.Get<ScalarFeature>("sc");
+            var sc = new ScalarFeature("sc", 0, 2);
             var scSubtract = sc.Subtract(1);
             FeatureMatrix fm;
 
-            fm = new FeatureMatrix(new FeatureValue[] { sc.Value(0) });
-            Assert.AreSame(scSubtract.GetValues(null, fm).First(), sc.Value(-1));
-
             fm = new FeatureMatrix(new FeatureValue[] { sc.Value(1) });
             Assert.AreSame(scSubtract.GetValues(null, fm).First(), sc.Value(0));
+
+            fm = new FeatureMatrix(new FeatureValue[] { sc.Value(2) });
+            Assert.AreSame(scSubtract.GetValues(null, fm).First(), sc.Value(1));
 
             try
             {
@@ -274,6 +282,16 @@ namespace Phonix.UnitTest
                 Assert.Fail("should have thrown exception combining with null value");
             }
             catch (InvalidScalarOpException)
+            {
+            }
+
+            try
+            {
+                fm = new FeatureMatrix(new FeatureValue[] { sc.Value(0) });
+                scSubtract.GetValues(null, fm);
+                Assert.Fail("should have thrown exception going out of range");
+            }
+            catch (ScalarValueRangeException)
             {
             }
         }
