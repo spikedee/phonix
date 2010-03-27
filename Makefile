@@ -40,8 +40,10 @@ test: parser $(PHONIX_TEST) $(ANTLR)
 	mono --debug /usr/lib/nunit/nunit-console.exe $(PHONIX_TEST) -labels
 
 prof: $(PHONIX)
+	if [ -e prof.txt ]; then mv prof.txt base_prof.txt; fi
 	time -o prof.txt mono --profile=logging:c,ts,o=phonix.mprof $(PHONIX) $(PERF_DIR)/perf.phonix -i $(PERF_DIR)/perf.lex -o $(PERF_DIR)/perf.out
 	mprof-decoder phonix.mprof >> prof.txt
+	if [ -e parse_prof.txt ]; then mv parse_prof.txt base_parse_prof.txt; fi
 	time -o parse_prof.txt mono --profile=logging:c,ts,o=parse.mprof $(PHONIX) $(PERF_DIR)/perf.phonix -i /dev/null
 	mprof-decoder parse.mprof >> parse_prof.txt
 
