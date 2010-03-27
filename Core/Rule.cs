@@ -66,6 +66,7 @@ namespace Phonix
         public event Action<Rule, Word, IWordSlice> Applied;
         public event Action<Rule, Word> Exited;
         public event Action<Rule, IMatchCombine> UndefinedVariableUsed;
+        public event Action<Rule, ScalarFeature, int> ScalarValueRangeViolation;
 
         public Rule(string name, IEnumerable<IRuleSegment> segments, IEnumerable<IRuleSegment> excluded)
         {
@@ -83,6 +84,7 @@ namespace Phonix
             Applied += (r, w, s) => {};
             Exited += (r, w) => {};
             UndefinedVariableUsed += (r, v) => {};
+            ScalarValueRangeViolation += (r, f, v) => {};
         }
 
         public override string ToString()
@@ -159,6 +161,10 @@ namespace Phonix
                         {
                             UndefinedVariableUsed(this, ex.Variable);
                         }
+                        catch (ScalarValueRangeException ex)
+                        {
+                            ScalarValueRangeViolation(this, ex.Feature, ex.Value);
+                        }
                     }
                     wordSegment.Dispose();
                     Applied(this, word, slice.Current);
@@ -192,6 +198,7 @@ namespace Phonix
         public event Action<Rule, Word, IWordSlice> RuleApplied;
         public event Action<Rule, Word> RuleExited;
         public event Action<Rule, IMatchCombine> UndefinedVariableUsed;
+        public event Action<Rule, ScalarFeature, int> ScalarValueRangeViolation;
 
         public RuleSet()
         {
@@ -201,6 +208,7 @@ namespace Phonix
             RuleApplied += (r, w, s) => {};
             RuleExited += (r, w) => {};
             UndefinedVariableUsed += (r, v) => {};
+            ScalarValueRangeViolation += (r, f, v) => {};
         }
 
         public void Add(Rule rule)
@@ -213,11 +221,7 @@ namespace Phonix
                     RuleRedefined(existing, rule);
                 }
             }
-
-            rule.Entered += (r, w) => RuleEntered(r, w);
-            rule.Exited += (r, w) => RuleExited(r, w);
-            rule.Applied += (r, w, s) => RuleApplied(r, w, s);
-            rule.UndefinedVariableUsed += (r, v) => UndefinedVariableUsed(r, v);
+            AddRuleEventHandlers(rule);
 
             _ordered.Add(rule);
         }
@@ -232,13 +236,18 @@ namespace Phonix
                     RuleRedefined(existing, rule);
                 }
             }
+            AddRuleEventHandlers(rule);
 
+            _persistent.Add(rule);
+        }
+
+        private void AddRuleEventHandlers(Rule rule)
+        {
             rule.Entered += (r, w) => RuleEntered(r, w);
             rule.Exited += (r, w) => RuleExited(r, w);
             rule.Applied += (r, w, s) => RuleApplied(r, w, s);
             rule.UndefinedVariableUsed += (r, v) => UndefinedVariableUsed(r, v);
-
-            _persistent.Add(rule);
+            rule.ScalarValueRangeViolation += (r, f, v) => ScalarValueRangeViolation(r, f, v);
         }
 
         public void ApplyAll(Word word)
@@ -272,7 +281,6 @@ namespace Phonix
                 rule.Apply(word);
             }
         }
-
     }
 
 }

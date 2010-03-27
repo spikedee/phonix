@@ -333,7 +333,7 @@ namespace Phonix.UnitTest
         }
 
         private string scalarDefs = 
-            "feature sc (type=scalar) " +
+            "feature sc (type=scalar min=0 max=3) " +
             "symbol sc0 [sc=0] " +
             "symbol sc1 [sc=1] " +
             "symbol sc2 [sc=2] " +
@@ -414,6 +414,34 @@ namespace Phonix.UnitTest
             ApplyRules(phono, "sc1", "sc0");
             ApplyRules(phono, "sc2", "sc1");
             ApplyRules(phono, "sc3", "sc2");
+        }
+
+        [Test]
+        public void ScalarValueOutOfRange()
+        {
+            var phono = new Phonology();
+
+            bool gotTrace = false;
+            Rule rule = null;
+            ScalarFeature feature = null;
+            int traceValue = 100;
+            Action<Rule, ScalarFeature, int> tracer = (r, f, i) =>
+            { 
+                gotTrace = true;
+                rule = r;
+                feature = f;
+                traceValue = i;
+            };
+
+            Parse.Util.ParseString(phono, scalarDefs + "rule subtract [] => [sc=-1]");
+            phono.RuleSet.ScalarValueRangeViolation += tracer;
+
+            ApplyRules(phono, "sc0", "sc0"); // assert that this doesn't blow up
+
+            Assert.IsTrue(gotTrace);
+            Assert.AreSame(rule, phono.RuleSet.OrderedRules.Where(r => r.Name.Equals("subtract")).First());
+            Assert.AreSame(feature, phono.FeatureSet.Get<Feature>("sc"));
+            Assert.AreEqual(-1, traceValue);
         }
     }
 }

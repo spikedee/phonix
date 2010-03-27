@@ -181,7 +181,7 @@ namespace Phonix
             {
                 if (val < Min || val > Max)
                 {
-                    throw new ScalarValueRangeException(this.Name, Min.Value, Max.Value, val);
+                    throw new ScalarValueRangeException(this, val);
                 }
             }
 

@@ -42,6 +42,7 @@ namespace Phonix
             _phono.RuleSet.RuleExited += this.LogRuleExited;
             _phono.RuleSet.RuleApplied += this.LogRuleApplied;
             _phono.RuleSet.UndefinedVariableUsed += this.LogUndefinedVariableUsed;
+            _phono.RuleSet.ScalarValueRangeViolation += this.LogScalarValueRangeViolation;
         }
 
         public void Stop()
@@ -184,7 +185,12 @@ namespace Phonix
 
         private void LogUndefinedVariableUsed(Rule rule, IMatchCombine var)
         {
-            Log(Level.Warning, "variable {0} used in rule {1} without appearing in rule context", var, rule);
+            Log(Level.Warning, "variable {0} used in rule '{1}' without appearing in rule context; some parts of this rule may be skipped", var, rule);
+        }
+
+        private void LogScalarValueRangeViolation(Rule rule, ScalarFeature feature, int val)
+        {
+            Log(Level.Warning, "in rule '{0}' resulting value {1}={2} is not in the range ({3}, {4}); some parts of this rule may be skipped", rule.Name, feature.Name, val, feature.Min, feature.Max);
         }
     }
 }

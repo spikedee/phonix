@@ -17,7 +17,25 @@ namespace Phonix
 
     public class MatrixCombiner : IMatrixCombiner
     {
-        public static MatrixCombiner NullCombiner = new MatrixCombiner(FeatureMatrix.Empty);
+        private class NullCombinator : IMatrixCombiner
+        {
+            public IEnumerator<ICombinable> GetEnumerator()
+            {
+                yield break;
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
+
+            public FeatureMatrix Combine(RuleContext ctx, FeatureMatrix matrix)
+            {
+                return matrix;
+            }
+        }
+
+        public static IMatrixCombiner NullCombiner = new NullCombinator();
 
         private readonly IEnumerable<ICombinable> _values;
 
@@ -61,11 +79,6 @@ namespace Phonix
 
         public FeatureMatrix Combine(RuleContext ctx, FeatureMatrix matrix)
         {
-            if (this == NullCombiner)
-            {
-                return matrix;
-            }
-
             var comboValues = new List<FeatureValue>();
             comboValues.AddRange(matrix);
 

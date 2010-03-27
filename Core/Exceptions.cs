@@ -34,10 +34,15 @@ namespace Phonix
 
     public class ScalarValueRangeException : PhonixException
     {
-        public ScalarValueRangeException(string name, int min, int max, int actual)
+        public readonly ScalarFeature Feature;
+        public readonly int Value;
+
+        public ScalarValueRangeException(ScalarFeature feature, int actual)
             : base(String.Format("value {0} for {1} was not in the range ({2}, {3})",
-                        actual, name, min, max))
+                        actual, feature.Name, feature.Min, feature.Max))
         {
+            Feature = feature;
+            Value = actual;
         }
     }
 
