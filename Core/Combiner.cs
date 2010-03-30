@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Text;
 
 namespace Phonix
 {
@@ -32,6 +34,11 @@ namespace Phonix
             public FeatureMatrix Combine(RuleContext ctx, FeatureMatrix matrix)
             {
                 return matrix;
+            }
+
+            override public string ToString()
+            {
+                return "[]";
             }
         }
 
@@ -89,21 +96,37 @@ namespace Phonix
 
             return new FeatureMatrix(comboValues);
         }
+
+        override public string ToString()
+        {
+            var str = new StringBuilder();
+            str.Append("[");
+            str.Append(String.Join(" ", new List<ICombinable>(_values).ConvertAll(s => s.ToString()).ToArray()));
+            str.Append("]");
+            return str.ToString();
+        }
     }
 
     internal class DelegateCombiner : ICombinable
     {
         public delegate IEnumerable<FeatureValue> ComboFunc(RuleContext ctx, FeatureMatrix fm);
         private readonly ComboFunc _combo;
+        private readonly string _desc;
 
-        public DelegateCombiner(ComboFunc combo)
+        public DelegateCombiner(ComboFunc combo, string desc)
         {
             _combo = combo;
+            _desc = desc;
         }
 
         public IEnumerable<FeatureValue> GetValues(RuleContext ctx, FeatureMatrix matrix)
         {
             return _combo(ctx, matrix);
+        }
+        
+        override public string ToString()
+        {
+            return _desc;
         }
     }
 }

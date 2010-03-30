@@ -43,6 +43,10 @@ namespace Phonix.UnitTest
             CombineCalled++;
             segment.MoveNext();
         }
+
+        public bool IsMatchOnlySegment { get { return false; } }
+        public string MatchString { get { return "~"; } }
+        public string CombineString { get { return "~"; } }
     }
 
     [TestFixture]
@@ -170,6 +174,21 @@ namespace Phonix.UnitTest
 
             Assert.IsTrue(appliedCount > (callCount * word.Count() * 0.49), "appliedCount: " + appliedCount);
             Assert.IsTrue(appliedCount < (callCount * word.Count() * 0.51), "appliedCount: " + appliedCount);
+
+        }
+
+        [Test]
+        public void Description()
+        {
+            Rule rule = new Rule(
+                    "test", 
+                    new IRuleSegment[] { new ActionSegment(MatrixMatcher.AlwaysMatches, MatrixCombiner.NullCombiner) },
+                    new IRuleSegment[] { new ActionSegment(MatrixMatcher.NeverMatches, MatrixCombiner.NullCombiner) }
+                );
+
+            Console.WriteLine(rule.Description);
+            Assert.IsNotNull(rule.Description);
+            Assert.AreSame(rule.Description, rule.Description);
         }
     }
 

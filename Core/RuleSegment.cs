@@ -1,17 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace Phonix
 {
     public interface IRuleSegment
     {
 
-        /* This function should return true if this matches the segment(s) at
-         * the next position(s) of the enumeration. When this is called, the
-         * iterator will be at the start of the enumeration or on the last
-         * segment matched by the previous IRuleSegment, so implementations
-         * should call segment.MoveNext() zero or more times (depending on how
+        /* This function should return true if the implementation matches the
+         * segment(s) at the next position(s) of the enumeration. When this is
+         * called, the iterator will be at the start of the enumeration or on
+         * the last segment matched by the previous IRuleSegment, so
+         * implementations should call segment.MoveNext() (depending on how
          * many segments from the input they consume) _before_ testing
          * segment.Current.
          */
@@ -22,7 +23,15 @@ namespace Phonix
          * mentioned for Matches also applies here.
          */
          void Combine(RuleContext ctx, MutableSegmentEnumerator segment); 
-    
+
+        /* If this returns TRUE, then the implementation warrants that it does
+         * not modify any segments in Combine(), and only moves the position of
+         * the enumerator. This is only used for metadata and reporting
+         */
+         bool IsMatchOnlySegment { get; }
+
+         string MatchString { get; }
+         string CombineString { get; }
     }
 
     public class ContextSegment : IRuleSegment
@@ -47,6 +56,10 @@ namespace Phonix
         {
             pos.MoveNext();
         }
+
+        public bool IsMatchOnlySegment { get { return true; } }
+        public string MatchString { get { return _match.ToString(); } }
+        public string CombineString { get { return ""; } }
     }
 
     public class MultiSegment : IRuleSegment
@@ -57,6 +70,11 @@ namespace Phonix
 
         public MultiSegment(IEnumerable<IRuleSegment> match, uint minMatches, uint? maxMatches)
         {
+            if (!match.All(s => s.IsMatchOnlySegment))
+            {
+                throw new ArgumentException("MultiSegment can only encapsulate match-only segments");
+            }
+
             _match = match;
             _minMatches = minMatches;
             _maxMatches = maxMatches;
@@ -110,6 +128,31 @@ namespace Phonix
         {
             Matches(ctx, pos);
         }
+
+        public bool IsMatchOnlySegment { get { return true; } }
+        public string MatchString 
+        { 
+            get 
+            { 
+                var str = new StringBuilder();
+                str.Append("(");
+                str.Append(_match.Aggregate("", (t, s) => { return t + s.MatchString; }));
+                str.Append(")");
+
+                // add operators
+                if (_minMatches == 0 && _maxMatches == null)
+                {
+                    str.Append("*");
+                }
+                else if (_minMatches == 1 && _maxMatches == null)
+                {
+                    str.Append("+");
+                }
+
+                return str.ToString();
+            }
+        }
+        public string CombineString { get { return ""; } }
     }
 
     public class ActionSegment : IRuleSegment
@@ -137,6 +180,10 @@ namespace Phonix
             pos.MoveNext();
             pos.Current = _combo.Combine(ctx, pos.Current);
         }
+
+        public bool IsMatchOnlySegment { get { return false; } }
+        public string MatchString { get { return _match.ToString(); } }
+        public string CombineString { get { return _combo.ToString(); } }
     }
 
     public class DeletingSegment : IRuleSegment
@@ -162,6 +209,10 @@ namespace Phonix
             pos.MoveNext();
             pos.Delete();
         }
+
+        public bool IsMatchOnlySegment { get { return false; } }
+        public string MatchString { get { return _match.ToString(); } }
+        public string CombineString { get { return "*"; } }
     }
         
     public class InsertingSegment : IRuleSegment
@@ -184,6 +235,10 @@ namespace Phonix
             pos.InsertAfter(_insert.Combine(ctx, FeatureMatrix.Empty));
             pos.MoveNext();
         }
+
+        public bool IsMatchOnlySegment { get { return false; } }
+        public string MatchString { get { return "*"; } }
+        public string CombineString { get { return _insert.ToString(); } }
     }
 
     public class StepSegment : IRuleSegment
@@ -197,6 +252,10 @@ namespace Phonix
         {
             Matches(ctx, pos);
         }
+
+        public bool IsMatchOnlySegment { get { return true; } }
+        public string MatchString { get { return ""; } }
+        public string CombineString { get { return ""; } }
     }
 
     public class BackstepSegment : IRuleSegment
@@ -224,5 +283,9 @@ namespace Phonix
         {
             Matches(ctx, pos);
         }
+
+        public bool IsMatchOnlySegment { get { return true; } }
+        public string MatchString { get { return ""; } }
+        public string CombineString { get { return ""; } }
     }
 }

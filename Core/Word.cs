@@ -323,6 +323,10 @@ namespace Phonix
              {
                  // nothing to do
              }
+
+            public bool IsMatchOnlySegment { get { return true; } }
+            public string MatchString { get { return "$"; } }
+            public string CombineString { get { return ""; } }
         }
 
         public static IRuleSegment LeftBoundary = new BoundarySegment();

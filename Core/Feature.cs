@@ -218,27 +218,32 @@ namespace Phonix
         {
             // Note: !GetIntValue is true when the value is null. A null value
             // should evaluated to TRUE under the NotEqual operator.
-            return new DelegateMatcher((ctx, fm) => { int val; return !GetIntValue(fm, out val) || val != cmp; });
+            return new DelegateMatcher((ctx, fm) => { int val; return !GetIntValue(fm, out val) || val != cmp; }, 
+                    String.Format("{0}<>{1}", Name, cmp));
         }
 
         public IMatchable GreaterThan(int cmp)
         {
-            return new DelegateMatcher((ctx, fm) => { int val; return GetIntValue(fm, out val) && val > cmp; });
+            return new DelegateMatcher((ctx, fm) => { int val; return GetIntValue(fm, out val) && val > cmp; },
+                    String.Format("{0}>{1}", Name, cmp));
         }
 
         public IMatchable LessThan(int cmp)
         {
-            return new DelegateMatcher((ctx, fm) => { int val; return GetIntValue(fm, out val) && val < cmp; });
+            return new DelegateMatcher((ctx, fm) => { int val; return GetIntValue(fm, out val) && val < cmp; },
+                    String.Format("{0}<{1}", Name, cmp));
         }
 
         public IMatchable GreaterThanOrEqual(int cmp)
         {
-            return new DelegateMatcher((ctx, fm) => { int val; return GetIntValue(fm, out val) && val >= cmp; });
+            return new DelegateMatcher((ctx, fm) => { int val; return GetIntValue(fm, out val) && val >= cmp; },
+                    String.Format("{0}>={1}", Name, cmp));
         }
 
         public IMatchable LessThanOrEqual(int cmp)
         {
-            return new DelegateMatcher((ctx, fm) => { int val; return GetIntValue(fm, out val) && val <= cmp; });
+            return new DelegateMatcher((ctx, fm) => { int val; return GetIntValue(fm, out val) && val <= cmp; },
+                    String.Format("{0}<={1}", Name, cmp));
         }
 
         public ICombinable Add(int addend)
@@ -252,7 +257,7 @@ namespace Phonix
                 }
                 return new FeatureValue[] { this.Value(val + addend) };
             };
-            return new DelegateCombiner(func);
+            return new DelegateCombiner(func, String.Format("{0}=+{1}", Name, addend));
         }
 
         public ICombinable Subtract(int diminuend)
@@ -266,7 +271,7 @@ namespace Phonix
                 }
                 return new FeatureValue[] { this.Value(val - diminuend) };
             };
-            return new DelegateCombiner(func);
+            return new DelegateCombiner(func, String.Format("{0}=-{1}", Name, diminuend));
         }
     }
 

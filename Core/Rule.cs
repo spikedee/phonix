@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace Phonix
 {
@@ -39,11 +40,9 @@ namespace Phonix
         public readonly string Name;
 
         public readonly IEnumerable<IRuleSegment> Segments;
-
         public readonly IEnumerable<IRuleSegment> ExcludedSegments;
 
         public IMatrixMatcher Filter { get; set; }
-
         public Direction Direction { get; set; }
 
         // Application rate should vary from 0 to 1000
@@ -57,6 +56,61 @@ namespace Phonix
                     throw new ArgumentException("ApplicationRate must be between zero and one");
                 }
                 _applicationRate = (int)(value * 1000);
+            }
+        }
+
+        private string _description;
+        public string Description
+        {
+            get
+            {
+                if (_description == null)
+                {
+
+                    // build the description string. this is kinda complicated,
+                    // which is why we don't do it until we're asked (and we
+                    // save the result)
+                    
+                    var leftCtx = new StringBuilder();
+                    var rightCtx = new StringBuilder();
+                    var leftAct = new StringBuilder();
+                    var rightAct = new StringBuilder();
+                    bool leftSide = true;
+
+                    // iterate over all of the segments here, and append their
+                    // strings to the left or right context or left/right action as
+                    // necessary. We start by putting match segments on the left
+                    // context, then switch to the right context as soon as we've
+                    // encountered any action segments.
+                    
+                    foreach (var seg in Segments)
+                    {
+                        if (seg.IsMatchOnlySegment)
+                        {
+                            if (leftSide)
+                            {
+                                leftCtx.Append(seg.MatchString);
+                            }
+                            else
+                            {
+                                rightCtx.Append(seg.MatchString);
+                            }
+                        }
+                        else
+                        {
+                            leftAct.Append(seg.MatchString);
+                            rightAct.Append(seg.CombineString);
+                            leftSide = false;
+                        }
+                    }
+
+                    _description = String.Format("{0} => {1} / {2} _ {3}", 
+                            leftAct.ToString(), 
+                            rightAct.ToString(), 
+                            leftCtx.ToString(), 
+                            rightCtx.ToString());
+                }
+                return _description;
             }
         }
 
@@ -89,8 +143,7 @@ namespace Phonix
 
         public override string ToString()
         {
-            // TODO
-            return Name;
+            return "rule " + Name;
         }
 
         public void Apply(Word word)

@@ -59,8 +59,8 @@ namespace Phonix
             _phono.RuleSet.RuleEntered -= this.LogRuleEntered;
             _phono.RuleSet.RuleExited -= this.LogRuleExited;
             _phono.RuleSet.RuleApplied -= this.LogRuleApplied;
-
-            //Trace.OnUndefinedVariableUsed -= this.LogUndefinedVariableUsed;
+            _phono.RuleSet.UndefinedVariableUsed -= this.LogUndefinedVariableUsed;
+            _phono.RuleSet.ScalarValueRangeViolation -= this.LogScalarValueRangeViolation;
 
             Writer.Flush();
         }
@@ -132,7 +132,7 @@ namespace Phonix
                 return;
             }
 
-            Log(Level.Info, "rule {0} applied", rule);
+            Log(Level.Info, "rule {0} applied: {1}", rule.Name, rule.Description);
 
             // match until we get to the current segment, so that we can
             // display which segment was acted upon

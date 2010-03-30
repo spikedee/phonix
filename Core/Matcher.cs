@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Diagnostics;
+using System.Text;
 
 namespace Phonix
 {
@@ -53,7 +54,7 @@ namespace Phonix
         {
         }
 
-#region IEnumerable<AbstractFeatureValue> members
+#region IEnumerable<IMatchable> members
 
         public IEnumerator<IMatchable> GetEnumerator()
         {
@@ -83,21 +84,37 @@ namespace Phonix
             }
             return true;
         }
+
+        override public string ToString()
+        {
+            var str = new StringBuilder();
+            str.Append("[");
+            str.Append(String.Join(" ", new List<IMatchable>(_values).ConvertAll(s => s.ToString()).ToArray()));
+            str.Append("]");
+            return str.ToString();
+        }
     }
 
     internal class DelegateMatcher : IMatchable
     {
         public delegate bool MatchFunc(RuleContext ctx, FeatureMatrix fm);
         private readonly MatchFunc _match;
+        private readonly string _desc;
 
-        public DelegateMatcher(MatchFunc match)
+        public DelegateMatcher(MatchFunc match, string desc)
         {
             _match = match;
+            _desc = desc;
         }
 
         public bool Matches(RuleContext ctx, FeatureMatrix matrix)
         {
             return _match(ctx, matrix);
+        }
+
+        override public string ToString()
+        {
+            return _desc;
         }
     }
 }
