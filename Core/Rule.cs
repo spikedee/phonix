@@ -143,7 +143,7 @@ namespace Phonix
 
         public override string ToString()
         {
-            return "rule " + Name;
+            return Name;
         }
 
         public void Apply(Word word)
