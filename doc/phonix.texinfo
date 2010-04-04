@@ -4,7 +4,7 @@
 @settitle Phonix Phonological Transformation Language
 
 @copying
-Copyright @copyright{} 2009 Jesse Bangs.
+Copyright @copyright{} 2009-2010 Jesse Bangs.
 
 This manual and Phonix itself are licensed under the BSD license.
 
@@ -51,37 +51,42 @@ $LastChangedDate$
 @chapter Quick Start Guide
 
 You are a busy person. You have sound changes to apply and phonologies to
-crunch and you do not have time to read a whole manual. This section is for
-you. Writing your first phonology is very easy: all that you need to do is open
-up a text file and type the following:
+crunch and you do not have time to read a whole manual. 
+
+This section is for you. 
+
+Writing your first phonology in Phonix is very easy: all that you need to do is
+open up a text file and type the following:
 
 @example
 import std.features
 import std.symbols
 @end example
 
-The first line will automatically add the standard feature set to your
-phonology. The second line will add the standard symbol set.  Together, these
+The first line above automatically adds the standard feature set to your
+phonology. The second line adds the standard symbol set. Together, these
 provide you with a set of contrastive features and phonetic symbols to allow
-you express whatever phonological processes you desire. You can find out more
-by reading @ref{std.features} and @ref{std.symbols}.
+you express whatever phonological processes you desire. You can find out
+exactly what these imports contain by reading @ref{std.features} and
+@ref{std.symbols}.
 
-But you've only started. Your phonology contains rules, and the first and most
-important rule in your phonology is I-Nasal. This rule expressed in English is
-"every front vowel must be /i/ if the next segment is /n/". (This is, perhaps, not a
-very realistic rule, but we're doing this for the sake of simplicity.) In
+But you've only started. Your phonology contains rules and processes that
+convert underlying forms to surface forms, and the first and most important
+rule in your phonology is @emph{I-Nasal}. This rule is expressed in English as:
+"every front vowel must be /i/ if the next segment is /n/". (This is, perhaps,
+not a very realistic rule, but we're doing this for the sake of simplicity.) In
 Phonix, you will write this as such:
 
 @example
 rule i-nasal 
-[-cons +fr] => i / _n
+[-cons +fr] => i / _ n
 @end example
 
 A well educated phonologist such as yourself will immediately recognize the
-notation being used here. The portion @code{[-cons +fr]} is a @dfn{feature
-matrix} that specifies non-consonantal front segments (i.e. front vowels), and
+notation being used here. The string @code{[-cons +fr]} is a @dfn{feature
+matrix} that specifies non-consonantal front segments a.k.a. front vowels, and
 the notation @code{=> i} may be read as "becomes /i/". The portion following
-the @code{/} is the @dfn{context}, and the context for this rule is @code{_n},
+the @code{/} is the @dfn{context}, and the context for this rule is @code{_ n},
 which we read as "when followed by /n/".
 
 If you didn't understand that, you should read @ref{Rules}, which has a much
@@ -89,18 +94,22 @@ fuller explanation. You may also look at the @ref{Romanian} for examples of
 other Phonix rules.
 
 Save your phonology in a file called @file{my.phonix}. Let's assume that you
-already have the list of underlying forms to which you wish to apply your
-transformations saved in @file{lexicon.txt}, with one word on each line.
-Conveniently, this is exactly the format that Phonix uses. You can then apply
-your rules to your lexicon by typing the following at the command line:
+already have a file @file{lexicon.txt} with a list of underlying forms for your
+transformations, with one word on each line. Conveniently, this is exactly the
+format that Phonix uses. You can then apply your rules to your lexicon by
+typing the following on the command line:
 
 @command{phonix my.phonix -i lexicon.txt}
 
-This will print the output to the screen, one word on each line. Should you
-wish to have Phonix save them to a file, simply provide the filename with
-@option{-o}:
+This will print the output of your sound changes to the screen, one word on
+each line. Should you wish to have Phonix save them to a file, simply provide
+the filename with @option{-o}:
 
 @command{phonix my.phonix -i lexicon.txt -o output.txt}
+
+This barely scratches the surface of what Phonix can do, but it should give you
+an idea of how Phonix works and what you can do with it. There are many, many
+more features in Phonix which the rest of this manual will describe.
 
 @node How To Use Phonix
 @chapter How To Use Phonix
@@ -118,10 +127,10 @@ In order to use Phonix, you need two things:
 declarations of the phonology you wish to model. Phonix files conventionally
 have the extension @file{.phonix} or @file{.phx}.
 
-@item The lexicon for your phonology--the underlying or ancestral forms before
-any rules or sound-changes are applied to them--written with the symbols
-defined in your Phonix file. Phonix can read the lexicon from standard input or
-from a file.
+@item The lexicon for your phonology---the underlying or ancestral forms before
+any rules or sound-changes are applied to them---written with the symbols
+defined in your Phonix file. Phonix can read your lexicon from standard input
+or from a file.
 
 @end enumerate
 
@@ -135,7 +144,7 @@ phonix @var{phonix-file} @var{arguments}
 @end example
 
 The only required argument is the @var{phonix-file}, which is a file containing
-a phonology definition. The following @var{arguments} are optional.
+a phonology definition. The following arguments are optional.
 
 @table @option
 
@@ -206,8 +215,8 @@ this section tough going.
 
 The Phonix language is @dfn{declarative}: you use Phonix to create a
 description of your phonology, and @code{phonix} reads your description and
-applies the rules contained therein to the lexicon. There are three basic
-elements in a Phonix file: @dfn{features}, @dfn{symbols}, and @dfn{rules}. Each
+applies the rules contained therein to the lexicon. There are three fundamental
+elements to a Phonix file: @dfn{features}, @dfn{symbols}, and @dfn{rules}. Each
 of these is built up from the previous parts: features are the most basic
 element, symbols are composed of features, and rules are composed from symbols
 and feature matrices.
@@ -225,8 +234,8 @@ and feature matrices.
 @node Features
 @section Features
 
-Features are the contrastive elements that compose the phonemes in your
-phonology. Features must be declared before they can be used in symbols or
+Phonological features are the contrastive elements that compose the phonemes in
+a phonology. Features must be declared before they can be used in symbols or
 rules. 
 
 @menu
@@ -441,15 +450,15 @@ symbol s [+cons -son +cont +str -vc +ant -dist]
 Having this symbol declaration does three things:
 
 @enumerate
-@item Allows you to use the string "s" in your lexicon files or other input to Phonix
-@item Allows you to use "s" as a shorthand for [+cons -son +cont +str -vc +ant -dist] in your rules
-@item Causes the feature matrix [+cons -son +cont +str -vc +ant -dist] to be translated to "s" in your rule output.
+@item Allows you to use the string @code{s} in your lexicon files or other input to Phonix
+@item Allows you to use @code{s} as a shorthand for @code{[+cons -son +cont +str -vc +ant -dist]} in your rules
+@item Causes the feature matrix @code{[+cons -son +cont +str -vc +ant -dist]} to be translated to @code{s} in your rule output.
 @end enumerate
 
-It is an error to use any character that isn't part of a symbol in your lexicon
-file, and Phonix will quit with an error message if you try to do so. If your
-rules create a feature matrix for which there is no symbol, Phonix will print a
-warning and insert the dummy symbol @code{[?]} as a placeholder in your output.
+Every character you use in in your lexicon file must be defined as a symbol, or
+else Phonix will quit with an error message. If your rules result in an output
+feature matrix for which there is no symbol, Phonix will print a warning and
+insert the dummy symbol @code{[?]} as a placeholder in your output.
 
 Any Unicode character that doesn't have a special meaning in Phonix can be used
 in a symbol. So if you want to define ☃ (Unicode snowman) as a symbol in your
@@ -500,10 +509,10 @@ single feature matrix with the features @code{[+cons -son +cont +str -vc +ant
 -dist +nas]}. These are the feature values for /s/, with the @code{+nas} value
 of /~/ added to them.
 
-@item Because of this, diacritics must follow a base symbol in your input. If
-/s/ is a base symbol and /~/ is a diacritic, then "s" is a valid input string,
-as is "s~". However, "~" and "~s" are not valid input. Phonix will quit with an
-error if it encounters such a string.
+@item Diacritics must follow a base symbol in your input. If /s/ is a base
+symbol and /~/ is a diacritic, then @code{s} is a valid input string, as is
+@code{s~}.  However, @code{~} and @code{~s} are not valid input. Phonix will
+quit with an error if it encounters such a string.
 
 @item When representing the output of your rules with symbols, Phonix will
 first look for a base symbol that matches the output feature matrix. It then
@@ -517,9 +526,9 @@ For many examples of diacritic definitions, see @ref{std.symbols.diacritics}.
 @node Rules
 @section Rules
 
-The @dfn{rule} is the most complex and the most useful object in Phonix. A rule
-describes the conditions under which one phonological unit is transformed into
-another.
+The @dfn{rule} is the most complex and the most variable object in Phonix. A
+rule describes the conditions under which one phonological unit is transformed
+into another.
 
 @menu
 * Parts of a rule::
@@ -547,8 +556,7 @@ rule @var{name} (@var{parameters}) @var{match} => @var{action} / @var{context} /
 
 @item The @dfn{parameters} are optional and define characteristics of how the
 rule is applied. If you don't apply any parameters, you can omit the
-parenthesis. Currently the supported parameters for rules are @code{filter} and
-@code{direction}. @xref{Rule parameters}.
+parentheses.
 
 @item The @dfn{match} is a sequence of feature matrices or symbols that matches
 the segments that the transformation works on.
@@ -563,7 +571,7 @@ does not depend on the surrounding segments, you can omit the context and the
 excluded context.
 
 @item The @dfn{excluded-context} defines conditions under which the rule should
-not apply. Thus, this indicates exceptions to the conditions in the context.
+not apply. These are exceptions to the conditions in the context.
 
 @end itemize
 
@@ -576,7 +584,8 @@ The simplest transformation is one that has no context or parameters and acts
 only on a single phoneme, as in the following example.
 
 @example
-rule s-to-z s => z
+rule s-to-z
+    s => z
 @end example
 
 The @dfn{match} here is the segment /s/, and the @dfn{action} is to turn all
@@ -585,30 +594,33 @@ write this rule like this (using the appreviation @code{vc} for voice, as in
 the standard feature set):
 
 @example
-rule s-voicing s => [+vc]
+rule s-voicing
+    s => [+vc]
 @end example
 
 Here the action is a feature matrix rather than a segment. The effect of this
 is to take whichever value for @code{voice} the input previously had and
-replace it with @code{+voice}. You can use a feature matrix in the match to
-match against a class of segments:
+replace it with @code{+voice}. You can also use a feature matrix in the match
+portion of the rule to match against a class of segments:
 
 @example
-rule continuant-voicing [+cont] => [+vc]
+rule continuant-voicing
+    [+cont] => [+vc]
 @end example
 
-This matches all segments that have the feature @code{+cont} and applies the
-feature @code{+vc} to them.
+The matrix @code{[+cont]} causes this rule to match all segments that have the
+feature @code{+cont}, and applies the feature @code{+vc} to them.
 
 Most rules do not apply everywhere, however, but have some @dfn{context}. The
-context consists of, at minimum, the character @code{_} with any number of
-feature matrices or symbols before or after it. The @code{_} character stands
-for the segment(s) of the match/action. Regardless of how many segments are
-matched or transformed, you must write only one underscore. For example, let's
-modify our previous rule to only apply after a nasal:
+context in Phonix consists of, at minimum, the character @code{_} with any
+number of feature matrices or symbols before or after it. The @code{_}
+character stands for the segment(s) of the match/action. Regardless of how many
+segments are matched or transformed, you must write only one underscore. For
+example, let's modify our previous rule to only apply after a nasal:
 
 @example
-rule postnasal-voicing [+cont] => [+vc] / [+nas] _
+rule postnasal-voicing
+    [+cont] => [+vc] / [+nas] _
 @end example
 
 In this case, the context @code{/ [+nas] _} indicates that the segments matched
@@ -622,7 +634,7 @@ apply at the end of a word. In this case, we write this:
 
 @example
 rule final-postnasal-voicing
-[+cont] => [+vc] / [+nas] _ $
+    [+cont] => [+vc] / [+nas] _ $
 @end example
 
 (Note that we've broken this rule into two lines. This is perfectly acceptable:
@@ -637,7 +649,7 @@ For example:
 
 @example
 rule postnasal-voicing-with-exception
-[+cont] => [+vc] / [+nas] _ // N _
+    [+cont] => [+vc] / [+nas] _ // N _
 @end example
 
 Here we voice continuants after nasals, @emph{except} after /N/ (the velar
@@ -647,7 +659,7 @@ If you wish, you can also indicate the excluded context without the context:
 
 @example
 rule voicing-with-exception
-[+cont] => [+vc] // $ _
+    [+cont] => [+vc] // $ _
 @end example
 
 This voices all continuants unless they are the first segment in the word. Note
@@ -655,7 +667,7 @@ that we could accomplish the exact same thing with:
 
 @example
 rule voicing-with-exception
-[+cont] => [+vc] / [] _
+    [+cont] => [+vc] / [] _
 @end example
 
 Here, we specify that voicing occurs when the continuant is preceded by any
@@ -674,10 +686,10 @@ specify that "nothing" becomes something:
 
 @example
 rule e-epenthesis
-* => e / $ _ s[-cont]
+    * => e / $ _ s[-cont]
 @end example
 
-This is the familiar rule found in many Romance languages which adds an
+This is a familiar rule found in many Romance languages, which adds an
 epenthetic /e/ following an initial cluster with /s/.
 
 The opposite of insertion is deletion, in which something becomes nothing.
@@ -685,27 +697,29 @@ E.g.:
 
 @example
 rule final-cons-deletion
-[-son] => * / _ $
+    [-son] => * / _ $
 @end example
 
-Here, the "something" is any non-sonorant (@code{-son}), which becomes nothing
-when followed by the word boundary.
+Here, the "something" is any non-sonorant (@code{-son}), which becomes
+"nothing" when followed by the word boundary.
 
-Our nothing character is important when writing coalescence rules, in which
-multiple segments become one. For example, to express that /s/+/k/ becomes /S/,
-you @emph{cannot} write the following:
+Our nothing character is important when writing rules in which multiple
+segments become one. For example, to express that /s/+/k/ becomes /S/, you
+@emph{cannot} write the following:
 
 @example
-# DOES NOT WORK - Phonix will not compile this line
-rule sk-coalescence sk => S
+# DOES NOT WORK - Phonix will not compile this rule
+rule sk-coalescence 
+    sk => S
 @end example
 
 The problem with this is that you must have the same number of segments both
-before and after the @code{=>} symbol. To accomplish what you want, just add a
-little nothing to balance out the rule:
+before and after the @code{=>} symbol. To accomplish what you want, just
+specify that one of the input segments is deleted:
 
 @example
-rule sk-coalescence sk => S*
+rule sk-coalescence 
+    sk => S*
 @end example
 
 This rule will compile and function as expected.
@@ -723,7 +737,8 @@ without the Greek using @dfn{variable feature values}, which are indicated by
 Consider the following rule:
 
 @example
-rule cluster-spirantization [$vc -son] => [+cont] / _ [$vc -son]
+rule cluster-spirantization 
+    [$vc -son] => [+cont] / _ [$vc -son]
 @end example
 
 This rule in English reads as "spirantize any non-sonorant when followed by
@@ -731,28 +746,31 @@ another non-sonorant of the same voicing". The feature values @code{-son} and
 @code{+cont} are ordinary feature values. The feature value @code{$vc} is
 different: it doesn't stipulate @code{+vc} or @code{-vc}, but rather requires
 that the value for @code{vc} be the same in both the match and context
-segments. This rule will change @code{apta} into @code{afta} and @code{abda}
-into @code{avda}, but it won't change @code{abta} at all, because the segments
-in that word are of different voicing.
+segments. This rule will change @code{apta} into @code{afta} since both /p/ and
+/t/ have the same voicinge, and it will change @code{abda} into @code{avda}
+since /b/ and /d/ have the some voicing. However, it won't change @code{abta}
+at all, because the segments in that word are of different voicing.
 
-This extends to rule actions. The following illustrates a nasal assimilation
-rule:
+Variables may also occur in rule actions. The following illustrates a nasal
+assimilation rule:
 
 @example
-rule nasal-assimilate [-cont] => [$nas $son] / _ [-cont $nas $son]
+rule nasal-assimilate
+    [-cont] => [$nas $son] / _ [-cont $nas $son]
 @end example
 
 This rule reads as "any non-continuant takes the nasality and sonority of a
-following non-contiuant segment". This will cause, for example /d/+/m/ to
-become /n/+/m/, while /n/+/b/ becomes /d/+/b/. The values @code{$nas $son} in
-the rule action have the effect of setting @code{nas} and @code{son} in the
-matched segment to whatever value they have in the context segment.
+following non-contiuant segment". The values @code{$nas $son} in the rule
+action have the effect of setting @code{nas} and @code{son} in the matched
+segment to whatever value they have in the context segment. This will cause,
+for example /d/+/m/ to become /n/+/m/, while /n/+/b/ becomes /d/+/b/. 
 
 In order for a variable feature value to be meaningful, it has to occur at
 least twice in a rule. Consider the following modified example:
 
 @example
-rule nasal-assimilate-mod [-cont] => [$nas] / _ [-cont $nas $son]
+rule nasal-assimilate-mod
+    [-cont] => [$nas] / _ [-cont $nas $son]
 @end example
 
 This rule parses and executes without any warning, but the value @code{$son} in
@@ -762,13 +780,14 @@ to match against.
 The following example, however, will generate a warning message:
 
 @example
-rule nasal-assimilate-mod [-cont] => [$nas $son] / _ [-cont $nas]
+rule nasal-assimilate-mod2
+    [-cont] => [$nas $son] / _ [-cont $nas]
 @end example
 
 In this case we are trying to set the value of @code{son} in the rule action,
-but the value the value for @code{son} is not defined anywhere else in the
-rule. Since this usually indicates a mistake, Phonix issues a warning and
-leaves the value of @code{son} unchanged.
+but the value for @code{son} is not defined anywhere else in the rule. Since
+this usually indicates a mistake, Phonix issues a warning and leaves the value
+of @code{son} unchanged.
 
 @node Node feature values
 @subsection Node feature values
@@ -782,7 +801,7 @@ syntax that is used for unary values to test for the presence of a node:
 
 @example
 rule postlabial-centralization
-[+fr -bk] => [-fr] / [Labial] _
+    [+fr -bk] => [-fr] / [Labial] _
 @end example
 
 In this case we are testing for the presence of the @code{Labial} node. This is
@@ -790,47 +809,48 @@ especially convenient because it allows us to capture both @code{+ro} segments
 (rounded vowels) and @code{-ro} segments (labial consonants), which otherwise
 can't be represented in a natural class.
 
-Conversely, you can test for the absence of a particular node by testing for
-@code{*Labial}. The following rule centralizes vowels after non-@code{Coronal}
-segments.
+Conversely, you can test for the absence of a particular node by preceding the
+node name with @code{*},as with other features. For example, the following rule
+centralizes vowels after non-@code{Coronal} segments.
 
 @example
 rule nonlabial-centralization
-[+fr -bk] => [-fr] / [*Coronal] _
+    [+fr -bk] => [-fr] / [*Coronal] _
 @end example
 
 This rule will apply whenever the action segment is preceded by something that
-has no non-null @code{Coronal} features. The @code{[*Coronal]} segment could
-also be written @code{[*ant *dist]}--these two forms have exactly the same
-meaning.
+has no non-null values for features that occur under the @code{Coronal} node.
+You could also write @code{[*Coronal]} as @code{[*ant *dist]}, since @code{ant}
+and @code{dist} are the only two features under @code{Coronal}. These two forms
+have exactly the same meaning, though the former is clearer and easier to
+understand.
 
 Within the action portion of a rule, you can use this syntax to set an entire
 group of segments to their absent values. For example, the following rule
-reduces all stops in final position to /?/ by removing all of their segments
-under the @code{Place} node.
+reduces all stops in final position to /?/ by removing every feature under the
+@code{Place} node.
 
 @example
 rule final-glottalization
-[-cont] => [*Place] / _ $
+    [-cont] => [*Place] / _ $
 @end example
 
 As this rule illustrates, you may use the @code{*Node} syntax in a rule action,
 but you cannot use the @code{Node} syntax in an action, because it makes no
-sense to assign a value directly to a node. A node is present if one of its
-children is present, so in order to make a node be present, assign a value to
-one of its children.
+sense to assign a value directly to a node.
 
 @node Assimilation and gemination
 @subsection Assimilation and gemination
 
 Node features (@pxref{Node Features}) are especially useful for assimilation
-and gemination rules. One common phonological process is @emph{nasal place
-assimilation}, by which nasals in coda positions take on the place of the
-following segments. These rules can be written with a flat feature set by
-writing a complex rule that assigns every feature value correspending to the
-notion of "place". However, this can get very cumbersome--consider that to
-write a @emph{total} assimilation rule, you would need to have every single
-feature in your phonology as a variable in your rule.
+and gemination rules, as we'll see.
+
+A common phonological process is @emph{nasal place assimilation}, by which
+nasals in coda positions take on the place of the following segments. These
+rules can be written with a flat feature set by writing a complex rule that
+assigns every feature value correspending to the notion of "place". However,
+this can get very cumbersome--consider that to write a @emph{total}
+assimilation rule, you would need include every single feature as a variable!
 
 However, these processes are considerably simplified by using node features.
 For example, using @ref{std.features}, we can write a nasal place assimilation
@@ -838,7 +858,7 @@ rule as follows:
 
 @example
 rule nasal-place-assimilation
-[+nas] => [$Place] / _ [+cons $Place]
+    [+nas] => [$Place] / _ [+cons $Place]
 @end example
 
 This rule is greatly simplified by using the @code{Place} node, which has as
@@ -853,7 +873,7 @@ You can extend this even further for a gemination rule that duplicates
 
 @example
 rule intervocalic-gemination
-* => [$ROOT] / [-cons][+cons $ROOT] _ [-cons]
+    * => [$ROOT] / [-cons][+cons $ROOT] _ [-cons]
 @end example
 
 Here a consonantal segment is doubled when surrounded on either side by
@@ -870,23 +890,23 @@ segment(s) in parenthesis, and the same convention is followed by Phonix.
 
 @example
 rule optional-r
-a => i / k(r) _
+    a => i / k(r) _
 @end example
 
 This rule will take the sequences /ka/ and /kra/ and convert them to /ki/ and
 /kri/ respectively. The @code{(r)} in the rule context indicates that the /r/
 optionally follows the /k/.
 
-This syntax can be extended to indicated that a segment is repeated @emph{zero
+This syntax can be extended to indicate that a segment is repeated @emph{zero
 or more times} or @emph{one or more times}. These are indicated by using the
-operators @code{*} or @code{+} together with the parentheses.
+operators @code{*} or @code{+} respectively, together with the parentheses.
 
 The operator @code{*} following a parenthesized segment indicates that the
 segment may appear zero or more times.
 
 @example
 rule multiple-r
-a => i / k(r)* _
+    a => i / k(r)* _
 @end example
 
 This rule will match against /ka/ and /kra/, as the one above, but it also
@@ -897,7 +917,7 @@ segment may appear one or more times.
 
 @example
 rule at-least-one-r
-a => i / k(r)+ _
+    a => i / k(r)+ _
 @end example
 
 This rule, unlike the ones above, does @emph{not} match /ka/. It does, however,
@@ -970,20 +990,20 @@ last consonant. The following rule does not accomplish that:
 @example
 # This doesn't work as expected
 rule voicing-agreement 
-[+cons] => [+vc] / _ [+cons +vc]
+    [+cons] => [+vc] / _ [+cons +vc]
 @end example
 
 Given an input word like @code{astga}, the output of this rule will be
 @code{asdga}---only the middle consonant in the cluster is affected! This is
 because the default rule direction is to the right. First the /s/ is evaluated,
-but this /s/ is followed by /t/, so the rule does not apply. Then the /t/
-followed by /g/ is evaluated. This does match the required context, so /t/
-becomes /d/. However, the /s/ is never reevaluated. To fix this, specify that
-the rule applies from the right to the left:
+but this /s/ is followed by /t/, so the rule does not apply. Then /t/ followed
+by /g/ is evaluated. This does match the required context, so /t/ becomes /d/.
+However, the /s/ is never reevaluated. To fix this, specify that the rule
+applies from the right to the left:
 
 @example
 rule voicing-agreement (direction=right-to-left)
-[+cons] => [+vc] / _ [+cons +vc]
+    [+cons] => [+vc] / _ [+cons +vc]
 @end example
 
 This rule will transform @code{astga} into @code{azdga} as expected. First /t/
@@ -997,8 +1017,8 @@ Rule filters are a powerful way to express rules that only apply to certain
 classes of segments and ignore intervening segments. A familiar real-world
 example of this kind of rule is @emph{vowel harmony}, which typically works on
 vowels regardless of intervening consonants. To add a filter to a rule, specify
-the parameter @code{filter=@var{filter-value}}, where the filter value may be a
-feature matrix or a symbol.
+the parameter @code{filter=@var{filter-value}}, where the @dfn{filter-value}
+may be a feature matrix or a symbol.
 
 When you apply a filter, the rule acts as if those segments not matching the
 filter were not present at all in the input. Take the following vowel harmony
@@ -1006,7 +1026,7 @@ rule:
 
 @example
 rule vowel-harmony (filter=[+syll])
-[-fr] => [+fr -bk] / _ [+fr]
+    [-fr] => [+fr -bk] / _ [+fr]
 @end example
 
 This rule turns back vowels into front vowels when followed by other front
@@ -1030,7 +1050,7 @@ following persistent rule:
 
 @example
 rule voiced-syllabics (persist)
-[+syll] => [+vc]
+    [+syll] => [+vc]
 @end example
 
 Of course, this rule only serves some purpose if there are other processes
@@ -1091,6 +1111,8 @@ covered in this section.
 @node Importing files
 @subsection Importing files 
 
+You may import one Phonix file into another with the following declaration:
+
 @example
 import @var{filename}
 @end example
@@ -1107,8 +1129,8 @@ import "C:\greek.phonix"
 @end example
 
 If the file name that you give after @code{import} is not an absolute path
-(however that is defined on your local system), Phonix looks for the file you
-imported in the following places:
+(however such a path is defined on your local system), Phonix looks for the
+file you imported in the following places:
 
 @enumerate
 
@@ -1258,7 +1280,7 @@ to minimize the situation where you have to use a quoted string:
 always interpreted as a token delimiter outside of a quoted string, which
 implicitly means it cannot be part of a string.
 
-@item A bare string cannot contain any of the characters @code{[]()$=} @emph{at
+@item A bare string cannot contain any of the characters @code{[]()<>$=} @emph{at
 all}. 
 
 @item A bare string cannot begin with any of the characters @code{+-*/#_"'}.
@@ -1274,6 +1296,32 @@ all can appear inside a quoted string, except for another quote, of course.
 There is no mechanism for escaping quotes, so if you need to include a single
 quote then surround your quote with double quotes, and vice versa.
 
+The following are valid strings that could be used for feature names, rule
+names, or symbols:
+
+@example
+foo
+foo-bar
+foo+
+bar?
+!   
+b*a*z
+blu" 
+"+++" 
+'_'    
+'"'
+@end example
+
+The following are NOT valid strings and cannot be used for feature names, rule
+names, or symbols:
+
+@example
+-foo        # looks like a feature value
+_foo        # ambiguous in rule context
+foo()       # cannot use parentheses
+foo$        # cannot use dollar sign
+@end example
+
 @node Examples
 @chapter Examples
 
@@ -1286,12 +1334,12 @@ The following examples illustrate common use cases for Phonix.
 @node Romanian
 @section Romanian
 
-The following example files define a phonology for contemporary Romanian, and
+The following files define a phonology for contemporary Romanian, and
 illustrates how most of the surface alternations in Romanian can be derived.
 Note that the example is somewhat incomplete: the input represents an internal
 reconstruction of Proto-Romanian, not Proto-Romance or Vulgar Latin, and there
-may be a few alternations that slipped by me. However, the majority of the
-active phonological processes in Romanian should be represented.
+may be a few alternations that slipped by. However, the majority of the active
+phonological processes in Romanian should be represented.
 
 @subsection @file{romanian.phonix}
 
