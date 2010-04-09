@@ -253,7 +253,7 @@ namespace Phonix
                 int val;
                 if (!GetIntValue(fm, out val))
                 {
-                    throw new InvalidScalarOpException("cannot add to a null scalar value");
+                    throw new InvalidScalarOpException(this, "cannot add to a null scalar value");
                 }
                 return new FeatureValue[] { this.Value(val + addend) };
             };
@@ -267,7 +267,7 @@ namespace Phonix
                 int val;
                 if (!GetIntValue(fm, out val))
                 {
-                    throw new InvalidScalarOpException("cannot subtract from a null scalar value");
+                    throw new InvalidScalarOpException(this, "cannot subtract from a null scalar value");
                 }
                 return new FeatureValue[] { this.Value(val - diminuend) };
             };

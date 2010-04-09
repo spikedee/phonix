@@ -43,6 +43,7 @@ namespace Phonix
             _phono.RuleSet.RuleApplied += this.LogRuleApplied;
             _phono.RuleSet.UndefinedVariableUsed += this.LogUndefinedVariableUsed;
             _phono.RuleSet.ScalarValueRangeViolation += this.LogScalarValueRangeViolation;
+            _phono.RuleSet.InvalidScalarValueOp += this.LogInvalidScalarValueOp;
         }
 
         public void Stop()
@@ -61,6 +62,7 @@ namespace Phonix
             _phono.RuleSet.RuleApplied -= this.LogRuleApplied;
             _phono.RuleSet.UndefinedVariableUsed -= this.LogUndefinedVariableUsed;
             _phono.RuleSet.ScalarValueRangeViolation -= this.LogScalarValueRangeViolation;
+            _phono.RuleSet.InvalidScalarValueOp -= this.LogInvalidScalarValueOp;
 
             Writer.Flush();
         }
@@ -191,6 +193,11 @@ namespace Phonix
         private void LogScalarValueRangeViolation(Rule rule, ScalarFeature feature, int val)
         {
             Log(Level.Warning, "in rule '{0}' resulting value {1}={2} is not in the range ({3}, {4}); some parts of this rule may be skipped", rule.Name, feature.Name, val, feature.Min, feature.Max);
+        }
+
+        private void LogInvalidScalarValueOp(Rule rule, ScalarFeature feature, string message)
+        {
+            Log(Level.Warning, "invalid operation in rule '{0}' on feature '{1}': {2}", rule.Name, feature.Name, message);
         }
     }
 }

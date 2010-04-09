@@ -121,6 +121,7 @@ namespace Phonix
         public event Action<Rule, Word> Exited;
         public event Action<Rule, IMatchCombine> UndefinedVariableUsed;
         public event Action<Rule, ScalarFeature, int> ScalarValueRangeViolation;
+        public event Action<Rule, ScalarFeature, string> InvalidScalarValueOp;
 
         public Rule(string name, IEnumerable<IRuleSegment> segments, IEnumerable<IRuleSegment> excluded)
         {
@@ -139,6 +140,7 @@ namespace Phonix
             Exited += (r, w) => {};
             UndefinedVariableUsed += (r, v) => {};
             ScalarValueRangeViolation += (r, f, v) => {};
+            InvalidScalarValueOp += (r, f, s) => {};
         }
 
         public override string ToString()
@@ -218,6 +220,10 @@ namespace Phonix
                         {
                             ScalarValueRangeViolation(this, ex.Feature, ex.Value);
                         }
+                        catch (InvalidScalarOpException ex)
+                        {
+                            InvalidScalarValueOp(this, ex.Feature, ex.Message);
+                        }
                     }
                     wordSegment.Dispose();
                     Applied(this, word, slice.Current);
@@ -252,6 +258,7 @@ namespace Phonix
         public event Action<Rule, Word> RuleExited;
         public event Action<Rule, IMatchCombine> UndefinedVariableUsed;
         public event Action<Rule, ScalarFeature, int> ScalarValueRangeViolation;
+        public event Action<Rule, ScalarFeature, string> InvalidScalarValueOp;
 
         public RuleSet()
         {
@@ -262,6 +269,7 @@ namespace Phonix
             RuleExited += (r, w) => {};
             UndefinedVariableUsed += (r, v) => {};
             ScalarValueRangeViolation += (r, f, v) => {};
+            InvalidScalarValueOp += (r, f, s) => {};
         }
 
         public void Add(Rule rule)
@@ -301,6 +309,7 @@ namespace Phonix
             rule.Applied += (r, w, s) => RuleApplied(r, w, s);
             rule.UndefinedVariableUsed += (r, v) => UndefinedVariableUsed(r, v);
             rule.ScalarValueRangeViolation += (r, f, v) => ScalarValueRangeViolation(r, f, v);
+            rule.InvalidScalarValueOp += (r, f, v) => InvalidScalarValueOp(r, f, v);
         }
 
         public void ApplyAll(Word word)

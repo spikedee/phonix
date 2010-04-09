@@ -26,9 +26,12 @@ namespace Phonix
 
     public class InvalidScalarOpException : PhonixException
     {
-        public InvalidScalarOpException(string desc)
+        public readonly ScalarFeature Feature;
+
+        public InvalidScalarOpException(ScalarFeature feature, string desc)
             : base(desc)
         {
+            Feature = feature;
         }
     }
 

@@ -334,6 +334,7 @@ namespace Phonix.UnitTest
 
         private string scalarDefs = 
             "feature sc (type=scalar min=0 max=3) " +
+            "symbol scX [*sc] " +
             "symbol sc0 [sc=0] " +
             "symbol sc1 [sc=1] " +
             "symbol sc2 [sc=2] " +
@@ -348,6 +349,7 @@ namespace Phonix.UnitTest
             ApplyRules(phono, "sc1", "sc2");
             ApplyRules(phono, "sc2", "sc2");
             ApplyRules(phono, "sc3", "sc2");
+            ApplyRules(phono, "scX", "sc2");
         }
 
         [Test]
@@ -359,6 +361,7 @@ namespace Phonix.UnitTest
             ApplyRules(phono, "sc1", "sc1");
             ApplyRules(phono, "sc2", "sc0");
             ApplyRules(phono, "sc3", "sc0");
+            ApplyRules(phono, "scX", "scX");
         }
 
         [Test]
@@ -370,6 +373,7 @@ namespace Phonix.UnitTest
             ApplyRules(phono, "sc1", "sc1");
             ApplyRules(phono, "sc2", "sc0");
             ApplyRules(phono, "sc3", "sc0");
+            ApplyRules(phono, "scX", "scX");
         }
 
         [Test]
@@ -381,6 +385,7 @@ namespace Phonix.UnitTest
             ApplyRules(phono, "sc1", "sc3");
             ApplyRules(phono, "sc2", "sc2");
             ApplyRules(phono, "sc3", "sc3");
+            ApplyRules(phono, "scX", "scX");
         }
 
         [Test]
@@ -392,6 +397,7 @@ namespace Phonix.UnitTest
             ApplyRules(phono, "sc1", "sc3");
             ApplyRules(phono, "sc2", "sc2");
             ApplyRules(phono, "sc3", "sc3");
+            ApplyRules(phono, "scX", "scX");
         }
 
         [Test]
@@ -403,6 +409,7 @@ namespace Phonix.UnitTest
             ApplyRules(phono, "sc1", "sc2");
             ApplyRules(phono, "sc2", "sc3");
             ApplyRules(phono, "sc3", "sc3");
+            ApplyRules(phono, "scX", "scX");
         }
 
         [Test]
@@ -414,6 +421,7 @@ namespace Phonix.UnitTest
             ApplyRules(phono, "sc1", "sc0");
             ApplyRules(phono, "sc2", "sc1");
             ApplyRules(phono, "sc3", "sc2");
+            ApplyRules(phono, "scX", "scX");
         }
 
         [Test]
@@ -442,6 +450,31 @@ namespace Phonix.UnitTest
             Assert.AreSame(rule, phono.RuleSet.OrderedRules.Where(r => r.Name.Equals("subtract")).First());
             Assert.AreSame(feature, phono.FeatureSet.Get<Feature>("sc"));
             Assert.AreEqual(-1, traceValue);
+        }
+
+        [Test]
+        public void ScalarValueInvalidOp()
+        {
+            var phono = new Phonology();
+
+            bool gotTrace = false;
+            Rule rule = null;
+            ScalarFeature feature = null;
+            Action<Rule, ScalarFeature, string> tracer = (r, f, s) =>
+            { 
+                gotTrace = true;
+                rule = r;
+                feature = f;
+            };
+
+            Parse.Util.ParseString(phono, scalarDefs + "rule subtract [] => [sc=-1]");
+            phono.RuleSet.InvalidScalarValueOp += tracer;
+
+            ApplyRules(phono, "scX", "scX"); // assert that this doesn't blow up
+
+            Assert.IsTrue(gotTrace);
+            Assert.AreSame(rule, phono.RuleSet.OrderedRules.Where(r => r.Name.Equals("subtract")).First());
+            Assert.AreSame(feature, phono.FeatureSet.Get<Feature>("sc"));
         }
     }
 }
