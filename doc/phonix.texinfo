@@ -338,6 +338,17 @@ Scalar features may have any non-negative integer value, and are written as
 and @code{sc=foo} are not valid. Scalar features may also be absent, in which
 case they are written @code{*sc}.
 
+Scalar features may take two additional parameters @code{min} and @code{max} to
+specify the minimum and maximum value for the feature, as in the following
+example:
+
+@example
+feature sc (type=scalar min=1 max=5)
+@end example
+
+Note that if you specify either @code{min} or @code{max}, you must specify
+both.
+
 @node Node Features
 @subsection Node Features
 
@@ -537,6 +548,7 @@ into another.
 * Rule variables::
 * Node feature values::
 * Assimilation and gemination::
+* Scalar feature value operators::
 * Optional and repeated segments::
 * Rule parameters::
 @end menu
@@ -880,6 +892,98 @@ Here a consonantal segment is doubled when surrounded on either side by
 non-consonantal segments. The feature @code{ROOT} has as its children every
 feature in @code{std.features}, and so the inserted segment copies every value
 from the preceding segment.
+
+@node Scalar feature value operators
+@subsection Scalar feature value operators
+
+There a few special operators that can be used with scalar feature values to
+perform integer operations and comparisons. Scalar feature values are unlike
+other feature value types in that they represent a range of integer values, and
+so it's often useful to perform simple numeric operations on them.
+
+@subsubsection Comparison operators
+
+Scalar comparison operators can be used anywhere within a feature matrix that
+does matching, i.e. in the match portion of the rule, or to the left of the
+arrow in the action. The most basic scalar comparison is for equality, which
+has the same format as a regular scalar value:
+
+@example
+[sc=2]
+@end example
+
+This feature matrix will match any segment for which the scalar feature
+@code{sc} has the value @code{2}.
+
+You can also check for @dfn{inequality} with @code{<>}:
+
+@example
+[sc<>2]
+@end example
+
+This matrix will match any segment which has a value for @code{sc} other than
+@code{2}. This includes values like @code{sc=3}, @code{sc=1}, and even null
+values like @code{*sc}.
+
+There are also operators for @dfn{greater than}, @dfn{greater than or equal},
+@dfn{less than}, and @dfn{less than or equal}, which have the familiar numeric
+notation:
+
+@example
+sc>2    # matches sc=3, sc=4, etc.
+sc>=2   # matches sc=2, sc=3, etc.
+sc<2    # matches sc=1, sc=0
+sc<=2   # matches sc=2, sc=1, sc=0
+@end example
+
+These numeric comparison operators will only match if the segment they're
+matching against has a defined value for @code{sc}. They will always return
+false when comparing against @code{*sc}.
+
+@subsubsection Addition and subtraction operators
+
+You can use addition and subtraction operators to add to or subtract from a
+scalar feature value. These operators can only be used in a rule action, on the
+right-hand side of the arrow.
+
+The @code{=+} operator is used to add to a scalar feature value. (Note that the
+equal sign comes first, unlike most programming languages.)
+
+@example
+rule add-two
+    [sc>0] => [sc=+2]
+@end example
+
+This rule matches any segment that has a value for @code{sc} greater than zero,
+and adds two to that value. An input segment with @code{sc=1} would have
+@code{sc=3} after this rule applied.
+
+The subtraction operator @code{=-} works much the same way:
+
+@example
+rule subtract-one
+    [sc>2] => [sc=-1]
+@end example
+
+This rule matches any segment that has a value for @code{sc} greater than two,
+and subtracts one from that value. An input segment with @code{sc=3} would have
+@code{sc=2} after this rule applied.
+
+These operators may generate non-fatal warnings under a few conditions:
+
+@itemize
+
+@item If the scalar feature value is null (e.g. @code{*sc}) and you attempt to
+apply the addition or subtraction operator, Phonix will issue a warning and
+leave the value unchanged.
+
+@item If the scalar feature has a minimum and a maximum (@pxref{Scalar
+Features}) and applying the addition or subtraction operator causes the scalar
+to go out of range, Phonix will also issue a warning and leave the value
+unchanged.
+
+@end itemize
+
 
 @node Optional and repeated segments
 @subsection Optional and repeated segments
