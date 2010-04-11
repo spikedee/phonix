@@ -105,7 +105,7 @@ fragment DQ: '"';
 NUMBER: (DIGIT)+;
 LABEL: (ALPHA | DIGIT)+;
 STR: CHAR_START (CHAR_MID)*;
-QSTR: ( SQ ( ~SQ )* SQ ) | ( DQ ( ~DQ )* DQ );
+QSTR: ( SQ ( '\u0000'..'&' | '('..'\uffff' )* SQ ) | ( DQ ( '\u0000'..'!' | '#'..'\uffff' )* DQ );
 COMMENT: POUND ~EOL* EOL { Skip(); };
 WS: (SPACE | EOL)+ { Skip(); };
 
