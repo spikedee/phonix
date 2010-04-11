@@ -13,13 +13,22 @@ namespace Phonix
 
         private static StringBuilder _inputBuffer = new StringBuilder();
 
-        public enum ExitCodes : int
+        private enum ExitCodes : int
         {
             Success = 0,
             BadArgument = 1,
             ParseError = 2,
             FileNotFound = 3,
             UnhandledException = Int32.MaxValue
+        }
+
+        internal class Config
+        {
+            public string PhonixFile;
+            public TextReader Reader = Console.In;
+            public TextWriter Writer = Console.Out;
+            public Log.Level LogLevel = Log.Level.Warning;
+            public Log.Level WarningLevel = Log.Level.Error;
         }
 
         public static int Main(string[] args)
@@ -30,14 +39,14 @@ namespace Phonix
             AppDomain.CurrentDomain.UnhandledException += 
                 (src, exArgs) => CrashHandler.GetReport(exArgs, new StringReader(_inputBuffer.ToString()));
 
-            PhonixConfig config = null;
-            Logger logger = null;
+            Config config = null;
+            Log logger = null;
             try
             {
                 config = ParseArgs(args);
 
                 Phonology phono = new Phonology();
-                logger = new Logger(config.LogLevel, config.WarningLevel, Console.Error, phono);
+                logger = new Log(config.LogLevel, config.WarningLevel, Console.Error, phono);
                 logger.Start();
 
                 Parse.Util.ParseFile(phono, config.PhonixFile, config.PhonixFile);
@@ -115,9 +124,9 @@ namespace Phonix
             return str.ToString();
         }
 
-        public static PhonixConfig ParseArgs(string[] args)
+        internal static Config ParseArgs(string[] args)
         {
-            var rv = new PhonixConfig();
+            var rv = new Config();
 
             try
             {
@@ -153,22 +162,22 @@ namespace Phonix
 
                         case "-d":
                         case "--debug":
-                            rv.LogLevel = Level.Info;
+                            rv.LogLevel = Log.Level.Info;
                             break;
 
                         case "-q":
                         case "--quiet":
-                            rv.LogLevel = Level.Error;
+                            rv.LogLevel = Log.Level.Error;
                             break;
 
                         case "-w":
                         case "--warn-fatal":
-                            rv.WarningLevel = Level.Warning;
+                            rv.WarningLevel = Log.Level.Warning;
                             break;
 
                         case "-v":
                         case "--verbose":
-                            rv.LogLevel = Level.Verbose;
+                            rv.LogLevel = Log.Level.Verbose;
                             break;
 
                         default:
@@ -189,16 +198,5 @@ namespace Phonix
 
             return rv;
         }
-
     }
-
-    public class PhonixConfig
-    {
-        public string PhonixFile;
-        public TextReader Reader = Console.In;
-        public TextWriter Writer = Console.Out;
-        public Level LogLevel = Level.Warning;
-        public Level WarningLevel = Level.Error;
-    }
-
 }

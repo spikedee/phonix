@@ -5,36 +5,6 @@ using System.Text;
 
 namespace Phonix
 {
-    public interface SegmentEnumerator : IEnumerator<FeatureMatrix>
-    {
-        bool IsFirst { get; }
-        bool IsLast { get; }
-        bool MovePrev();
-        new FeatureMatrix Current { get; }
-        void Mark();
-        void Revert();
-    }
-
-    public interface MutableSegmentEnumerator : SegmentEnumerator
-    {
-        void InsertBefore(FeatureMatrix fm);
-        void InsertAfter(FeatureMatrix fm);
-        void Delete();
-        new FeatureMatrix Current { get; set; }
-    }
-
-    public interface IWordSlice
-    {
-        SegmentEnumerator GetEnumerator();
-        MutableSegmentEnumerator GetMutableEnumerator();
-    }
-
-    public enum Direction
-    {
-        Rightward,
-        Leftward
-    }
-
     public class Word : IEnumerable<FeatureMatrix>
     {
         private readonly LinkedList<FeatureMatrix> _list;
@@ -401,5 +371,4 @@ namespace Phonix
             return str.ToString();
         }
     }
-
 }

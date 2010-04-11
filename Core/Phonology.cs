@@ -8,7 +8,7 @@ namespace Phonix
         public readonly SymbolSet SymbolSet;
         public readonly RuleSet RuleSet;
 
-        public PhonixConfig Config;
+        internal Shell.Config Config;
 
         public Phonology()
             : this(new FeatureSet(), new SymbolSet(), new RuleSet())

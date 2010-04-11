@@ -172,6 +172,5 @@ namespace Phonix
             str.Append("]");
             return str.ToString();
         }
-
     }
 }

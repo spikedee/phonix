@@ -6,86 +6,6 @@ using System.Text;
 
 namespace Phonix
 {
-    internal class SymbolTable : Dictionary<string, Symbol>
-    {
-        public event Action<Symbol> SymbolDefined;
-        public event Action<Symbol, Symbol> SymbolRedefined;
-        public event Action<Symbol, Symbol> SymbolDuplicate;
-
-        private int _longestSymbol = 0;
-
-        public SymbolTable()
-        {
-            // add null event handlers
-            SymbolDefined += (s) => {};
-            SymbolRedefined += (s1, s2) => {};
-            SymbolDuplicate += (s1, s2) => {};
-        }
-
-        public void Add(Symbol s)
-        {
-            if (s == null)
-            {
-                throw new ArgumentNullException("s");
-            }
-
-            SymbolDefined(s);
-
-            if (this.ContainsKey(s.Label))
-            {
-                SymbolRedefined(this[s.Label], s);
-            }
-
-            foreach (var existing in Values)
-            {
-                if (existing.FeatureMatrix.Equals(s.FeatureMatrix))
-                {
-                    SymbolDuplicate(existing, s);
-                }
-            }
-
-            if (s.Label.Length > _longestSymbol)
-            {
-                _longestSymbol = s.Label.Length;
-            }
-
-            this[s.Label] = s;
-        }
-
-        // Take as many symbols as are recognized can from `word`, and return
-        // them. The out param `leftover` contains the unrecognized portion of
-        // `word`.
-        public List<Symbol> TakeSymbols(string word, out string leftover)
-        {
-            var list = new List<Symbol>();
-
-            // search through the symbols for the input word, taking the longest
-            // possible existing symbol every time
-
-            while (word.Length > 0)
-            {
-                string symbol = word.Substring(0, Math.Min(_longestSymbol, word.Length));
-                while (symbol.Length > 0 && !this.ContainsKey(symbol)) 
-                {
-                    symbol = symbol.Substring(0, symbol.Length - 1);
-                }
-
-                if (symbol.Length == 0)
-                {
-                    // we can't find any more symbols in this string
-                    break;
-                }
-
-                list.Add(this[symbol]);
-
-                word = word.Substring(symbol.Length);
-            }
-
-            leftover = word;
-            return list;
-        }
-    }
-
     public class SymbolSet : IEnumerable<Symbol>
     {
         internal readonly SymbolTable BaseSymbols = new SymbolTable();
@@ -256,6 +176,86 @@ namespace Phonix
         public List<FeatureMatrix> Pronounce(string word)
         {
             return SplitSymbols(word).ConvertAll(s => s.FeatureMatrix);
+        }
+
+        internal class SymbolTable : Dictionary<string, Symbol>
+        {
+            public event Action<Symbol> SymbolDefined;
+            public event Action<Symbol, Symbol> SymbolRedefined;
+            public event Action<Symbol, Symbol> SymbolDuplicate;
+
+            private int _longestSymbol = 0;
+
+            public SymbolTable()
+            {
+                // add null event handlers
+                SymbolDefined += (s) => {};
+                SymbolRedefined += (s1, s2) => {};
+                SymbolDuplicate += (s1, s2) => {};
+            }
+
+            public void Add(Symbol s)
+            {
+                if (s == null)
+                {
+                    throw new ArgumentNullException("s");
+                }
+
+                SymbolDefined(s);
+
+                if (this.ContainsKey(s.Label))
+                {
+                    SymbolRedefined(this[s.Label], s);
+                }
+
+                foreach (var existing in Values)
+                {
+                    if (existing.FeatureMatrix.Equals(s.FeatureMatrix))
+                    {
+                        SymbolDuplicate(existing, s);
+                    }
+                }
+
+                if (s.Label.Length > _longestSymbol)
+                {
+                    _longestSymbol = s.Label.Length;
+                }
+
+                this[s.Label] = s;
+            }
+
+            // Take as many symbols as are recognized can from `word`, and return
+            // them. The out param `leftover` contains the unrecognized portion of
+            // `word`.
+            public List<Symbol> TakeSymbols(string word, out string leftover)
+            {
+                var list = new List<Symbol>();
+
+                // search through the symbols for the input word, taking the longest
+                // possible existing symbol every time
+
+                while (word.Length > 0)
+                {
+                    string symbol = word.Substring(0, Math.Min(_longestSymbol, word.Length));
+                    while (symbol.Length > 0 && !this.ContainsKey(symbol)) 
+                    {
+                        symbol = symbol.Substring(0, symbol.Length - 1);
+                    }
+
+                    if (symbol.Length == 0)
+                    {
+                        // we can't find any more symbols in this string
+                        break;
+                    }
+
+                    list.Add(this[symbol]);
+
+                    word = word.Substring(symbol.Length);
+                }
+
+                leftover = word;
+                return list;
+            }
         }
     }
 }

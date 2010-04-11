@@ -4,22 +4,22 @@ using System.Text;
 
 namespace Phonix
 {
-    public enum Level
+    public class Log
     {
-        Error = 0,
-        Warning = 1,
-        Info = 2,
-        Verbose = 3
-    };
+        public enum Level
+        {
+            Error = 0,
+            Warning = 1,
+            Info = 2,
+            Verbose = 3
+        };
 
-    public class Logger
-    {
         public readonly Level LogLevel;
         public readonly Level ErrorLevel;
         public readonly TextWriter Writer;
         private readonly Phonology _phono;
 
-        public Logger(Level logLevel, Level errorLevel, TextWriter writer, Phonology phono)
+        public Log(Level logLevel, Level errorLevel, TextWriter writer, Phonology phono)
         {
             LogLevel = logLevel;
             ErrorLevel = errorLevel;
@@ -67,7 +67,7 @@ namespace Phonix
             Writer.Flush();
         }
 
-        public void Log(Level level, string format, params object[] args)
+        public void WriteLog(Level level, string format, params object[] args)
         {
             string message = String.Format(format, args);
             if (this.LogLevel >= level)
@@ -82,47 +82,47 @@ namespace Phonix
 
         private void LogFeatureDefined(Feature f)
         {
-            Log(Level.Info, "{0} {1} defined", f.GetType().Name, f.Name);
+            WriteLog(Level.Info, "{0} {1} defined", f.GetType().Name, f.Name);
         }
 
         private void LogFeatureRedefined(Feature old, Feature newer)
         {
-            Log(Level.Warning, "{0} {1} overwrites {2} {3}", newer.GetType().Name, newer.Name, old.GetType().Name, old.Name);
+            WriteLog(Level.Warning, "{0} {1} overwrites {2} {3}", newer.GetType().Name, newer.Name, old.GetType().Name, old.Name);
         }
 
         private void LogSymbolDefined(Symbol s)
         {
-            Log(Level.Info, "symbol {0} defined", s);
+            WriteLog(Level.Info, "symbol {0} defined", s);
         }
 
         private void LogSymbolRedefined(Symbol old, Symbol newer)
         {
-            Log(Level.Warning, "symbol {0} changed from {1} to {2}", old.Label, old.FeatureMatrix, newer.FeatureMatrix);
+            WriteLog(Level.Warning, "symbol {0} changed from {1} to {2}", old.Label, old.FeatureMatrix, newer.FeatureMatrix);
         }
 
         private void LogSymbolDuplicate(Symbol old, Symbol newer)
         {
-            Log(Level.Warning, "symbol {0} is identical to symbol {1}", newer, old);
+            WriteLog(Level.Warning, "symbol {0} is identical to symbol {1}", newer, old);
         }
 
         private void LogRuleDefined(Rule r)
         {
-            Log(Level.Info, "rule {0} defined", r);
+            WriteLog(Level.Info, "rule {0} defined", r);
         }
 
         private void LogRuleRedefined(Rule old, Rule newer)
         {
-            Log(Level.Warning, "rule {0} redefined", newer, old);
+            WriteLog(Level.Warning, "rule {0} redefined", newer, old);
         }
 
         private void LogRuleEntered(Rule rule, Word word)
         {
-            Log(Level.Verbose, "rule {0} entered", rule);
+            WriteLog(Level.Verbose, "rule {0} entered", rule);
         }
 
         private void LogRuleExited(Rule rule, Word word)
         {
-            Log(Level.Verbose, "rule {0} exited", rule);
+            WriteLog(Level.Verbose, "rule {0} exited", rule);
         }
 
         private void LogRuleApplied(Rule rule, Word word, IWordSlice slice)
@@ -134,7 +134,7 @@ namespace Phonix
                 return;
             }
 
-            Log(Level.Info, "rule {0} applied: {1}", rule.Name, rule.Description);
+            WriteLog(Level.Info, "rule {0} applied: {1}", rule.Name, rule.Description);
 
             // match until we get to the current segment, so that we can
             // display which segment was acted upon
@@ -181,23 +181,23 @@ namespace Phonix
                 }
                 str.Append("{0} : {1}");
 
-                Log(Level.Info, str.ToString(), symbol, fm);
+                WriteLog(Level.Info, str.ToString(), symbol, fm);
             }
         }
 
         private void LogUndefinedVariableUsed(Rule rule, IMatchCombine var)
         {
-            Log(Level.Warning, "variable {0} used in rule '{1}' without appearing in rule context; some parts of this rule may be skipped", var, rule);
+            WriteLog(Level.Warning, "variable {0} used in rule '{1}' without appearing in rule context; some parts of this rule may be skipped", var, rule);
         }
 
         private void LogScalarValueRangeViolation(Rule rule, ScalarFeature feature, int val)
         {
-            Log(Level.Warning, "in rule '{0}' resulting value {1}={2} is not in the range ({3}, {4}); some parts of this rule may be skipped", rule.Name, feature.Name, val, feature.Min, feature.Max);
+            WriteLog(Level.Warning, "in rule '{0}' resulting value {1}={2} is not in the range ({3}, {4}); some parts of this rule may be skipped", rule.Name, feature.Name, val, feature.Min, feature.Max);
         }
 
         private void LogInvalidScalarValueOp(Rule rule, ScalarFeature feature, string message)
         {
-            Log(Level.Warning, "invalid operation in rule '{0}' on feature '{1}': {2}", rule.Name, feature.Name, message);
+            WriteLog(Level.Warning, "invalid operation in rule '{0}' on feature '{1}': {2}", rule.Name, feature.Name, message);
         }
     }
 }

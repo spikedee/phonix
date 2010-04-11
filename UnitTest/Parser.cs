@@ -25,7 +25,7 @@ namespace Phonix.UnitTest
 
         public void ApplyRules(Phonology phono, string input, string expectedOutput)
         {
-            var log = new Logger(Level.Verbose, Level.Error, Console.Out, phono);
+            var log = new Log(Log.Level.Verbose, Log.Level.Error, Console.Out, phono);
             log.Start();
 
             try
