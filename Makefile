@@ -72,7 +72,7 @@ $(DOC_HTML): $(DOC_SRC)
 $(DOC_INFO): $(DOC_SRC)
 	makeinfo -o $@ $<
 
-$(BIN_DIR)/phonix.zip: $(PHONIX) $(ANTLR) $(DOC_PDF) $(EX_FILES)
+$(BIN_DIR)/phonix.zip: clean $(PHONIX) $(ANTLR) $(DOC_PDF) $(EX_FILES)
 	rm -f $@
 	zip $@ $+
 
