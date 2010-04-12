@@ -3,7 +3,7 @@
 CORE_DIR=Core
 RESOURCE_DIR=Resx
 PARSER_DIR=Parser
-TEST_DIR=UnitTest
+TEST_DIR=Test
 BIN_DIR=bin
 DOC_DIR=doc
 EX_DIR=examples

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using Phonix;
 
-namespace Phonix.UnitTest
+namespace Phonix.Test
 {
     using NUnit.Framework;
 

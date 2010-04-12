@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Phonix.UnitTest
+namespace Phonix.Test
 {
     using NUnit.Framework;
 

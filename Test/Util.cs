@@ -1,7 +1,7 @@
 using System;
 using Phonix;
 
-namespace Phonix.UnitTest
+namespace Phonix.Test
 {
     using NUnit.Framework;
 
