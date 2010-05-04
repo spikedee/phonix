@@ -29,20 +29,6 @@ namespace Phonix
                 this._children.Add(child);
                 child._parents.Add(this);
             }
-
-            CheckCircularRelationships(this);
-        }
-
-        private void CheckCircularRelationships(Tier tier)
-        {
-            foreach (var child in tier.Children)
-            {
-                if (child == this)
-                {
-                    throw new InvalidOperationException("circular relationship detected");
-                }
-                CheckCircularRelationships(child);
-            }
         }
 
         public bool HasChild(Tier tier)

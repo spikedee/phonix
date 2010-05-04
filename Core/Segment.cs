@@ -25,10 +25,21 @@ namespace Phonix
             }
         }
 
+        // Segment.Parents is an *unordered* list which cannot be assigned (all
+        // parents are assigned when a parent has its children assigned)
+        private readonly List<Segment> _parents = new List<Segment>();
+        public IEnumerable<Segment> Parents
+        {
+            get
+            {
+                return _parents;
+            }
+        }
+
         // Segment.Children is an ordered list. The list is validated and all
         // bidirectional links are created during assignment.
         private readonly List<Segment> _children = new List<Segment>();
-        IEnumerable<Segment> Children
+        public IEnumerable<Segment> Children
         {
             get 
             { 
@@ -58,17 +69,6 @@ namespace Phonix
                     _children.Add(child);
                     child._parents.Add(this);
                 }
-            }
-        }
-
-        // Segment.Parents is an *unordered* list which cannot be assigned (all
-        // parents are assigned when a parent has its children assigned)
-        private readonly List<Segment> _parents = new List<Segment>();
-        public IEnumerable<Segment> Parents
-        {
-            get
-            {
-                return _parents;
             }
         }
 
