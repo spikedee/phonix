@@ -17,12 +17,12 @@ namespace Phonix
             }
         }
 
-        virtual public bool Matches(RuleContext ctx, FeatureMatrix matrix)
+        virtual public bool Matches(RuleContext ctx, Segment segment)
         {
-            return this == matrix[this.Feature];
+            return this == segment.Matrix[this.Feature];
         }
 
-        virtual public IEnumerable<FeatureValue> GetValues(RuleContext ctx, FeatureMatrix matrix)
+        virtual public IEnumerable<FeatureValue> CombineValues(RuleContext ctx, MutableSegment segment)
         {
             return new FeatureValue[] { this };
         }

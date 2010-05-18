@@ -138,18 +138,19 @@ namespace Phonix
 
             // match until we get to the current segment, so that we can
             // display which segment was acted upon
-            var ctx = new RuleContext();
-            var seg = rule.Segments.GetEnumerator();
             FeatureMatrix current = null;
             try
             {
+                var ctx = new RuleContext();
+                var seg = rule.Segments.GetEnumerator();
                 var pos = slice.GetEnumerator();
+
                 while (seg.MoveNext() && seg.Current is ContextSegment)
                 {
                     seg.Current.Matches(ctx, pos);
                 }
 
-                current = pos.MoveNext() ? pos.Current : null;
+                current = pos.MoveNext() ? pos.Current.Matrix : null;
             }
             catch (SegmentDeletedException)
             {
@@ -158,10 +159,10 @@ namespace Phonix
                 // safely swallowed
             }
 
-            foreach (var fm in word)
+            foreach (var seg in word)
             {
                 var str = new StringBuilder();
-                if (current != null && fm == current)
+                if (current != null && seg.Matrix == current)
                 {
                     str.Append("> ");
                 }
@@ -173,7 +174,7 @@ namespace Phonix
                 Symbol symbol;
                 try
                 {
-                    symbol = _phono.SymbolSet.Spell(fm);
+                    symbol = _phono.SymbolSet.Spell(seg.Matrix);
                 }
                 catch (SpellingException)
                 {
@@ -181,7 +182,7 @@ namespace Phonix
                 }
                 str.Append("{0} : {1}");
 
-                WriteLog(Level.Info, str.ToString(), symbol, fm);
+                WriteLog(Level.Info, str.ToString(), symbol, seg.Matrix);
             }
         }
 

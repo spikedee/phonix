@@ -28,15 +28,15 @@ namespace Phonix.Test
 
             Assert.AreEqual(firstMatch, seg.Matches(ctx, iter), "first match");
             if (firstPos != null)
-                Assert.AreSame(firstPos, iter.Current, "position after first match");
+                Assert.AreSame(firstPos, iter.Current.Matrix, "position after first match");
 
             Assert.AreEqual(secondMatch, seg.Matches(ctx, iter), "second match");
             if (secondPos != null)
-                Assert.AreSame(secondPos, iter.Current, "position after second match");
+                Assert.AreSame(secondPos, iter.Current.Matrix, "position after second match");
 
             Assert.AreEqual(thirdMatch, seg.Matches(ctx, iter), "third match");
             if (thirdPos != null)
-                Assert.AreSame(thirdPos, iter.Current, "position after third match");
+                Assert.AreSame(thirdPos, iter.Current.Matrix, "position after third match");
 
             Assert.AreEqual(fourthMatch, seg.Matches(ctx, iter), "fourth match");
         }
@@ -70,19 +70,19 @@ namespace Phonix.Test
             seg.Combine(ctx, iter);
             if (firstPos != null)
             {
-                Assert.IsTrue(firstPos.Equals(iter.Current), "position after first combo");
+                Assert.IsTrue(firstPos.Equals(iter.Current.Matrix), "position after first combo");
             }
 
             seg.Combine(ctx, iter);
             if (secondPos != null)
             {
-                Assert.IsTrue(secondPos.Equals(iter.Current), "position after second combo");
+                Assert.IsTrue(secondPos.Equals(iter.Current.Matrix), "position after second combo");
             }
 
             seg.Combine(ctx, iter);
             if (thirdPos != null)
             {
-                Assert.IsTrue(thirdPos.Equals(iter.Current), "position after third combo");
+                Assert.IsTrue(thirdPos.Equals(iter.Current.Matrix), "position after third combo");
             }
 
             // get a new slice rather than reusing the old one
@@ -265,7 +265,7 @@ namespace Phonix.Test
             var ctx = new RuleContext();
 
             Assert.IsTrue(step.Matches(ctx, iter));
-            Assert.AreSame(FeatureMatrixTest.MatrixA, iter.Current);
+            Assert.AreSame(FeatureMatrixTest.MatrixA, iter.Current.Matrix);
             Assert.IsTrue(step.Matches(ctx, iter));
 
             try

@@ -29,7 +29,7 @@ namespace Phonix.Test
             Assert.AreEqual(f.Name, f.ToString());
 
             Assert.IsNotNull(f.NullValue);
-            Assert.AreSame(f, f.NullValue.GetValues(null, null).First().Feature);
+            Assert.AreSame(f, ((FeatureValue) f.NullValue).Feature);
             Assert.AreEqual("*" + TEST, f.NullValue.ToString());
 
             Assert.IsNotNull(f.VariableValue);

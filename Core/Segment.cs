@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Phonix
 {
@@ -15,7 +16,7 @@ namespace Phonix
             { 
                 return _fm; 
             }
-            set 
+            protected set 
             { 
                 if (value == null)
                 {
@@ -45,7 +46,7 @@ namespace Phonix
             { 
                 return _children; 
             }
-            set 
+            protected set 
             {
                 // unlink all old children
                 foreach (var child in _children)
@@ -72,11 +73,71 @@ namespace Phonix
             }
         }
 
-        public Segment(Tier tier, FeatureMatrix fm, IEnumerable<Segment> children)
+        protected Segment(Tier tier, FeatureMatrix fm, IEnumerable<Segment> children)
         {
+            if (fm == null)
+            {
+                throw new ArgumentNullException("fm");
+            }
+            if (tier == null)
+            {
+                throw new ArgumentNullException("tier");
+            }
+            if (children == null)
+            {
+                throw new ArgumentNullException("children");
+            }
             Matrix = fm;
             Tier = tier;
-            Children = children;
+            _children.AddRange(children);
         }
+
+        public bool TryFindAncestor(Tier tier, out Segment ancestor)
+        {
+            if (!this.Tier.HasAncestor(tier))
+            {
+                throw new ArgumentException(String.Format("tier {0} is not an ancestor if {1}", tier, this.Tier));
+            }
+
+            ancestor = null;
+            foreach (var parent in Parents)
+            {
+                if (parent.Tier == tier)
+                {
+                    ancestor = parent;
+                    return true;
+                }
+                else if (parent.TryFindAncestor(tier, out ancestor))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public Segment FindAncestor(Tier tier)
+        {
+            Segment ancestor;
+            if (TryFindAncestor(tier, out ancestor))
+            {
+                return ancestor;
+            }
+            throw new InvalidOperationException(String.Format("no ancestor found on {0} tier", tier));
+        }
+
+        public bool HasAncestor(Tier tier)
+        {
+            return Parents.Any(p => p.Tier == tier) || Parents.Any(p => p.HasAncestor(tier));
+        }
+
+        protected void Detach()
+        {
+            foreach (var parent in Parents)
+            {
+                parent._children.Remove(this);
+            }
+            _parents.Clear();
+        }
+
     }
 }

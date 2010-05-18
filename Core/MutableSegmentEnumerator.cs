@@ -1,10 +1,12 @@
+using System.Collections.Generic;
+
 namespace Phonix
 {
-    public interface MutableSegmentEnumerator : SegmentEnumerator
+    public interface MutableSegmentEnumerator : SegmentEnumerator, IEnumerator<MutableSegment>
     {
-        void InsertBefore(FeatureMatrix fm);
-        void InsertAfter(FeatureMatrix fm);
+        void InsertBefore(MutableSegment segment);
+        void InsertAfter(MutableSegment segment);
         void Delete();
-        new FeatureMatrix Current { get; set; }
+        new MutableSegment Current { get; }
     }
 }

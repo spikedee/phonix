@@ -17,7 +17,10 @@ namespace Phonix
 
         public void Combine(RuleContext ctx, MutableSegmentEnumerator pos)
         {
-            pos.InsertAfter(_insert.Combine(ctx, FeatureMatrix.Empty));
+            var segment = new MutableSegment(Tier.Segment, FeatureMatrix.Empty, new Segment[] {});
+            _insert.Combine(ctx, segment);
+
+            pos.InsertAfter(segment);
             pos.MoveNext();
         }
 

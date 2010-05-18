@@ -55,9 +55,9 @@ namespace Phonix
                 _node = feature;
             }
 
-            public bool Matches(RuleContext ctx, FeatureMatrix matrix)
+            public bool Matches(RuleContext ctx, Segment segment)
             {
-                return !_node.NullValue.Matches(ctx, matrix);
+                return !_node.NullValue.Matches(ctx, segment);
             }
         }
 
@@ -71,11 +71,11 @@ namespace Phonix
                 _node = f;
             }
 
-            public bool Matches(RuleContext ctx, FeatureMatrix matrix)
+            public bool Matches(RuleContext ctx, Segment segment)
             {
                 foreach (var feature in _node.Children)
                 {
-                    if (!feature.NullValue.Matches(ctx, matrix))
+                    if (!feature.NullValue.Matches(ctx, segment))
                     {
                         return false;
                     }
@@ -83,12 +83,12 @@ namespace Phonix
                 return true;
             }
 
-            public IEnumerable<FeatureValue> GetValues(RuleContext ctx, FeatureMatrix matrix)
+            public IEnumerable<FeatureValue> CombineValues(RuleContext ctx, MutableSegment segment)
             {
                 var list = new List<FeatureValue>();
                 foreach (var feature in _node.Children)
                 {
-                    list.AddRange(feature.NullValue.GetValues(ctx, matrix));
+                    list.AddRange(feature.NullValue.CombineValues(ctx, segment));
                 }
                 return list;
             }
@@ -104,13 +104,13 @@ namespace Phonix
                 _node = feature;
             }
 
-            public bool Matches(RuleContext ctx, FeatureMatrix matrix)
+            public bool Matches(RuleContext ctx, Segment segment)
             {
                 if (ctx.VariableNodes.ContainsKey(_node))
                 {
                     foreach (var fv in ctx.VariableNodes[_node])
                     {
-                        if (fv != matrix[fv.Feature])
+                        if (fv != segment.Matrix[fv.Feature])
                         {
                             return false;
                         }
@@ -121,14 +121,14 @@ namespace Phonix
                     var list = new List<FeatureValue>();
                     foreach (var feature in _node.NonNodeDescendants)
                     {
-                        list.Add(matrix[feature]);
+                        list.Add(segment.Matrix[feature]);
                     }
                     ctx.VariableNodes[_node] = list;
                 }
                 return true;
             }
 
-            public IEnumerable<FeatureValue> GetValues(RuleContext ctx, FeatureMatrix matrix)
+            public IEnumerable<FeatureValue> CombineValues(RuleContext ctx, MutableSegment segment)
             {
                 if (ctx.VariableNodes.ContainsKey(_node))
                 {

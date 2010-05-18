@@ -23,7 +23,7 @@ namespace Phonix
         public void Combine(RuleContext ctx, MutableSegmentEnumerator pos)
         {
             pos.MoveNext();
-            pos.Current = _combo.Combine(ctx, pos.Current);
+            _combo.Combine(ctx, pos.Current);
         }
 
         public bool IsMatchOnlySegment { get { return false; } }

@@ -29,14 +29,14 @@ namespace Phonix
             return Label;
         }
 
-        public bool Matches(RuleContext ctx, FeatureMatrix matrix)
+        public bool Matches(RuleContext ctx, Segment segment)
         {
-            return FeatureMatrix.Equals(matrix);
+            return FeatureMatrix.Equals(segment.Matrix);
         }
 
-        public FeatureMatrix Combine(RuleContext ctx, FeatureMatrix matrix)
+        public void Combine(RuleContext ctx, MutableSegment segment)
         {
-            return FeatureMatrix;
+            segment.Matrix = FeatureMatrix;
         }
 
 #region IEnumerable members

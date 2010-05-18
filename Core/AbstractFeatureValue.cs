@@ -13,7 +13,7 @@ namespace Phonix
 
         private readonly string _desc;
 
-        protected AbstractFeatureValue(Feature feature, string desc)
+        protected internal AbstractFeatureValue(Feature feature, string desc)
         {
             Feature = feature;
             _desc = desc;

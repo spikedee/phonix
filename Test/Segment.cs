@@ -13,7 +13,7 @@ namespace Phonix.Test
         [Test]
         public void Ctor()
         {
-            var test = new Segment(Tier.Segment, FeatureMatrixTest.MatrixA, new Segment[] {});
+            var test = new MutableSegment(Tier.Segment, FeatureMatrixTest.MatrixA, new Segment[] {});
 
             Assert.AreSame(Tier.Segment, test.Tier);
             Assert.AreSame(FeatureMatrixTest.MatrixA, test.Matrix);
@@ -24,7 +24,7 @@ namespace Phonix.Test
         [Test]
         public void Matrix()
         {
-            var test = new Segment(Tier.Segment, FeatureMatrixTest.MatrixA, new Segment[] {});
+            var test = new MutableSegment(Tier.Segment, FeatureMatrixTest.MatrixA, new Segment[] {});
 
             test.Matrix = FeatureMatrixTest.MatrixB;
             Assert.AreSame(FeatureMatrixTest.MatrixB, test.Matrix);
@@ -42,9 +42,9 @@ namespace Phonix.Test
         [Test]
         public void Children()
         {
-            var midA = new Segment(TierTest.MidA, FeatureMatrixTest.MatrixA, new Segment[] {});
-            var midB = new Segment(TierTest.MidB, FeatureMatrixTest.MatrixA, new Segment[] {});
-            var top = new Segment(TierTest.Top, FeatureMatrixTest.MatrixA, new Segment[] {});
+            var midA = new MutableSegment(TierTest.MidA, FeatureMatrixTest.MatrixA, new Segment[] {});
+            var midB = new MutableSegment(TierTest.MidB, FeatureMatrixTest.MatrixA, new Segment[] {});
+            var top = new MutableSegment(TierTest.Top, FeatureMatrixTest.MatrixA, new Segment[] {});
 
             top.Children = new Segment[] { midA, midB };
 

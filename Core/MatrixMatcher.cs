@@ -52,7 +52,7 @@ namespace Phonix
 
 #endregion
 
-        virtual public bool Matches(RuleContext ctx, FeatureMatrix matrix)
+        virtual public bool Matches(RuleContext ctx, Segment segment)
         {
             if (this == NeverMatches)
             {
@@ -61,7 +61,7 @@ namespace Phonix
 
             foreach (IMatchable match in this)
             {
-                if (!match.Matches(ctx, matrix))
+                if (!match.Matches(ctx, segment))
                 {
                     return false;
                 }

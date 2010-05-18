@@ -14,9 +14,9 @@ namespace Phonix
             _desc = desc;
         }
 
-        public IEnumerable<FeatureValue> GetValues(RuleContext ctx, FeatureMatrix matrix)
+        public IEnumerable<FeatureValue> CombineValues(RuleContext ctx, MutableSegment segment)
         {
-            return _combo(ctx, matrix);
+            return _combo(ctx, segment.Matrix);
         }
         
         override public string ToString()

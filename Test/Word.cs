@@ -27,15 +27,15 @@ namespace Phonix.Test
         {
             SymbolSet ss = SymbolSetTest.GetTestSet();
             StringBuilder str = new StringBuilder();
-            foreach (FeatureMatrix seg in slice)
+            foreach (Segment seg in slice)
             {
                 try
                 {
-                    str.Append(ss.Spell(seg));
+                    str.Append(ss.Spell(seg.Matrix));
                 }
                 catch (SpellingException)
                 {
-                    str.Append(seg.ToString());
+                    str.Append(seg.Matrix.ToString());
                 }
             }
             return str.ToString();
@@ -162,11 +162,11 @@ namespace Phonix.Test
 
             // should be able to MoveNext three times
             Assert.IsTrue(iter.MoveNext());
-            Assert.AreSame(FeatureMatrixTest.MatrixA, iter.Current);
+            Assert.AreSame(FeatureMatrixTest.MatrixA, iter.Current.Matrix);
             Assert.IsTrue(iter.MoveNext());
-            Assert.AreSame(FeatureMatrixTest.MatrixB, iter.Current);
+            Assert.AreSame(FeatureMatrixTest.MatrixB, iter.Current.Matrix);
             Assert.IsTrue(iter.MoveNext());
-            Assert.AreSame(FeatureMatrixTest.MatrixC, iter.Current);
+            Assert.AreSame(FeatureMatrixTest.MatrixC, iter.Current.Matrix);
             Assert.IsFalse(iter.MoveNext());
             Assert.IsFalse(iter.MoveNext()); // check that this MoveNext()=false repeats
 
@@ -180,11 +180,11 @@ namespace Phonix.Test
 
             // should be able to MovePrev three times
             Assert.IsTrue(iter.MovePrev());
-            Assert.AreSame(FeatureMatrixTest.MatrixC, iter.Current);
+            Assert.AreSame(FeatureMatrixTest.MatrixC, iter.Current.Matrix);
             Assert.IsTrue(iter.MovePrev());
-            Assert.AreSame(FeatureMatrixTest.MatrixB, iter.Current);
+            Assert.AreSame(FeatureMatrixTest.MatrixB, iter.Current.Matrix);
             Assert.IsTrue(iter.MovePrev());
-            Assert.AreSame(FeatureMatrixTest.MatrixA, iter.Current);
+            Assert.AreSame(FeatureMatrixTest.MatrixA, iter.Current.Matrix);
             Assert.IsFalse(iter.MovePrev());
             Assert.IsFalse(iter.MovePrev()); // check that this MovePrev()=false repeats
 
@@ -198,11 +198,11 @@ namespace Phonix.Test
 
             // should be able to MoveNext again after moving back
             Assert.IsTrue(iter.MoveNext());
-            Assert.AreSame(FeatureMatrixTest.MatrixA, iter.Current);
+            Assert.AreSame(FeatureMatrixTest.MatrixA, iter.Current.Matrix);
             Assert.IsTrue(iter.MoveNext());
-            Assert.AreSame(FeatureMatrixTest.MatrixB, iter.Current);
+            Assert.AreSame(FeatureMatrixTest.MatrixB, iter.Current.Matrix);
             Assert.IsTrue(iter.MoveNext());
-            Assert.AreSame(FeatureMatrixTest.MatrixC, iter.Current);
+            Assert.AreSame(FeatureMatrixTest.MatrixC, iter.Current.Matrix);
             Assert.IsFalse(iter.MoveNext());
 
         }
@@ -241,7 +241,7 @@ namespace Phonix.Test
 
             try
             {
-                sliceIter.InsertBefore(FeatureMatrixTest.MatrixC);
+                sliceIter.InsertBefore(new MutableSegment(FeatureMatrixTest.MatrixC));
                 Assert.Fail("should have thrown exception");
             }
             catch (InvalidOperationException)
@@ -249,19 +249,19 @@ namespace Phonix.Test
             }
 
             Assert.IsTrue(sliceIter.MoveNext(), "first MoveNext()");
-            Assert.AreSame(FeatureMatrixTest.MatrixA, sliceIter.Current);
-            sliceIter.InsertBefore(FeatureMatrixTest.MatrixC);
+            Assert.AreSame(FeatureMatrixTest.MatrixA, sliceIter.Current.Matrix);
+            sliceIter.InsertBefore(new MutableSegment(FeatureMatrixTest.MatrixC));
 
             Assert.IsTrue(sliceIter.MoveNext(), "second MoveNext()");
-            Assert.AreSame(FeatureMatrixTest.MatrixB, sliceIter.Current);
-            sliceIter.InsertBefore(FeatureMatrixTest.MatrixC);
+            Assert.AreSame(FeatureMatrixTest.MatrixB, sliceIter.Current.Matrix);
+            sliceIter.InsertBefore(new MutableSegment(FeatureMatrixTest.MatrixC));
 
             Assert.IsTrue(sliceIter.MoveNext(), "third MoveNext()");
-            Assert.AreSame(FeatureMatrixTest.MatrixC, sliceIter.Current);
-            sliceIter.InsertBefore(FeatureMatrixTest.MatrixC);
+            Assert.AreSame(FeatureMatrixTest.MatrixC, sliceIter.Current.Matrix);
+            sliceIter.InsertBefore(new MutableSegment(FeatureMatrixTest.MatrixC));
 
             Assert.IsFalse(sliceIter.MoveNext(), "last MoveNext()");
-            sliceIter.InsertBefore(FeatureMatrixTest.MatrixC);
+            sliceIter.InsertBefore(new MutableSegment(FeatureMatrixTest.MatrixC));
 
             iter = word.GetSliceEnumerator(Direction.Rightward);
             iter.MoveNext();
@@ -278,33 +278,33 @@ namespace Phonix.Test
             var slice = iter.Current;
             var sliceIter = slice.GetMutableEnumerator();
 
-            sliceIter.InsertAfter(FeatureMatrixTest.MatrixC);
+            sliceIter.InsertAfter(new MutableSegment(FeatureMatrixTest.MatrixC));
             Assert.IsTrue(sliceIter.MoveNext(), "zeroeth MoveNext() (inserted before starting)");
-            Assert.AreSame(FeatureMatrixTest.MatrixC, sliceIter.Current);
+            Assert.AreSame(FeatureMatrixTest.MatrixC, sliceIter.Current.Matrix);
 
             Assert.IsTrue(sliceIter.MoveNext(), "first MoveNext()");
-            Assert.AreSame(FeatureMatrixTest.MatrixA, sliceIter.Current);
-            sliceIter.InsertAfter(FeatureMatrixTest.MatrixC);
+            Assert.AreSame(FeatureMatrixTest.MatrixA, sliceIter.Current.Matrix);
+            sliceIter.InsertAfter(new MutableSegment(FeatureMatrixTest.MatrixC));
             Assert.IsTrue(sliceIter.MoveNext(), "second MoveNext()");
-            Assert.AreSame(FeatureMatrixTest.MatrixC, sliceIter.Current);
+            Assert.AreSame(FeatureMatrixTest.MatrixC, sliceIter.Current.Matrix);
 
             Assert.IsTrue(sliceIter.MoveNext(), "third MoveNext()");
-            Assert.AreSame(FeatureMatrixTest.MatrixB, sliceIter.Current);
-            sliceIter.InsertAfter(FeatureMatrixTest.MatrixC);
+            Assert.AreSame(FeatureMatrixTest.MatrixB, sliceIter.Current.Matrix);
+            sliceIter.InsertAfter(new MutableSegment(FeatureMatrixTest.MatrixC));
             Assert.IsTrue(sliceIter.MoveNext(), "fourth MoveNext()");
-            Assert.AreSame(FeatureMatrixTest.MatrixC, sliceIter.Current);
+            Assert.AreSame(FeatureMatrixTest.MatrixC, sliceIter.Current.Matrix);
 
             Assert.IsTrue(sliceIter.MoveNext(), "fifth MoveNext()");
-            Assert.AreSame(FeatureMatrixTest.MatrixC, sliceIter.Current);
-            sliceIter.InsertAfter(FeatureMatrixTest.MatrixC);
+            Assert.AreSame(FeatureMatrixTest.MatrixC, sliceIter.Current.Matrix);
+            sliceIter.InsertAfter(new MutableSegment(FeatureMatrixTest.MatrixC));
             Assert.IsTrue(sliceIter.MoveNext(), "sixth MoveNext()");
-            Assert.AreSame(FeatureMatrixTest.MatrixC, sliceIter.Current);
+            Assert.AreSame(FeatureMatrixTest.MatrixC, sliceIter.Current.Matrix);
 
             Assert.IsFalse(sliceIter.MoveNext(), "last MoveNext()");
 
             try
             {
-                sliceIter.InsertAfter(FeatureMatrixTest.MatrixC);
+                sliceIter.InsertAfter(new MutableSegment(FeatureMatrixTest.MatrixC));
                 Assert.Fail("should have thrown exception");
             }
             catch (InvalidOperationException)
@@ -327,15 +327,15 @@ namespace Phonix.Test
             var sliceIter = slice.GetMutableEnumerator();
 
             Assert.IsTrue(sliceIter.MoveNext(), "first MoveNext()");
-            Assert.AreSame(FeatureMatrixTest.MatrixA, sliceIter.Current);
+            Assert.AreSame(FeatureMatrixTest.MatrixA, sliceIter.Current.Matrix);
             sliceIter.Delete();
 
             Assert.IsTrue(sliceIter.MoveNext(), "second MoveNext()");
-            Assert.AreSame(FeatureMatrixTest.MatrixB, sliceIter.Current);
+            Assert.AreSame(FeatureMatrixTest.MatrixB, sliceIter.Current.Matrix);
             sliceIter.Delete();
 
             Assert.IsTrue(sliceIter.MoveNext(), "third MoveNext()");
-            Assert.AreSame(FeatureMatrixTest.MatrixC, sliceIter.Current);
+            Assert.AreSame(FeatureMatrixTest.MatrixC, sliceIter.Current.Matrix);
             sliceIter.Delete();
 
             Assert.IsFalse(sliceIter.MoveNext(), "last MoveNext()");
@@ -356,7 +356,7 @@ namespace Phonix.Test
 
             Assert.IsTrue(Word.LeftBoundary.Matches(null, sliceIter), "left boundary matches at first segment");
             Assert.IsTrue(sliceIter.MoveNext(), "first MoveNext()");
-            Assert.AreSame(FeatureMatrixTest.MatrixA, sliceIter.Current, "next iter is A");
+            Assert.AreSame(FeatureMatrixTest.MatrixA, sliceIter.Current.Matrix, "next iter is A");
             Assert.IsFalse(Word.LeftBoundary.Matches(null, sliceIter), "left boundary doesn't match after first segment");
         }
 
@@ -374,7 +374,7 @@ namespace Phonix.Test
 
             Assert.IsFalse(Word.RightBoundary.Matches(null, sliceIter), "right boundary doesn't match before last segment");
             Assert.IsTrue(sliceIter.MoveNext(), "first MoveNext()");
-            Assert.AreSame(FeatureMatrixTest.MatrixC, sliceIter.Current, "next iter is C");
+            Assert.AreSame(FeatureMatrixTest.MatrixC, sliceIter.Current.Matrix, "next iter is C");
             Assert.IsTrue(Word.RightBoundary.Matches(null, sliceIter), "right boundary matches at last segment");
         }
 
@@ -393,7 +393,7 @@ namespace Phonix.Test
 
             Assert.IsTrue(Word.LeftBoundary.Matches(null, sliceIter), "left boundary matches at first segment");
             Assert.IsTrue(sliceIter.MoveNext(), "first MoveNext()");
-            Assert.AreSame(FeatureMatrixTest.MatrixB, sliceIter.Current, "next iter is B");
+            Assert.AreSame(FeatureMatrixTest.MatrixB, sliceIter.Current.Matrix, "next iter is B");
             Assert.IsFalse(Word.LeftBoundary.Matches(null, sliceIter), "left boundary doesn't match after first segment");
         }
 
@@ -413,7 +413,7 @@ namespace Phonix.Test
 
             Assert.IsFalse(Word.RightBoundary.Matches(null, sliceIter), "right boundary doesn't match before last segment");
             Assert.IsTrue(sliceIter.MoveNext(), "first MoveNext()");
-            Assert.AreSame(FeatureMatrixTest.MatrixB, sliceIter.Current, "next iter is B");
+            Assert.AreSame(FeatureMatrixTest.MatrixB, sliceIter.Current.Matrix, "next iter is B");
             Assert.IsTrue(Word.RightBoundary.Matches(null, sliceIter), "right boundary matches at last segment");
         }
     }

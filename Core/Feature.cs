@@ -59,7 +59,7 @@ namespace Phonix
             {
             }
 
-            public bool Matches(RuleContext ctx, FeatureMatrix matrix)
+            public bool Matches(RuleContext ctx, Segment segment)
             {
                 if (ctx == null)
                 {
@@ -67,17 +67,18 @@ namespace Phonix
                 }
                 if (!ctx.VariableFeatures.ContainsKey(Feature))
                 {
-                    ctx.VariableFeatures[Feature] = matrix[Feature];
+                    ctx.VariableFeatures[Feature] = segment.Matrix[Feature];
                 }
-                return matrix[Feature] == ctx.VariableFeatures[Feature];
+                return segment.Matrix[Feature] == ctx.VariableFeatures[Feature];
             }
 
-            public IEnumerable<FeatureValue> GetValues(RuleContext ctx, FeatureMatrix matrix)
+            public IEnumerable<FeatureValue> CombineValues(RuleContext ctx, MutableSegment segment)
             {
                 if (ctx == null)
                 {
                     throw new InvalidOperationException("context cannot be null for combine with variables");
                 }
+
                 if (ctx.VariableFeatures.ContainsKey(Feature))
                 {
                     return new FeatureValue[] { ctx.VariableFeatures[Feature] };

@@ -5,31 +5,34 @@ using System.Text;
 
 namespace Phonix
 {
-    public class Word : IEnumerable<FeatureMatrix>
+    public class Word : IEnumerable<Segment>
     {
-        private readonly LinkedList<FeatureMatrix> _list;
+        private readonly LinkedList<MutableSegment> _list = new LinkedList<MutableSegment>();
 
         public Word(IEnumerable<FeatureMatrix> fms)
         {
-            _list = new LinkedList<FeatureMatrix>( fms );
+            foreach (var fm in fms)
+            {
+                _list.AddLast(new MutableSegment(Tier.Segment, fm, new Segment[] {}));
+            }
         }
 
         private class WordSegment : MutableSegmentEnumerator
         {
-            private LinkedListNode<FeatureMatrix> _node;
-            private LinkedListNode<FeatureMatrix> _startNode;
-            private LinkedListNode<FeatureMatrix> _lastNode;
+            private LinkedListNode<MutableSegment> _node;
+            private LinkedListNode<MutableSegment> _startNode;
+            private LinkedListNode<MutableSegment> _lastNode;
             private readonly IMatrixMatcher _filter;
 
             private bool _beforeFirst = false;
             private bool _afterLast = false;
 
-            private LinkedListNode<FeatureMatrix> _markNode;
+            private LinkedListNode<MutableSegment> _markNode;
             private bool _markBeforeFirst = false;
             private bool _markAfterLast = false;
             private bool _markValid = false;
 
-            public WordSegment(LinkedListNode<FeatureMatrix> node, IMatrixMatcher filter)
+            public WordSegment(LinkedListNode<MutableSegment> node, IMatrixMatcher filter)
             {
                 if (node == null)
                 {
@@ -69,12 +72,12 @@ namespace Phonix
                 return !_afterLast;
             }
 
-            public FeatureMatrix Current
+            public MutableSegment Current
             {
                 get 
                 { 
                     CheckValid();
-                    return _node.Value; 
+                    return _node.Value;
                 }
                 set 
                 {
@@ -83,16 +86,26 @@ namespace Phonix
                 }
             }
 
-            public void Reset()
+            Segment SegmentEnumerator.Current
             {
-                _node = _startNode;
-                _beforeFirst = true;
-                _afterLast = false;
+                get { return Current; }
+            }
+
+            Segment IEnumerator<Segment>.Current
+            {
+                get { return Current; }
             }
 
             object IEnumerator.Current
             {
                 get { return Current; }
+            }
+
+            public void Reset()
+            {
+                _node = _startNode;
+                _beforeFirst = true;
+                _afterLast = false;
             }
 
             public void Dispose()
@@ -169,7 +182,7 @@ namespace Phonix
 
 #region MutableSegmentEnumerator members
 
-            public void InsertBefore(FeatureMatrix fm)
+            public void InsertBefore(MutableSegment seg)
             {
                 if (_node == _startNode && _beforeFirst)
                 {
@@ -180,15 +193,15 @@ namespace Phonix
                 {
                     // we've gone past the end, but we can still add "before",
                     // which means after the last node.
-                    _lastNode.List.AddAfter(_lastNode, fm);
+                    _lastNode.List.AddAfter(_lastNode, seg);
                 }
                 else
                 {
-                    _node.List.AddBefore(_node, fm);
+                    _node.List.AddBefore(_node, seg);
                 }
             }
 
-            public void InsertAfter(FeatureMatrix fm)
+            public void InsertAfter(MutableSegment seg)
             {
                 if (_node == _lastNode &&  _afterLast)
                 {
@@ -198,12 +211,12 @@ namespace Phonix
                 {
                     // we haven't started yet, so "after" actually means before
                     // our start node. we also move the start node back
-                    _node.List.AddBefore(_node, fm);
+                    _node.List.AddBefore(_node, seg);
                     _node = _startNode = _node.Previous;
                 }
                 else
                 {
-                    _node.List.AddAfter(_node, fm);
+                    _node.List.AddAfter(_node, seg);
                 }
             }
 
@@ -230,10 +243,10 @@ namespace Phonix
 
         private class WordSlice : IWordSlice
         {
-            private LinkedListNode<FeatureMatrix> _node;
+            private LinkedListNode<MutableSegment> _node;
             private readonly IMatrixMatcher _filter;
 
-            public WordSlice(LinkedListNode<FeatureMatrix> node, IMatrixMatcher filter)
+            public WordSlice(LinkedListNode<MutableSegment> node, IMatrixMatcher filter)
             {
                 if (node == null)
                 {
@@ -310,7 +323,7 @@ namespace Phonix
 
         public IEnumerator<IWordSlice> GetSliceEnumerator(Direction dir, IMatrixMatcher filter)
         {
-            LinkedListNode<FeatureMatrix> currNode;
+            LinkedListNode<MutableSegment> currNode;
             if (dir == Direction.Rightward)
             {
                 currNode = _list.First;
@@ -349,9 +362,13 @@ namespace Phonix
 
 #region IEnumerable(T) members
 
-        public IEnumerator<FeatureMatrix> GetEnumerator()
+        public IEnumerator<Segment> GetEnumerator()
         {
-            return _list.GetEnumerator();
+            foreach (var seg in _list)
+            {
+                yield return seg;
+            }
+            yield break;
         }
 
         IEnumerator IEnumerable.GetEnumerator()

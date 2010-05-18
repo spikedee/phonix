@@ -86,7 +86,8 @@ namespace Phonix
 
                 try
                 {
-                    return _values[f.Index] ?? f.NullValue.GetValues(null, this).First();
+                    // the cast here *should* never throw--if it does, we want to crash
+                    return _values[f.Index] ?? (FeatureValue) f.NullValue;
                 }
                 catch (ArgumentOutOfRangeException)
                 {

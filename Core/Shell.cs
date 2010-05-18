@@ -109,16 +109,16 @@ namespace Phonix
         public static string SafeMakeString(Phonology phono, Word word, TextWriter err)
         {
             StringBuilder str = new StringBuilder();
-            foreach(var fm in word)
+            foreach(var seg in word)
             {
                 try
                 {
-                    str.Append(phono.SymbolSet.Spell(fm).Label);
+                    str.Append(phono.SymbolSet.Spell(seg.Matrix).Label);
                 }
                 catch (SpellingException ex)
                 {
                     err.WriteLine(ex.Message);
-                    str.Append(fm.ToString());
+                    str.Append(seg.Matrix.ToString());
                 }
             }
             return str.ToString();

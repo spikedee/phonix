@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Phonix
 {
@@ -14,6 +15,11 @@ namespace Phonix
         public IEnumerable<Tier> Parents { get { return _parents; } }
 
         static public readonly Tier Segment = new Tier("segment", new Tier[] {});
+        static public readonly Tier Onset = new Tier("onset", new Tier[] { Segment });
+        static public readonly Tier Nucleus = new Tier("nucleus", new Tier[] { Segment });
+        static public readonly Tier Coda = new Tier("coda", new Tier[] { Segment });
+        static public readonly Tier Rime = new Tier("rime", new Tier[] { Nucleus, Coda });
+        static public readonly Tier Syllable = new Tier("syllable", new Tier[] { Onset, Rime });
 
         public Tier(string name, IEnumerable<Tier> children)
         {
@@ -39,6 +45,16 @@ namespace Phonix
         public bool HasParent(Tier tier)
         {
             return _parents.Contains(tier);
+        }
+
+        public bool HasAncestor(Tier tier)
+        {
+            return HasParent(tier) || Parents.Any(p => p.HasAncestor(tier));
+        }
+
+        public bool HasDescendant(Tier tier)
+        {
+            return HasChild(tier) || Children.Any(c => c.HasDescendant(tier));
         }
 
         override public string ToString()

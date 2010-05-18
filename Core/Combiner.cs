@@ -9,11 +9,11 @@ namespace Phonix
 {
     public interface IMatrixCombiner : IEnumerable<ICombinable>
     {
-        FeatureMatrix Combine(RuleContext ctx, FeatureMatrix matrix);
+        void Combine(RuleContext ctx, MutableSegment segment);
     }
 
     public interface ICombinable
     {
-        IEnumerable<FeatureValue> GetValues(RuleContext ctx, FeatureMatrix matrix);
+        IEnumerable<FeatureValue> CombineValues(RuleContext ctx, MutableSegment segment);
     }
 }

@@ -12,9 +12,9 @@ namespace Phonix
             _desc = desc;
         }
 
-        public bool Matches(RuleContext ctx, FeatureMatrix matrix)
+        public bool Matches(RuleContext ctx, Segment segment)
         {
-            return _match(ctx, matrix);
+            return _match(ctx, segment.Matrix);
         }
 
         override public string ToString()

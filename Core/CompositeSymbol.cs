@@ -40,13 +40,13 @@ namespace Phonix
 
         static private FeatureMatrix CombineFeatures(Symbol baseSymbol, Diacritic[] diacritics)
         {
-            var fm = baseSymbol.FeatureMatrix;
+            var values = new List<FeatureValue>();
+            values.AddRange(baseSymbol.FeatureMatrix);
             foreach (var d in diacritics)
             {
-                var combo = new MatrixCombiner(d.FeatureMatrix);
-                fm = combo.Combine(null, fm);
+                values.AddRange(d.FeatureMatrix);
             }
-            return fm;
+            return new FeatureMatrix(values);
         }
     }
 }

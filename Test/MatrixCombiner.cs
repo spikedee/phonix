@@ -35,10 +35,11 @@ namespace Phonix.Test
             var combo = new MatrixCombiner(FeatureMatrixTest.MatrixA);
 
             // combining with a non-emtpy combiner should fill in new values
-            var fm = combo.Combine(null, FeatureMatrix.Empty);
-            Assert.AreEqual(combo.Count() - 1, fm.Weight);
+            var seg = new MutableSegment(FeatureMatrix.Empty);
+            combo.Combine(null, seg);
+            Assert.AreEqual(combo.Count() - 1, seg.Matrix.Weight);
 
-            Assert.IsTrue(FeatureMatrixTest.MatrixA.Equals(fm), "combo with populated matrix");
+            Assert.IsTrue(FeatureMatrixTest.MatrixA.Equals(seg.Matrix), "combo with populated matrix");
         }
 
         [Test]
@@ -46,8 +47,9 @@ namespace Phonix.Test
         {
             // combining with the null combiner should actually yield the same
             // matrix
-            var fm = FeatureMatrixTest.MatrixA;
-            Assert.AreSame(fm, MatrixCombiner.NullCombiner.Combine(null, fm));
+            var seg = new MutableSegment(FeatureMatrixTest.MatrixA);
+            MatrixCombiner.NullCombiner.Combine(null, seg);
+            Assert.AreSame(FeatureMatrixTest.MatrixA, seg.Matrix);
         }
 
         [Test]
@@ -56,10 +58,11 @@ namespace Phonix.Test
             // combining with an empty matrix (one not explicitly set to
             // nullify values) shouldn't change anything
             var empty = new MatrixCombiner(FeatureMatrix.Empty);
-            var fm = empty.Combine(null, FeatureMatrixTest.MatrixA);
+            var seg = new MutableSegment(FeatureMatrixTest.MatrixA);
+            empty.Combine(null, seg);
 
-            Assert.AreEqual(FeatureMatrixTest.MatrixA.Weight, fm.Weight);
-            Assert.IsTrue(FeatureMatrixTest.MatrixA.Equals(fm), "combo with empty matrix");
+            Assert.AreEqual(FeatureMatrixTest.MatrixA.Weight, seg.Matrix.Weight);
+            Assert.IsTrue(FeatureMatrixTest.MatrixA.Equals(seg.Matrix), "combo with empty matrix");
         }
 
         [Test]
@@ -69,21 +72,22 @@ namespace Phonix.Test
             var fs = FeatureSetTest.GetTestSet();
             var nullFm = new FeatureMatrix(new FeatureValue[] 
                     {
-                        fs.Get<UnaryFeature>("un").NullValue.GetValues(null, null).First(),
-                        fs.Get<UnaryFeature>("un2").NullValue.GetValues(null, null).First(),
-                        fs.Get<BinaryFeature>("bn").NullValue.GetValues(null, null).First(),
-                        fs.Get<BinaryFeature>("bn2").NullValue.GetValues(null, null).First(),
-                        fs.Get<ScalarFeature>("sc").NullValue.GetValues(null, null).First(),
-                        fs.Get<ScalarFeature>("sc2").NullValue.GetValues(null, null).First()
+                        (FeatureValue) fs.Get<UnaryFeature>("un").NullValue,
+                        (FeatureValue) fs.Get<UnaryFeature>("un2").NullValue,
+                        (FeatureValue) fs.Get<BinaryFeature>("bn").NullValue,
+                        (FeatureValue) fs.Get<BinaryFeature>("bn2").NullValue,
+                        (FeatureValue) fs.Get<ScalarFeature>("sc").NullValue,
+                        (FeatureValue) fs.Get<ScalarFeature>("sc2").NullValue
                     });
             var nullCombo = new MatrixCombiner(nullFm);
-            var fm = nullCombo.Combine(null, FeatureMatrixTest.MatrixA);
+            var seg = new MutableSegment(FeatureMatrixTest.MatrixA);
+            nullCombo.Combine(null, seg);
 
-            Assert.AreEqual(0, fm.Weight);
+            Assert.AreEqual(0, seg.Matrix.Weight);
             foreach (var f in fs)
             {
                 if (f is NodeFeature) continue;
-                Assert.AreSame(f.NullValue, fm[f]);
+                Assert.AreSame(f.NullValue, seg.Matrix[f]);
             }
         }
 
@@ -98,14 +102,16 @@ namespace Phonix.Test
             ctx.VariableFeatures[un] = un.Value;
             ctx.VariableFeatures[sc] = sc.Value(1);
 
-            var fm = test.Combine(ctx, FeatureMatrixTest.MatrixB);
-            Assert.AreSame(ctx.VariableFeatures[un], fm[un]);
-            Assert.AreSame(ctx.VariableFeatures[sc], fm[sc]);
+            var seg = new MutableSegment(FeatureMatrixTest.MatrixB);
+            test.Combine(ctx, seg);
+
+            Assert.AreSame(ctx.VariableFeatures[un], seg.Matrix[un]);
+            Assert.AreSame(ctx.VariableFeatures[sc], seg.Matrix[sc]);
             foreach (var fv in FeatureMatrixTest.MatrixB)
             {
                 if (fv.Feature != un && fv.Feature != sc)
                 {
-                    Assert.AreSame(fv, fm[fv.Feature]);
+                    Assert.AreSame(fv, seg.Matrix[fv.Feature]);
                 }
             }
         }
@@ -120,7 +126,7 @@ namespace Phonix.Test
             var test = new MatrixCombiner(new ICombinable[] { un.VariableValue, sc.VariableValue });
             var ctx = new RuleContext();
 
-            test.Combine(ctx, FeatureMatrixTest.MatrixB);
+            test.Combine(ctx, new MutableSegment(FeatureMatrixTest.MatrixB));
         }
 
         [Test]
@@ -135,7 +141,7 @@ namespace Phonix.Test
             // this should throw InvalidOperationException because the context
             // is null.
 
-            test.Combine(null, FeatureMatrixTest.MatrixB);
+            test.Combine(null, new MutableSegment(FeatureMatrixTest.MatrixB));
         }
     }
 }

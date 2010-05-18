@@ -21,9 +21,8 @@ namespace Phonix
                 return GetEnumerator();
             }
 
-            public FeatureMatrix Combine(RuleContext ctx, FeatureMatrix matrix)
+            public void Combine(RuleContext ctx, MutableSegment segment)
             {
-                return matrix;
             }
 
             override public string ToString()
@@ -74,17 +73,17 @@ namespace Phonix
 
 #endregion
 
-        public FeatureMatrix Combine(RuleContext ctx, FeatureMatrix matrix)
+        public void Combine(RuleContext ctx, MutableSegment segment)
         {
             var comboValues = new List<FeatureValue>();
-            comboValues.AddRange(matrix);
+            comboValues.AddRange(segment.Matrix);
 
             foreach (var combo in this)
             {
-                comboValues.AddRange(combo.GetValues(ctx, matrix));
+                comboValues.AddRange(combo.CombineValues(ctx, segment));
             }
 
-            return new FeatureMatrix(comboValues);
+            segment.Matrix = new FeatureMatrix(comboValues);
         }
 
         override public string ToString()
