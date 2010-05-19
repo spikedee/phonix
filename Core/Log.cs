@@ -29,21 +29,30 @@ namespace Phonix
 
         public void Start()
         {
-            _phono.FeatureSet.FeatureDefined += this.LogFeatureDefined;
-            _phono.FeatureSet.FeatureRedefined += this.LogFeatureRedefined;
+            if (LogLevel >= Level.Warning)
+            {
+                _phono.FeatureSet.FeatureRedefined += this.LogFeatureRedefined;
+                _phono.SymbolSet.SymbolRedefined += this.LogSymbolRedefined;
+                _phono.SymbolSet.SymbolDuplicate += this.LogSymbolDuplicate;
+                _phono.RuleSet.RuleRedefined += this.LogRuleRedefined;
+                _phono.RuleSet.UndefinedVariableUsed += this.LogUndefinedVariableUsed;
+                _phono.RuleSet.ScalarValueRangeViolation += this.LogScalarValueRangeViolation;
+                _phono.RuleSet.InvalidScalarValueOp += this.LogInvalidScalarValueOp;
+            }
 
-            _phono.SymbolSet.SymbolDefined += this.LogSymbolDefined;
-            _phono.SymbolSet.SymbolRedefined += this.LogSymbolRedefined;
-            _phono.SymbolSet.SymbolDuplicate += this.LogSymbolDuplicate;
+            if (LogLevel >= Level.Info)
+            {
+                _phono.FeatureSet.FeatureDefined += this.LogFeatureDefined;
+                _phono.SymbolSet.SymbolDefined += this.LogSymbolDefined;
+                _phono.RuleSet.RuleDefined += this.LogRuleDefined;
+                _phono.RuleSet.RuleApplied += this.LogRuleApplied;
+            }
 
-            _phono.RuleSet.RuleDefined += this.LogRuleDefined;
-            _phono.RuleSet.RuleRedefined += this.LogRuleRedefined;
-            _phono.RuleSet.RuleEntered += this.LogRuleEntered;
-            _phono.RuleSet.RuleExited += this.LogRuleExited;
-            _phono.RuleSet.RuleApplied += this.LogRuleApplied;
-            _phono.RuleSet.UndefinedVariableUsed += this.LogUndefinedVariableUsed;
-            _phono.RuleSet.ScalarValueRangeViolation += this.LogScalarValueRangeViolation;
-            _phono.RuleSet.InvalidScalarValueOp += this.LogInvalidScalarValueOp;
+            if (LogLevel >= Level.Verbose)
+            {
+                _phono.RuleSet.RuleEntered += this.LogRuleEntered;
+                _phono.RuleSet.RuleExited += this.LogRuleExited;
+            }
         }
 
         public void Stop()
@@ -67,7 +76,7 @@ namespace Phonix
             Writer.Flush();
         }
 
-        public void WriteLog(Level level, string format, params object[] args)
+        private void WriteLog(Level level, string format, params object[] args)
         {
             string message = String.Format(format, args);
             if (this.LogLevel >= level)
