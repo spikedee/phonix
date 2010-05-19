@@ -23,7 +23,7 @@ namespace Phonix
         public event Action<Rule, Word> RuleEntered;
         public event Action<Rule, Word, IWordSlice> RuleApplied;
         public event Action<Rule, Word> RuleExited;
-        public event Action<Rule, IMatchCombine> UndefinedVariableUsed;
+        public event Action<Rule, IFeatureValue> UndefinedVariableUsed;
         public event Action<Rule, ScalarFeature, int> ScalarValueRangeViolation;
         public event Action<Rule, ScalarFeature, string> InvalidScalarValueOp;
 

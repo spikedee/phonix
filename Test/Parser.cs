@@ -52,8 +52,8 @@ namespace Phonix.Test
         public void RuleWithVariableUndefined()
         {
             bool gotTrace = false;
-            IMatchCombine undef = null;
-            Action<Rule, IMatchCombine> tracer = (r, fv) => 
+            IFeatureValue undef = null;
+            Action<Rule, IFeatureValue> tracer = (r, fv) => 
             {
                 gotTrace = true;
                 undef = fv;

@@ -79,21 +79,25 @@ namespace Phonix
         {
             get
             {
-                if (f is NodeFeature)
-                {
-                    throw new InvalidOperationException("Can't directly access node values");
-                }
-
                 try
                 {
-                    // the cast here *should* never throw--if it does, we want to crash
-                    return _values[f.Index] ?? (FeatureValue) f.NullValue;
+                    return _values[f.Index] ?? f.NullValue.ToFeatureValue();
                 }
                 catch (ArgumentOutOfRangeException)
                 {
                     // extend the list to include the new value
                     _values.AddRange(new FeatureValue[(f.Index + 1) - _values.Count]);
                     return this[f];
+                }
+                catch (NotImplementedException)
+                {
+                    // this should only happen when accessing node values. the
+                    // reason is that nodes are never directly present in
+                    // _values, and trying to get the
+                    // NullValue.ToFeatureValue() throws
+                    // NotImplementedException when the feature is a node.
+
+                    throw new InvalidOperationException("Can't directly access node values");
                 }
             }
         }

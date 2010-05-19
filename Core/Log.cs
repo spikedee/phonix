@@ -186,7 +186,7 @@ namespace Phonix
             }
         }
 
-        private void LogUndefinedVariableUsed(Rule rule, IMatchCombine var)
+        private void LogUndefinedVariableUsed(Rule rule, IFeatureValue var)
         {
             WriteLog(Level.Warning, "variable {0} used in rule '{1}' without appearing in rule context; some parts of this rule may be skipped", var, rule);
         }

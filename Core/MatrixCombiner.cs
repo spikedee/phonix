@@ -53,8 +53,8 @@ namespace Phonix
             _values = values;
         }
 
-        public MatrixCombiner(IEnumerable<IMatchCombine> values)
-            : this(new List<IMatchCombine>(values).ConvertAll<ICombinable>(v => v))
+        public MatrixCombiner(IEnumerable<IFeatureValue> values)
+            : this(new List<IFeatureValue>(values).ConvertAll<ICombinable>(v => v))
         {
         }
 

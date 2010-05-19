@@ -26,12 +26,12 @@ namespace Phonix
             Index = Interlocked.Increment(ref _instanceCount);
         }
 
-        protected virtual IMatchCombine GetVariableValue()
+        protected virtual IFeatureValue GetVariableValue()
         {
             return new VariableFeatureValue(this);
         }
 
-        protected virtual IMatchCombine GetNullValue()
+        protected virtual IFeatureValue GetNullValue()
         {
             return new NullFeatureValue(this);
         }
@@ -52,7 +52,7 @@ namespace Phonix
         // VariableFeatureValue is derived from AbstractFeatureValue to keep it
         // from being put into a FeatureMatrix or other containers that should
         // only contain non-variable values.
-        private class VariableFeatureValue : AbstractFeatureValue, IMatchCombine
+        private class VariableFeatureValue : AbstractFeatureValue, IFeatureValue
         {
             public VariableFeatureValue(Feature f)
                 : base(f, "$" + f.Name)
@@ -90,11 +90,16 @@ namespace Phonix
                     throw new UndefinedFeatureVariableException(this);
                 }
             }
+
+            public FeatureValue ToFeatureValue()
+            {
+                throw new NotImplementedException();
+            }
         }
 
-        public readonly IMatchCombine NullValue;
+        public readonly IFeatureValue NullValue;
 
-        public readonly IMatchCombine VariableValue;
+        public readonly IFeatureValue VariableValue;
 
         public static string FriendlyName<T>() where T : Feature
         {

@@ -33,8 +33,8 @@ namespace Phonix
             _values = list;
         }
 
-        public MatrixMatcher(IEnumerable<IMatchCombine> values)
-            : this(new List<IMatchCombine>(values).ConvertAll<IMatchable>(v => v))
+        public MatrixMatcher(IEnumerable<IFeatureValue> values)
+            : this(new List<IFeatureValue>(values).ConvertAll<IMatchable>(v => v))
         {
         }
 

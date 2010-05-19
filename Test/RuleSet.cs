@@ -133,7 +133,7 @@ namespace Phonix.Test
             int undefUsed = 0;
             var fs = FeatureSetTest.GetTestSet();
             Rule ruleInUndef = null;
-            IMatchCombine varInUndef = null;
+            IFeatureValue varInUndef = null;
             var combo = new MatrixCombiner(new ICombinable[] { fs.Get<Feature>("un").VariableValue });
 
             Rule rule = new Rule(

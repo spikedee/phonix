@@ -91,9 +91,9 @@ namespace Phonix
 
     public class UndefinedFeatureVariableException : PhonixException
     {
-        public readonly IMatchCombine Variable;
+        public readonly IFeatureValue Variable;
 
-        public UndefinedFeatureVariableException(IMatchCombine var)
+        public UndefinedFeatureVariableException(IFeatureValue var)
             : base("Undefined variable used: " + var)
         {
             Variable = var;

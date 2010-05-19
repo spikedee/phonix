@@ -12,9 +12,4 @@ namespace Phonix
         bool Matches(RuleContext ctx, Segment segment);
     }
 
-    public interface IMatchCombine : IMatchable, ICombinable
-    {
-        // this exists just to provide a convenient way to specify both
-        // behaviors
-    }
 }

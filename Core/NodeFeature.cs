@@ -35,12 +35,12 @@ namespace Phonix
             ExistsValue = new NodeExistsValue(this);
         }
 
-        override protected IMatchCombine GetVariableValue()
+        override protected IFeatureValue GetVariableValue()
         {
             return new NodeVariableValue(this);
         }
 
-        override protected IMatchCombine GetNullValue()
+        override protected IFeatureValue GetNullValue()
         {
             return new NodeNullValue(this);
         }
@@ -61,7 +61,7 @@ namespace Phonix
             }
         }
 
-        private class NodeNullValue : AbstractFeatureValue, IMatchCombine
+        private class NodeNullValue : AbstractFeatureValue, IFeatureValue
         {
             private readonly NodeFeature _node;
 
@@ -92,9 +92,14 @@ namespace Phonix
                 }
                 return list;
             }
+
+            public FeatureValue ToFeatureValue()
+            {
+                throw new NotImplementedException();
+            }
         }
 
-        private class NodeVariableValue : AbstractFeatureValue, IMatchCombine
+        private class NodeVariableValue : AbstractFeatureValue, IFeatureValue
         {
             private readonly NodeFeature _node;
 
@@ -138,6 +143,11 @@ namespace Phonix
                 {
                     throw new InvalidOperationException("undefined variable used");
                 }
+            }
+
+            public FeatureValue ToFeatureValue()
+            {
+                throw new NotImplementedException();
             }
         }
     }
