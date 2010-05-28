@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -23,287 +24,160 @@ namespace Phonix
         {
         }
 
-        public RuleSet GetRuleSet()
+        private class SyllableContext
         {
-            var rs = new RuleSet();
-
-            // create the segments for nuclei and onsets
-            var listCore = new List<IRuleSegment>();
-            listCore.Add(new AssignNucleus(this, true));
-            listCore.Add(new AssignOnset(this, RequireOnset));
-            if (AllowComplexOnset)
-            {
-                listCore.Add(new AssignComplexOnset(this, false));
-            }
-
-            var coreRule = new Rule("syllable-core", listCore, new IRuleSegment[] {});
-            coreRule.Direction = Direction;
-            rs.Add(coreRule);
-
-            // create the segments for codas
-            if (AllowCoda)
-            {
-                var listCoda = new List<IRuleSegment>();
-                listCoda.Add(new IsNucleus(this, true));
-                listCoda.Add(new AssignCoda(this, true));
-                if (AllowComplexCoda)
-                {
-                    listCoda.Add(new AssignComplexCoda(this, false));
-                }
-
-                var codaRule = new Rule("syllable-coda", listCoda, new IRuleSegment[] {});
-                rs.Add(codaRule);
-            }
-
-            return rs;
-        }
-
-        private int Sonority(Segment seg)
-        {
-            int sonority = 0;
-            foreach (var fv in Sonorous)
-            {
-                if (seg.Matrix[fv.Feature] == fv)
-                {
-                    sonority++;
-                }
-            }
-            return sonority;
+            public readonly List<Segment> Onset = new List<Segment>();
+            public readonly List<Segment> Nucleus = new List<Segment>();
+            public readonly List<Segment> Coda = new List<Segment>();
         }
 
         private abstract class SyllableSegment : IRuleSegment
         {
-            protected readonly Syllable _syllable;
-            private readonly bool _required;
-            private bool _lastMatched;
+            protected readonly SyllableContext Syllable; 
 
-            public SyllableSegment(Syllable syllable, bool required)
+            protected SyllableSegment(SyllableContext syll)
             {
-                _syllable = syllable;
-                _required = required;
+                Syllable = syll;
             }
 
-            public bool Matches(RuleContext ctx, SegmentEnumerator segment)
-            {
-                _lastMatched = MatchesImpl(ctx, segment);
-                return  _lastMatched || !_required;
-            }
-
-            public void Combine(RuleContext ctx, MutableSegmentEnumerator segment)
-            {
-                if (_lastMatched)
-                {
-                    CombineImpl(ctx, segment);
-                }
-            }
+            public abstract bool Matches(RuleContext ctx, SegmentEnumerator segment);
+            public abstract void Combine(RuleContext ctx, MutableSegmentEnumerator segment);
 
             // these are implemented here for convenience
-            public bool IsMatchOnlySegment { get { return false; } }
-            public string MatchString { get { return ""; } }
-            public string CombineString { get { return ""; } }
-
-            // these need to be implemented by subclasses
-            protected abstract bool MatchesImpl(RuleContext ctx, SegmentEnumerator segment);
-            protected abstract void CombineImpl(RuleContext ctx, MutableSegmentEnumerator segment);
+            public bool IsMatchOnlySegment 
+            { 
+                get { return false; } 
+            }
+            public string MatchString 
+            { 
+                get { return ""; } 
+            }
+            public string CombineString 
+            { 
+                get { return ""; } 
+            }
         }
 
-        private class AssignNucleus : SyllableSegment
+        private class SyllableStart : SyllableSegment
         {
-            public AssignNucleus(Syllable syllable, bool required)
-                : base(syllable, required) {}
-
-            override protected bool MatchesImpl(RuleContext ctx, SegmentEnumerator segment)
+            public SyllableStart(SyllableContext syll)
+                : base(syll)
             {
-                if (!segment.MoveNext())
-                {
-                    return false;
-                }
+            }
 
-                var son = _syllable.Sonority(segment.Current);
-                if (son > _syllable.MaxEdgeSonority)
+            public override bool Matches(RuleContext ctx, SegmentEnumerator segment)
+            {
+                try
                 {
-                    // too sonorant to be an edge
-                    return true;
-                } 
-                else if (son < _syllable.MinNucleusSonority)
-                {
-                    // not sonorant enough to be a nucleus
-                    return false;
+                    // if the current segment in the iterator is anything other
+                    // than an onset, we could potentially start a new syllable
+                    // on the next segment
+                    return !segment.Current.HasAncestor(Tier.Onset);
                 }
-
-                // is this segment less sonorous than the previous segment?
-                if (segment.MovePrev())
+                catch (InvalidOperationException)
                 {
-                    if (son < _syllable.Sonority(segment.Current))
-                    {
-                        return false;
-                    }
+                    // segment.Current wasn't valid. If this is because the
+                    // iteration hasn't yet started, then we still want to
+                    // return true.
+                    return segment.IsFirst;
                 }
-                segment.MoveNext();
+            }
 
-                // is this segment less sonorous than the following segment?
-                if (segment.MoveNext())
-                {
-                    if (son < _syllable.Sonority(segment.Current))
-                    {
-                        return false;
-                    }
-                }
-                segment.MovePrev();
+            public override void Combine(RuleContext ctx, MutableSegmentEnumerator segment)
+            {
+                // set up the context for the new syllable
+                Syllable.Onset.Clear();
+                Syllable.Nucleus.Clear();
+                Syllable.Coda.Clear();
+            }
+        }
 
-                // getting here implies that this is a sonority peak
+        private class SyllableFinish : SyllableSegment
+        {
+            public SyllableFinish(SyllableContext syll)
+                : base(syll)
+            {
+            }
+
+            public override bool Matches(RuleContext ctx, SegmentEnumerator segment)
+            {
                 return true;
             }
 
-            override protected void CombineImpl(RuleContext ctx, MutableSegmentEnumerator segment)
+            public override void Combine(RuleContext ctx, MutableSegmentEnumerator segment)
             {
-                segment.MoveNext();
-                if (!segment.Current.HasAncestor(Tier.Nucleus))
-                {
-#pragma warning disable 168
-                    segment.Current.Detach();
+                MutableSegment syllable;
+                MutableSegment onset;
+                MutableSegment rime;
+                MutableSegment nucleus;
+                MutableSegment coda;
 
-                    var nucleus = new MutableSegment(Tier.Nucleus, FeatureMatrix.Empty, new Segment[] { segment.Current });
-                    var rime = new MutableSegment(Tier.Rime, FeatureMatrix.Empty, new Segment[] { nucleus });
-                    var syllable = new MutableSegment(Tier.Syllable, FeatureMatrix.Empty, new Segment[] { rime });
-#pragma warning restore 168
+                var nuclearSeg = Syllable.Nucleus[0]; // this should *always* exist
+                if (nuclearSeg.HasAncestor(Tier.Nucleus))
+                {
+                    // get the existing syllable elements to use here
+                    syllable = (MutableSegment) nuclearSeg.FindAncestor(Tier.Syllable);
+                    rime = (MutableSegment) nuclearSeg.FindAncestor(Tier.Rime);
+                    nucleus = (MutableSegment) nuclearSeg.FindAncestor(Tier.Nucleus);
+                    onset = (MutableSegment) syllable.FindDescendant(Tier.Onset);
+                    coda = (MutableSegment) syllable.FindDescendant(Tier.Coda);
                 }
-            }
-        }
-
-        private class AssignOnset : SyllableSegment
-        {
-            public AssignOnset(Syllable syllable, bool required)
-                : base(syllable, required) {}
-
-            override protected bool MatchesImpl(RuleContext ctx, SegmentEnumerator segment)
-            {
-                return segment.MovePrev()
-                    && !segment.Current.HasAncestor(Tier.Nucleus)
-                    && _syllable.Sonority(segment.Current) <= _syllable.MaxEdgeSonority;
-            }
-
-            override protected void CombineImpl(RuleContext ctx, MutableSegmentEnumerator segment)
-            {
-                var syllable = (MutableSegment) segment.Current.FindAncestor(Tier.Syllable);
-                var rime = syllable.Children.First(seg => seg.Tier == Tier.Rime);
-
-                segment.MovePrev();
-                if (segment.Current.HasAncestor(Tier.Onset) 
-                        && segment.Current.FindAncestor(Tier.Syllable) == syllable)
+                else
                 {
-                    // we're already joined to the appropriate syllable, so do nothing
-                    return;
+                    // build a new syllable structure
+                    onset = new MutableSegment(Tier.Onset);
+                    nucleus = new MutableSegment(Tier.Nucleus);
+                    coda = new MutableSegment(Tier.Coda);
+                    rime = new MutableSegment(Tier.Rime, FeatureMatrix.Empty, new Segment[] { nucleus, coda });
+                    syllable = new MutableSegment(Tier.Syllable, FeatureMatrix.Empty, new Segment[] { onset, rime });
                 }
 
-                segment.Current.Detach();
-                var onset = new MutableSegment(Tier.Onset, FeatureMatrix.Empty, new Segment[] { segment.Current });
-                syllable.Children = new Segment[] { onset, rime };
+                onset.Children = Syllable.Onset;
+                nucleus.Children = Syllable.Nucleus;
+                coda.Children = Syllable.Coda;
             }
         }
 
-        private class AssignComplexOnset : SyllableSegment
+        private class SegmentWrapper : SyllableSegment
         {
-            public AssignComplexOnset(Syllable syllable, bool required)
-                : base(syllable, required) {}
+            private readonly IEnumerable<IRuleSegment> _wrappedSegments;
+            private readonly Tier _tier;
+            private readonly bool _required;
 
-            override protected bool MatchesImpl(RuleContext ctx, SegmentEnumerator segment)
+            private bool _lastMatch;
+            private readonly List<Segment> _matchedList = new List<Segment>();
+
+            public SegmentWrapper(SyllableContext syll, IEnumerable<IRuleSegment> wrapped, Tier targetTier, bool required)
+                : base(syll)
             {
-                var nextSeg = segment.Current;
-
-                return segment.MovePrev()
-                    && !segment.Current.HasAncestor(Tier.Syllable)
-                    && _syllable.Sonority(segment.Current) <= _syllable.MaxEdgeSonority
-                    && (_syllable.Sonority(nextSeg) - _syllable.Sonority(segment.Current)) >= _syllable.MinSonorityDistance;
+                _wrappedSegments = wrapped;
+                _tier = targetTier;
+                _required = required;
             }
 
-            override protected void CombineImpl(RuleContext ctx, MutableSegmentEnumerator segment)
+            public override bool Matches(RuleContext ctx, SegmentEnumerator segment)
             {
-                var segs = new List<Segment>();
-                var onset = (MutableSegment) segment.Current.FindAncestor(Tier.Onset);
+                _lastMatch = false;
+                _matchedList.Clear();
 
-                segment.MovePrev();
-                segs.Add(segment.Current);
-                segs.AddRange(onset.Children);
-
-                onset.Children = segs;
-            }
-        }
-
-        private class IsNucleus : SyllableSegment
-        {
-            public IsNucleus(Syllable syllable, bool required)
-                : base(syllable, required) {}
-
-            override protected bool MatchesImpl(RuleContext ctx, SegmentEnumerator segment)
-            {
-                return segment.MoveNext()
-                    && segment.Current.HasAncestor(Tier.Nucleus);
-            }
-
-            override protected void CombineImpl(RuleContext ctx, MutableSegmentEnumerator segment)
-            {
-                // nothing
-            }
-        }
-
-        private class AssignCoda : SyllableSegment
-        {
-            public AssignCoda(Syllable syllable, bool required)
-                : base(syllable, required) {}
-
-            override protected bool MatchesImpl(RuleContext ctx, SegmentEnumerator segment)
-            {
-                return segment.MoveNext()
-                    && !segment.Current.HasAncestor(Tier.Onset)
-                    && _syllable.Sonority(segment.Current) <= _syllable.MaxEdgeSonority
-                    && _syllable.Sonority(segment.Current) >= _syllable.MinCodaSonority;
-            }
-
-            override protected void CombineImpl(RuleContext ctx, MutableSegmentEnumerator segment)
-            {
-                var rime = (MutableSegment) segment.Current.FindAncestor(Tier.Rime);
-
-                segment.MoveNext();
-                if (segment.Current.HasAncestor(Tier.Coda) 
-                        && segment.Current.FindAncestor(Tier.Rime) == rime)
+                foreach (var seg in _wrappedSegments)
                 {
-                    // we're already joined to the appropriate syllable
-                    return;
+                    if (seg.Matches(ctx, segment))
+                    {
+                        // d00d, this be totally hard
+                    }
                 }
+                _lastMatch = true;
 
-                var coda = new MutableSegment(Tier.Coda, FeatureMatrix.Empty, new Segment[] { segment.Current });
-
-                var list = new List<Segment>( rime.Children );
-                list.Add(coda);
-
-                rime.Children = list;
-            }
-        }
-
-        private class AssignComplexCoda : SyllableSegment
-        {
-            public AssignComplexCoda(Syllable syllable, bool required)
-                : base(syllable, required) {}
-
-            override protected bool MatchesImpl(RuleContext ctx, SegmentEnumerator segment)
-            {
-                return segment.MoveNext()
-                    && !segment.Current.HasAncestor(Tier.Onset)
-                    && _syllable.Sonority(segment.Current) <= _syllable.MaxEdgeSonority
-                    && _syllable.Sonority(segment.Current) >= _syllable.MinCodaSonority;
+                return (_lastMatch || !_required);
             }
 
-            override protected void CombineImpl(RuleContext ctx, MutableSegmentEnumerator segment)
+            public override void Combine(RuleContext ctx, MutableSegmentEnumerator segment)
             {
-                var coda = (MutableSegment) segment.Current.FindAncestor(Tier.Coda);
-
-                segment.MoveNext();
-
-                var list = new List<Segment>( coda.Children );
-                list.Add( segment.Current );
-
-                coda.Children = list;
+                if (_tier == Tier.Onset)
+                {
+                    // TODO
+                }
             }
         }
     }

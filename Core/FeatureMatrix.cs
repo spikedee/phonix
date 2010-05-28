@@ -93,9 +93,9 @@ namespace Phonix
                 {
                     // this should only happen when accessing node values. the
                     // reason is that nodes are never directly present in
-                    // _values, and trying to get the
-                    // NullValue.ToFeatureValue() throws
-                    // NotImplementedException when the feature is a node.
+                    // _values, and trying to get f.NullValue.ToFeatureValue()
+                    // throws NotImplementedException when the feature is a
+                    // node.
 
                     throw new InvalidOperationException("Can't directly access node values");
                 }

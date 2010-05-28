@@ -127,7 +127,45 @@ namespace Phonix
 
         public bool HasAncestor(Tier tier)
         {
-            return Parents.Any(p => p.Tier == tier) || Parents.Any(p => p.HasAncestor(tier));
+            return Parents.Any(p => p.Tier == tier || p.HasAncestor(tier));
+        }
+
+        public bool TryFindDescendant(Tier tier, out Segment descendant)
+        {
+            if (!tier.HasAncestor(this.Tier))
+            {
+                throw new ArgumentException(String.Format("tier {0} is not an ancestor if {1}", tier, this.Tier));
+            }
+
+            descendant = null;
+            foreach (var child in Children)
+            {
+                if (child.Tier == tier)
+                {
+                    descendant = child;
+                    return true;
+                }
+                else if (child.TryFindDescendant(tier, out descendant))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public Segment FindDescendant(Tier tier)
+        {
+            Segment descendant;
+            if (TryFindDescendant(tier, out descendant))
+            {
+                return descendant;
+            }
+            throw new InvalidOperationException(String.Format("no ancestor found on {0} tier", tier));
+        }
+
+        public bool HasDescendant(Tier tier)
+        {
+            return Children.Any(c => c.Tier == tier || c.HasDescendant(tier));
         }
 
         protected void Detach()

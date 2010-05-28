@@ -290,6 +290,37 @@ namespace Phonix.Test
         }
 
         [Test]
+        public void SegmentRepeatZeroOrOnePre()
+        {
+            var phono = ParseWithStdImports("rule matchany a => x / (c)b _ $ ");
+            ApplyRules(phono, "cba", "cbx");
+            ApplyRules(phono, "ba", "bx");
+            ApplyRules(phono, "ca", "ca");
+        }
+
+        [Test]
+        public void SegmentRepeatZeroOnMorePre()
+        {
+            var phono = ParseWithStdImports("rule matchany a => x / (c)*b _ $ ");
+            ApplyRules(phono, "cba", "cbx");
+            ApplyRules(phono, "ccba", "ccbx");
+            ApplyRules(phono, "cccba", "cccbx");
+            ApplyRules(phono, "ba", "bx");
+            ApplyRules(phono, "ca", "ca");
+        }
+
+        [Test]
+        public void SegmentRepeatOneOrMorePre()
+        {
+            var phono = ParseWithStdImports("rule matchany a => x / (c)+b _ $ ");
+            ApplyRules(phono, "cba", "cbx");
+            ApplyRules(phono, "ccba", "ccbx");
+            ApplyRules(phono, "cccba", "cccbx");
+            ApplyRules(phono, "ba", "ba");
+            ApplyRules(phono, "ca", "ca");
+        }
+
+        [Test]
         public void RuleApplicationRate()
         {
             var phono = ParseWithStdImports("rule sporadic (applicationRate=0.25) a => b");

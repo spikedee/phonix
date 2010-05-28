@@ -14,6 +14,11 @@ namespace Phonix
             : this(Tier.Segment, fm, new Segment[] {})
         {
         }
+        
+        public MutableSegment(Tier tier)
+            : this(tier, FeatureMatrix.Empty, new Segment[] {})
+        {
+        }
 
         new public FeatureMatrix Matrix
         {
