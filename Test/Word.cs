@@ -125,26 +125,6 @@ namespace Phonix.Test
         }
 
         [Test]
-        public void SegmentIsFirst()
-        {
-            var word = GetTestWord();
-            var iter = word.GetSliceEnumerator(Direction.Rightward);
-            iter.MoveNext();
-
-            var slice = iter.Current;
-            var sliceIter = slice.GetEnumerator();
-
-            Assert.IsTrue(sliceIter.MoveNext(), "first MoveNext()");
-            Assert.IsTrue(sliceIter.IsFirst, "first sliceIter.IsFirst");
-
-            Assert.IsTrue(sliceIter.MoveNext(), "second MoveNext()");
-            Assert.IsFalse(sliceIter.IsFirst, "second sliceIter.IsFirst");
-
-            Assert.IsTrue(sliceIter.MoveNext(), "third MoveNext()");
-            Assert.IsFalse(sliceIter.IsFirst, "third sliceIter.IsFirst");
-        }
-
-        [Test]
         public void SegmentMoveNextPrev()
         {
             var word = GetTestWord();
@@ -205,28 +185,6 @@ namespace Phonix.Test
             Assert.AreSame(FeatureMatrixTest.MatrixC, iter.Current.Matrix);
             Assert.IsFalse(iter.MoveNext());
 
-        }
-
-        [Test]
-        public void SegmentIsLast()
-        {
-            var word = GetTestWord();
-            var iter = word.GetSliceEnumerator(Direction.Rightward);
-            iter.MoveNext();
-
-            var slice = iter.Current;
-            var sliceIter = slice.GetEnumerator();
-
-            Assert.IsTrue(sliceIter.MoveNext(), "first MoveNext()");
-            Assert.IsFalse(sliceIter.IsLast, "first sliceIter.IsLast");
-
-            Assert.IsTrue(sliceIter.MoveNext(), "second MoveNext()");
-            Assert.IsFalse(sliceIter.IsLast, "second sliceIter.IsLast");
-
-            Assert.IsTrue(sliceIter.MoveNext(), "third MoveNext()");
-            Assert.IsTrue(sliceIter.IsLast, "third sliceIter.IsLast");
-
-            Assert.IsFalse(sliceIter.MoveNext(), "last MoveNext()");
         }
 
         [Test]

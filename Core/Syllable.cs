@@ -76,10 +76,8 @@ namespace Phonix
                 }
                 catch (InvalidOperationException)
                 {
-                    // segment.Current wasn't valid. If this is because the
-                    // iteration hasn't yet started, then we still want to
-                    // return true.
-                    return segment.IsFirst;
+                    // TODO: fix this logic if necessary
+                    return false;
                 }
             }
 

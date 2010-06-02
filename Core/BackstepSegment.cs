@@ -8,15 +8,13 @@ namespace Phonix
         public bool Matches(RuleContext ctx, SegmentEnumerator pos)
         {
             // we only want to return false if we are already before the
-            // beginning. This requires us to advance, check IsFirst, then move
-            // back
+            // beginning. This requires us to advance, see if it's possible to
+            // retreat, then move back
 
-            if (pos.MoveNext() && pos.IsFirst)
+            if (pos.MoveNext() && !pos.MovePrev())
             {
-                pos.MovePrev();
                 return false;
             }
-            pos.MovePrev();
             pos.MovePrev();
             return true;
         }

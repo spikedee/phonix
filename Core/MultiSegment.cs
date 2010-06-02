@@ -47,10 +47,10 @@ namespace Phonix
             // enumeration. Those segments need to be put back for the next
             // matcher.
 
-            pos.Mark();
+            var marker = pos.Mark();
             while (MatchesAll(ctx, pos))
             {
-                pos.Mark();
+                marker = pos.Mark();
                 count++;
                 if (_maxMatches.HasValue && _maxMatches <= count)
                 {
@@ -61,7 +61,7 @@ namespace Phonix
             var rv = count >= _minMatches;
             if (rv)
             {
-                pos.Revert();
+                pos.Revert(marker);
             }
 
             return rv;
