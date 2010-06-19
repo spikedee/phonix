@@ -18,26 +18,20 @@ namespace Phonix
             get { return _ordered; }
         }
 
-        public event Action<Rule> RuleDefined;
-        public event Action<Rule, Rule> RuleRedefined;
-        public event Action<Rule, Word> RuleEntered;
-        public event Action<Rule, Word, IWordSlice> RuleApplied;
-        public event Action<Rule, Word> RuleExited;
-        public event Action<Rule, IFeatureValue> UndefinedVariableUsed;
-        public event Action<Rule, ScalarFeature, int> ScalarValueRangeViolation;
-        public event Action<Rule, ScalarFeature, string> InvalidScalarValueOp;
+        public event Action<AbstractRule> RuleDefined = r => {};
+        public event Action<AbstractRule, AbstractRule> RuleRedefined = (r1, r2) => {};
 
-        public RuleSet()
-        {
-            RuleDefined += (r) => {};
-            RuleRedefined += (r1, r2) => {};
-            RuleEntered += (r, w) => {};
-            RuleApplied += (r, w, s) => {};
-            RuleExited += (r, w) => {};
-            UndefinedVariableUsed += (r, v) => {};
-            ScalarValueRangeViolation += (r, f, v) => {};
-            InvalidScalarValueOp += (r, f, s) => {};
-        }
+        public event Action<Rule, IFeatureValue> UndefinedVariableUsed = (r, v) => {};
+        public event Action<Rule, ScalarFeature, int> ScalarValueRangeViolation = (r, f, v) => {};
+        public event Action<Rule, ScalarFeature, string> InvalidScalarValueOp = (r, f, s) => {};
+
+        // for performance reasons, the following events have to be checked
+        // against null at every invocation (which is actually faster than
+        // executing a nop delegate). They all have an OnX() method that safely
+        // wraps the invocation.
+        public event Action<AbstractRule, Word> RuleEntered;
+        public event Action<AbstractRule, Word, IWordSlice> RuleApplied;
+        public event Action<AbstractRule, Word> RuleExited;
 
         public void Add(Rule rule)
         {
@@ -71,12 +65,36 @@ namespace Phonix
 
         private void AddRuleEventHandlers(Rule rule)
         {
-            rule.Entered += (r, w) => RuleEntered(r, w);
-            rule.Exited += (r, w) => RuleExited(r, w);
-            rule.Applied += (r, w, s) => RuleApplied(r, w, s);
             rule.UndefinedVariableUsed += (r, v) => UndefinedVariableUsed(r, v);
             rule.ScalarValueRangeViolation += (r, f, v) => ScalarValueRangeViolation(r, f, v);
             rule.InvalidScalarValueOp += (r, f, v) => InvalidScalarValueOp(r, f, v);
+        }
+
+        private void OnRuleEntered(AbstractRule rule, Word word)
+        {
+            var entered = RuleEntered;
+            if (entered != null)
+            {
+                entered(rule, word);
+            }
+        }
+
+        private void OnRuleExited(AbstractRule rule, Word word)
+        {
+            var exited = RuleExited;
+            if (exited != null)
+            {
+                exited(rule, word);
+            }
+        }
+
+        private void OnRuleApplied(AbstractRule rule, Word word, IWordSlice slice)
+        {
+            var applied = RuleApplied;
+            if (applied != null)
+            {
+                applied(rule, word, slice);
+            }
         }
 
         public void ApplyAll(Word word)
@@ -86,15 +104,18 @@ namespace Phonix
 
             foreach (var rule in OrderedRules)
             {
-                Action<Rule, Word, IWordSlice> applyPersistentRules = (innerRule, innerWord, slice) => 
+                Action<AbstractRule, Word, IWordSlice> applyPersistentRules = (innerRule, innerWord, slice) => 
                 {
-                    ApplyPersistentRules(innerWord); 
+                    ApplyPersistentRules(innerWord);
                 };
-                rule.Applied += applyPersistentRules;
+                if (PersistentRules.Count() > 0)
+                {
+                    rule.Applied += applyPersistentRules;
+                }
 
                 try
                 {
-                    rule.Apply(word);
+                    ApplyRule(rule, word);
                 }
                 finally
                 {
@@ -107,7 +128,34 @@ namespace Phonix
         {
             foreach (var rule in PersistentRules)
             {
+                ApplyRule(rule, word);
+            }
+        }
+
+        private void ApplyRule(AbstractRule rule, Word word)
+        {
+            try
+            {
+                if (RuleEntered != null)
+                {
+                    rule.Entered += OnRuleEntered;
+                }
+                if (RuleApplied != null)
+                {
+                    rule.Applied += OnRuleApplied;
+                }
+                if (RuleExited != null)
+                {
+                    rule.Exited += OnRuleExited;
+                }
+
                 rule.Apply(word);
+            }
+            finally
+            {
+                rule.Entered -= OnRuleEntered;
+                rule.Applied -= OnRuleApplied;
+                rule.Exited -= OnRuleExited;
             }
         }
     }

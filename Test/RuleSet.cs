@@ -62,7 +62,7 @@ namespace Phonix.Test
         public void RuleDefined()
         {
             int calledDefined = 0;
-            Rule gotRule = null;
+            AbstractRule gotRule = null;
             var rs = new RuleSet();
 
             rs.RuleDefined += r => { calledDefined++; gotRule = r; };
@@ -77,8 +77,8 @@ namespace Phonix.Test
         public void RuleRedefined()
         {
             int calledRedefined = 0;
-            Rule newRule = null;
-            Rule oldRule = null;
+            AbstractRule newRule = null;
+            AbstractRule oldRule = null;
             var rs = new RuleSet();
 
             rs.RuleRedefined += (old, newer) => { calledRedefined++; oldRule = old; newRule = newer; };
@@ -99,8 +99,8 @@ namespace Phonix.Test
             int entered = 0;
             int exited = 0;
             int applied = 0;
-            Rule ruleEntered = null;
-            Rule ruleExited = null;
+            AbstractRule ruleEntered = null;
+            AbstractRule ruleExited = null;
             Word wordEntered = null;
             Word wordExited = null;
             Rule rule = new Rule(

@@ -11,9 +11,23 @@ namespace Phonix
         Leftward
     }
 
-    public class Rule
+    public sealed class Rule : AbstractRule
     {
-        public readonly string Name;
+        public Rule(string name, IEnumerable<IRuleSegment> segments, IEnumerable<IRuleSegment> excluded)
+            : base(name)
+        {
+            if (segments == null || excluded == null)
+            {
+                throw new ArgumentNullException();
+            }
+
+            Segments = new List<IRuleSegment>(segments);
+            ExcludedSegments = new List<IRuleSegment>(excluded);
+
+            UndefinedVariableUsed += (r, v) => {};
+            ScalarValueRangeViolation += (r, f, v) => {};
+            InvalidScalarValueOp += (r, f, s) => {};
+        }
 
         public readonly IEnumerable<IRuleSegment> Segments;
         public readonly IEnumerable<IRuleSegment> ExcludedSegments;
@@ -22,21 +36,22 @@ namespace Phonix
         public Direction Direction { get; set; }
 
         // Application rate should vary from 0 to 1000
-        private int _applicationRate = 1000;
+        private double _applicationRate = 1.0;
         public double ApplicationRate
         {
-            get { return ((double)_applicationRate) / 1000; }
-            set { 
+            get { return _applicationRate; }
+            set 
+            { 
                 if (value < 0 || value > 1)
                 {
                     throw new ArgumentException("ApplicationRate must be between zero and one");
                 }
-                _applicationRate = (int)(value * 1000);
+                _applicationRate = value;
             }
         }
 
         private string _description;
-        public string Description
+        public override string Description
         {
             get
             {
@@ -92,41 +107,18 @@ namespace Phonix
 
         private Random _random = new Random();
 
-        public event Action<Rule, Word> Entered;
-        public event Action<Rule, Word, IWordSlice> Applied;
-        public event Action<Rule, Word> Exited;
         public event Action<Rule, IFeatureValue> UndefinedVariableUsed;
         public event Action<Rule, ScalarFeature, int> ScalarValueRangeViolation;
         public event Action<Rule, ScalarFeature, string> InvalidScalarValueOp;
-
-        public Rule(string name, IEnumerable<IRuleSegment> segments, IEnumerable<IRuleSegment> excluded)
-        {
-            if (name == null || segments == null || excluded == null)
-            {
-                throw new ArgumentNullException();
-            }
-
-            Name = name;
-            Segments = segments;
-            ExcludedSegments = excluded;
-
-            // add empty event handlers
-            Entered += (r, w) => {};
-            Applied += (r, w, s) => {};
-            Exited += (r, w) => {};
-            UndefinedVariableUsed += (r, v) => {};
-            ScalarValueRangeViolation += (r, f, v) => {};
-            InvalidScalarValueOp += (r, f, s) => {};
-        }
 
         public override string ToString()
         {
             return Name;
         }
 
-        public void Apply(Word word)
+        public override void Apply(Word word)
         {
-            Entered(this, word);
+            OnEntered(word);
 
             try
             {
@@ -134,48 +126,25 @@ namespace Phonix
 
                 while (slice.MoveNext())
                 {
-                    if (_applicationRate < 1000)
+                    if (_applicationRate < 1.0)
                     {
-                        if (_random.Next(0, 1000) > _applicationRate)
+                        if (_random.NextDouble() > _applicationRate)
                         {
                             // skip this potential application of the rule
                             continue;
                         }
                     }
 
-                    // match all of the segments
-                    var context = new RuleContext();
-                    var matrix = slice.Current.GetEnumerator();
-                    bool matchedAll = true;
-                    foreach (var segment in Segments)
-                    {
-                        if (!segment.Matches(context, matrix))
-                        {
-                            matchedAll = false;
-                            break;
-                        }
-                    }
-                    matrix.Dispose();
+                    var ctx = new RuleContext();
 
-                    if (!matchedAll)
+                    // match all of the segments
+                    if (!MatchesSegments(slice.Current, Segments, ctx))
                     {
                         continue;
                     }
 
                     // ensure that we don't match the excluded segments
-                    matrix = slice.Current.GetEnumerator();
-                    bool matchedExcluded = true;
-                    foreach (var segment in ExcludedSegments)
-                    {
-                        if (!segment.Matches(context, matrix))
-                        {
-                            matchedExcluded = false;
-                            break;
-                        }
-                    }
-                    matrix.Dispose();
-
-                    if (matchedExcluded)
+                    if (ExcludedSegments.Count() > 0 && MatchesSegments(slice.Current, ExcludedSegments, ctx))
                     {
                         continue;
                     }
@@ -186,7 +155,7 @@ namespace Phonix
                     {
                         try
                         {
-                            segment.Combine(context, wordSegment);
+                            segment.Combine(ctx, wordSegment);
                         }
                         catch (UndefinedFeatureVariableException ex)
                         {
@@ -202,14 +171,28 @@ namespace Phonix
                         }
                     }
                     wordSegment.Dispose();
-                    Applied(this, word, slice.Current);
+                    OnApplied(word, slice.Current);
                 }
             }
             finally
             {
-                Exited(this, word);
+                OnExited(word);
             }
         }
 
+        private static bool MatchesSegments(IWordSlice slice, IEnumerable<IRuleSegment> segments, RuleContext ctx)
+        {
+            using (var seg = slice.GetEnumerator())
+            {
+                foreach (var ruleSeg in segments)
+                {
+                    if (!ruleSeg.Matches(ctx, seg))
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
     }
 }

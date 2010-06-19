@@ -112,9 +112,8 @@ namespace Phonix
             while (currNode != null)
             {
                 var nextNodePre = (dir == Direction.Rightward ? currNode.Next : currNode.Previous);
-                RuleContext ctx = new RuleContext();
 
-                if (filter == null || filter.Matches(ctx, currNode.Value))
+                if (filter == null || filter.Matches(null, currNode.Value))
                 {
                     yield return new WordSlice(currNode, filter);
                 }

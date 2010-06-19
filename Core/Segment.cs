@@ -55,7 +55,7 @@ namespace Phonix
                 }
 
                 // empty our child list
-                _children.RemoveRange(0, _children.Count);
+                _children.Clear();
 
                 // add and validate all new children
                 foreach (var child in value)
@@ -89,25 +89,25 @@ namespace Phonix
             }
             Matrix = fm;
             Tier = tier;
-            _children.AddRange(children);
+            Children = children;
         }
 
-        public bool TryFindAncestor(Tier tier, out Segment ancestor)
+        public bool TryFindAncestor(Tier ancestorTier, out Segment ancestor)
         {
-            if (!this.Tier.HasAncestor(tier))
+            ancestor = null;
+            if (!this.Tier.HasAncestor(ancestorTier))
             {
-                throw new ArgumentException(String.Format("tier {0} is not an ancestor if {1}", tier, this.Tier));
+                return false;
             }
 
-            ancestor = null;
             foreach (var parent in Parents)
             {
-                if (parent.Tier == tier)
+                if (parent.Tier == ancestorTier)
                 {
                     ancestor = parent;
                     return true;
                 }
-                else if (parent.TryFindAncestor(tier, out ancestor))
+                else if (parent.Tier.HasAncestor(ancestorTier) && parent.TryFindAncestor(ancestorTier, out ancestor))
                 {
                     return true;
                 }
@@ -127,25 +127,26 @@ namespace Phonix
 
         public bool HasAncestor(Tier tier)
         {
-            return Parents.Any(p => p.Tier == tier || p.HasAncestor(tier));
+            Segment ignored;
+            return TryFindAncestor(tier, out ignored);
         }
 
-        public bool TryFindDescendant(Tier tier, out Segment descendant)
+        public bool TryFindDescendant(Tier descendantTier, out Segment descendant)
         {
-            if (!tier.HasAncestor(this.Tier))
+            descendant = null;
+            if (!this.Tier.HasDescendant(descendantTier))
             {
-                throw new ArgumentException(String.Format("tier {0} is not an ancestor if {1}", tier, this.Tier));
+                return false;
             }
 
-            descendant = null;
             foreach (var child in Children)
             {
-                if (child.Tier == tier)
+                if (child.Tier == descendantTier)
                 {
                     descendant = child;
                     return true;
                 }
-                else if (child.TryFindDescendant(tier, out descendant))
+                else if (child.Tier.HasDescendant(descendantTier) && child.TryFindDescendant(descendantTier, out descendant))
                 {
                     return true;
                 }
@@ -165,7 +166,8 @@ namespace Phonix
 
         public bool HasDescendant(Tier tier)
         {
-            return Children.Any(c => c.Tier == tier || c.HasDescendant(tier));
+            Segment ignored;
+            return TryFindDescendant(tier, out ignored);
         }
 
         protected void Detach()

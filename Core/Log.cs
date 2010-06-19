@@ -114,32 +114,39 @@ namespace Phonix
             WriteLog(Level.Warning, "symbol {0} is identical to symbol {1}", newer, old);
         }
 
-        private void LogRuleDefined(Rule r)
+        private void LogRuleDefined(AbstractRule r)
         {
             WriteLog(Level.Info, "rule {0} defined", r);
         }
 
-        private void LogRuleRedefined(Rule old, Rule newer)
+        private void LogRuleRedefined(AbstractRule old, AbstractRule newer)
         {
             WriteLog(Level.Warning, "rule {0} redefined", newer, old);
         }
 
-        private void LogRuleEntered(Rule rule, Word word)
+        private void LogRuleEntered(AbstractRule rule, Word word)
         {
             WriteLog(Level.Verbose, "rule {0} entered", rule);
         }
 
-        private void LogRuleExited(Rule rule, Word word)
+        private void LogRuleExited(AbstractRule rule, Word word)
         {
             WriteLog(Level.Verbose, "rule {0} exited", rule);
         }
 
-        private void LogRuleApplied(Rule rule, Word word, IWordSlice slice)
+        private void LogRuleApplied(AbstractRule abstractRule, Word word, IWordSlice slice)
         {
             // since this method is potentially expensive, skip it if we're not
             // going to log anything
             if (this.LogLevel < Level.Info)
             {
+                return;
+            }
+
+            var rule = abstractRule as Rule;
+            if (rule == null)
+            {
+                // TODO
                 return;
             }
 
@@ -154,7 +161,7 @@ namespace Phonix
                 var seg = rule.Segments.GetEnumerator();
                 var pos = slice.GetEnumerator();
 
-                while (seg.MoveNext() && seg.Current is ContextSegment)
+                while (seg.MoveNext() && seg.Current.IsMatchOnlySegment)
                 {
                     seg.Current.Matches(ctx, pos);
                 }
@@ -168,19 +175,17 @@ namespace Phonix
                 // safely swallowed
             }
 
+            var str = new StringBuilder();
             foreach (var seg in word)
             {
-                var str = new StringBuilder();
+                string marker = " ";
+                Symbol symbol;
+
                 if (current != null && seg.Matrix == current)
                 {
-                    str.Append("> ");
-                }
-                else
-                {
-                    str.Append("  ");
+                    marker = ">";
                 }
 
-                Symbol symbol;
                 try
                 {
                     symbol = _phono.SymbolSet.Spell(seg.Matrix);
@@ -189,10 +194,11 @@ namespace Phonix
                 {
                     symbol = Symbol.Unknown;
                 }
-                str.Append("{0} : {1}");
 
-                WriteLog(Level.Info, str.ToString(), symbol, seg.Matrix);
+                str.AppendLine(String.Format("{0} {1} : {2}", marker, symbol, seg.Matrix));
             }
+
+            WriteLog(Level.Info, str.ToString());
         }
 
         private void LogUndefinedVariableUsed(Rule rule, IFeatureValue var)

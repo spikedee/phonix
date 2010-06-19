@@ -46,6 +46,18 @@ namespace Phonix
                 seg._beforeFirst = _beforeFirst;
                 seg._afterLast = _afterLast;
             }
+            
+            public bool Equals(Marker other)
+            {
+                var otherMark = other as MarkerImpl;
+                if (otherMark == null)
+                {
+                    return false;
+                }
+                return _beforeFirst == otherMark._beforeFirst
+                    && _afterLast == otherMark._afterLast
+                    && _node == otherMark._node;
+            }
         }
 
         protected SegmentEnumerator(LinkedListNode<MutableSegment> node, IMatrixMatcher filter)
@@ -67,12 +79,11 @@ namespace Phonix
 
         public bool MoveNext()
         {
-            RuleContext ctx = new RuleContext();
             if (!_beforeFirst)
             {
                 _node = _node.Next;
             }
-            while (_node != null && _filter != null && !_filter.Matches(ctx, _node.Value))
+            while (_node != null && _filter != null && !_filter.Matches(null, _node.Value))
             {
                 _node = _node.Next;
             }
@@ -88,13 +99,11 @@ namespace Phonix
 
         public bool MovePrev()
         {
-            RuleContext ctx = new RuleContext();
-
             if (!_afterLast)
             {
                 _node = _node.Previous;
             }
-            while (_node != null && _filter != null && !_filter.Matches(ctx, _node.Value))
+            while (_node != null && _filter != null && !_filter.Matches(null, _node.Value))
             {
                 _node = _node.Previous;
             }
@@ -160,11 +169,51 @@ namespace Phonix
             mark.Restore(this);
         }
 
+        public IEnumerable<Segment> Span(Marker start, Marker end)
+        {
+            // this method should not change our state, so we save our current
+            // state and restore it at the end
+            var current = Mark();
+
+            try
+            {
+                var list = new List<Segment>();
+
+                Revert(end);
+                Segment endSeg = Current;
+                Revert(start);
+
+                bool hasCurrent;
+                while ((hasCurrent = MoveNext()) && Current != endSeg)
+                {
+                    list.Add(Current);
+                }
+                if (hasCurrent)
+                {
+                    list.Add(Current);
+                }
+
+                return list;
+            }
+            catch (InvalidOperationException ex)
+            {
+                throw new ArgumentOutOfRangeException("the start and end markers do not represent a valid range", ex);
+            }
+            finally
+            {
+                Revert(current);
+            }
+        }
+
         protected void CheckValid()
         {
-            if (_beforeFirst || _afterLast)
+            if (_beforeFirst)
             {
-                throw new InvalidOperationException();
+                throw new InvalidOperationException("The segment enumeration has passed the beginning of the set");
+            }
+            if (_afterLast)
+            {
+                throw new InvalidOperationException("The segment enumeration has passed the end of the set");
             }
         }
     }

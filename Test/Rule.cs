@@ -62,7 +62,7 @@ namespace Phonix.Test
             var rule = new Rule("Test", segs, segs);
             
             Assert.AreEqual("Test", rule.Name, "rule name");
-            Assert.AreSame(segs, rule.Segments, "rule segments");
+            Assert.AreSame(segs[0], rule.Segments.First(), "rule segments");
 
             try
             {
@@ -124,8 +124,8 @@ namespace Phonix.Test
             int entered = 0;
             int exited = 0;
             int applied = 0;
-            Rule ruleEntered = null;
-            Rule ruleExited = null;
+            AbstractRule ruleEntered = null;
+            AbstractRule ruleExited = null;
             Word wordEntered = null;
             Word wordExited = null;
             Rule rule = new Rule(
