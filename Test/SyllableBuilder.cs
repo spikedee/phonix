@@ -317,5 +317,29 @@ namespace Phonix.Test
             Assert.IsTrue(applied);
             Assert.AreEqual("b<c:a>cb", ShowSyllables(word));
         }
+
+        [Test]
+        public void PreferOnset()
+        {
+            var syll = new SyllableBuilder();
+
+            syll.Onsets.Add(new IRuleSegment[] {});
+            syll.Onsets.Add(new IRuleSegment[] { SegmentA });
+            syll.Onsets.Add(new IRuleSegment[] { SegmentB });
+            syll.Nuclei.Add(new IRuleSegment[] { SegmentC });
+            syll.Codas.Add(new IRuleSegment[] { SegmentA });
+            syll.Codas.Add(new IRuleSegment[] { SegmentB });
+            syll.Codas.Add(new IRuleSegment[] {});
+
+            var rule = syll.GetSyllableRule();
+            var word = GetTestWord();
+
+            bool applied = false;
+            rule.Applied += (r, w, s) => { applied = true; };
+            rule.Apply(word);
+
+            Assert.IsTrue(applied);
+            Assert.AreEqual("<b:c><a:c.b>", ShowSyllables(word));
+        }
     }
 }

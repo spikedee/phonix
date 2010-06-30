@@ -281,6 +281,18 @@ namespace Phonix
                 return b;
             }
 
+            // select based on most onsets
+            int aOnsets = a.Aggregate(0, (sum, syllable) => { return sum + syllable.Onset.Count(); });
+            int bOnsets = b.Aggregate(0, (sum, syllable) => { return sum + syllable.Onset.Count(); });
+            if (aOnsets > bOnsets)
+            {
+                return a;
+            }
+            if (bOnsets > aOnsets)
+            {
+                return b;
+            }
+
             // select on alignment
             var wordList = new List<Segment>(word);
             int aNucleusSum = a.Aggregate(0, (sum, syllable) => { return sum + wordList.IndexOf(syllable.Nucleus.First()); });
