@@ -1,4 +1,6 @@
 using System;
+using System.Text;
+using System.Linq;
 
 namespace Phonix.Test
 {
@@ -24,26 +26,80 @@ namespace Phonix.Test
             return new Word(segs);
         }
 
+        private string ShowSyllables(Word word)
+        {
+            StringBuilder str = new StringBuilder();
+            Segment lastSyll = null;
+            Segment lastSegment = null;
+            var symbols = SymbolSetTest.GetTestSet();
+
+            foreach (var segment in word)
+            {
+                Segment thisSyll;
+                if (segment.HasAncestor(Tier.Syllable))
+                {
+                    var ancestors = segment.FindAncestors(Tier.Syllable);
+
+                    Assert.AreEqual(1, ancestors.Count(),
+                            String.Format("{0} is linked to two syllables", symbols.Spell(segment.Matrix)));
+
+                    thisSyll = ancestors.First();
+                    if (thisSyll != lastSyll)
+                    {
+                        if (lastSyll != null)
+                        {
+                            str.Append(">");
+                        }
+                        str.Append("<");
+                        lastSyll = thisSyll;
+                    }
+                }
+                else
+                {
+                    if (lastSyll != null)
+                    {
+                        str.Append(">");
+                    }
+                    lastSyll = null;
+                }
+
+                if (lastSegment != null)
+                {
+                    if (segment.HasAncestor(Tier.Nucleus) && lastSegment.HasAncestor(Tier.Onset))
+                    {
+                        str.Append(":");
+                    }
+                    else if (segment.HasAncestor(Tier.Coda) && lastSegment.HasAncestor(Tier.Nucleus))
+                    {
+                        str.Append(".");
+                    }
+                }
+
+                str.Append(symbols.Spell(segment.Matrix));
+                lastSegment = segment;
+            }
+            if (lastSyll != null)
+            {
+                str.Append(">");
+            }
+
+            return str.ToString();
+        }
+
         [Test]
         public void Ctor()
         {
-            var syll = new Syllable();
+            var syll = new SyllableBuilder();
 
             Assert.IsNotNull(syll.Onsets);
             Assert.IsNotNull(syll.Nuclei);
             Assert.IsNotNull(syll.Codas);
-
-            Assert.IsFalse(syll.OnsetRequired);
-            Assert.IsFalse(syll.OnsetForbidden);
-
-            Assert.IsFalse(syll.CodaRequired);
-            Assert.IsFalse(syll.CodaForbidden);
         }
 
         [Test]
         public void GetSyllableRule()
         {
-            var syll = new Syllable();
+            var syll = new SyllableBuilder();
 
             syll.Onsets.Add(new IRuleSegment[] { SegmentB });
             syll.Nuclei.Add(new IRuleSegment[] { SegmentA });
@@ -66,86 +122,12 @@ namespace Phonix.Test
             {
                 syll.Nuclei.Add(new IRuleSegment[] { SegmentA });
             }
-
-            syll.OnsetForbidden = true;
-            try
-            {
-                rule = syll.GetSyllableRule();
-                Assert.Fail("should have thrown InvalidOperationException");
-            }
-            catch (InvalidOperationException)
-            {
-                syll.OnsetForbidden = false;
-            }
-
-            syll.CodaForbidden = true;
-            try
-            {
-                rule = syll.GetSyllableRule();
-                Assert.Fail("should have thrown InvalidOperationException");
-            }
-            catch (InvalidOperationException)
-            {
-                syll.CodaForbidden = false;
-            }
-
-            syll.OnsetRequired = true;
-            syll.Onsets.Clear();
-            try
-            {
-                rule = syll.GetSyllableRule();
-                Assert.Fail("should have thrown InvalidOperationException");
-            }
-            catch (InvalidOperationException)
-            {
-                syll.OnsetRequired = false;
-                syll.Onsets.Add(new IRuleSegment[] { SegmentB });
-            }
-
-            syll.CodaRequired = true;
-            syll.Codas.Clear();
-            try
-            {
-                rule = syll.GetSyllableRule();
-                Assert.Fail("should have thrown InvalidOperationException");
-            }
-            catch (InvalidOperationException)
-            {
-                syll.CodaRequired = false;
-                syll.Codas.Add(new IRuleSegment[] { SegmentC });
-            }
-
-            syll.OnsetRequired = true;
-            syll.OnsetForbidden = true;
-            try
-            {
-                rule = syll.GetSyllableRule();
-                Assert.Fail("should have thrown InvalidOperationException");
-            }
-            catch (InvalidOperationException)
-            {
-                syll.OnsetRequired = false;
-                syll.OnsetForbidden = false;
-            }
-
-            syll.CodaRequired = true;
-            syll.CodaForbidden = true;
-            try
-            {
-                rule = syll.GetSyllableRule();
-                Assert.Fail("should have thrown InvalidOperationException");
-            }
-            catch (InvalidOperationException)
-            {
-                syll.CodaRequired = false;
-                syll.CodaForbidden = false;
-            }
         }
 
         [Test]
         public void RuleDescription()
         {
-            var syll = new Syllable();
+            var syll = new SyllableBuilder();
 
             syll.Onsets.Add(new IRuleSegment[] { SegmentB });
             syll.Nuclei.Add(new IRuleSegment[] { SegmentA });
@@ -164,9 +146,9 @@ namespace Phonix.Test
         }
 
         [Test]
-        public void CVC()
+        public void CAC()
         {
-            var syll = new Syllable();
+            var syll = new SyllableBuilder();
 
             syll.Onsets.Add(new IRuleSegment[] { SegmentC });
             syll.Nuclei.Add(new IRuleSegment[] { SegmentA });
@@ -180,46 +162,37 @@ namespace Phonix.Test
             rule.Apply(word);
 
             Assert.IsTrue(applied);
-
-            var seg = word.GetEnumerator();
-
-            Assert.IsTrue(seg.MoveNext());
-            Assert.AreSame(seg.Current.Matrix, FeatureMatrixTest.MatrixB);
-            Assert.IsFalse(seg.Current.HasAncestor(Tier.Syllable));
-
-            Assert.IsTrue(seg.MoveNext());
-            Assert.AreSame(seg.Current.Matrix, FeatureMatrixTest.MatrixC);
-            Assert.IsTrue(seg.Current.HasAncestor(Tier.Syllable));
-            Assert.IsTrue(seg.Current.HasAncestor(Tier.Onset));
-            var syllSegment = seg.Current.FindAncestor(Tier.Syllable);
-
-            Assert.IsTrue(seg.MoveNext());
-            Assert.AreSame(seg.Current.Matrix, FeatureMatrixTest.MatrixA);
-            Assert.IsTrue(seg.Current.HasAncestor(Tier.Syllable));
-            Assert.IsTrue(seg.Current.HasAncestor(Tier.Rime));
-            Assert.IsTrue(seg.Current.HasAncestor(Tier.Nucleus));
-            Assert.AreSame(syllSegment, seg.Current.FindAncestor(Tier.Syllable));
-            var rimeSegment = seg.Current.FindAncestor(Tier.Rime);
-
-            Assert.IsTrue(seg.MoveNext());
-            Assert.AreSame(seg.Current.Matrix, FeatureMatrixTest.MatrixC);
-            Assert.IsTrue(seg.Current.HasAncestor(Tier.Syllable));
-            Assert.IsTrue(seg.Current.HasAncestor(Tier.Rime));
-            Assert.IsTrue(seg.Current.HasAncestor(Tier.Coda));
-            Assert.AreSame(syllSegment, seg.Current.FindAncestor(Tier.Syllable));
-            Assert.AreSame(rimeSegment, seg.Current.FindAncestor(Tier.Rime));
-
-            Assert.IsTrue(seg.MoveNext());
-            Assert.AreSame(seg.Current.Matrix, FeatureMatrixTest.MatrixB);
-            Assert.IsFalse(seg.Current.HasAncestor(Tier.Syllable));
-
-            Assert.IsFalse(seg.MoveNext());
+            Assert.AreEqual("b<c:a.c>b", ShowSyllables(word));
         }
 
         [Test]
-        public void MultiOnsetCVC()
+        public void ResyllabifyCAC()
         {
-            var syll = new Syllable();
+            var syll = new SyllableBuilder();
+
+            syll.Onsets.Add(new IRuleSegment[] { SegmentC });
+            syll.Nuclei.Add(new IRuleSegment[] { SegmentA });
+            syll.Codas.Add(new IRuleSegment[] { SegmentC });
+
+            var rule = syll.GetSyllableRule();
+            var word = GetTestWord();
+
+            int applied = 0;
+            rule.Applied += (r, w, s) => { applied++; };
+
+            rule.Apply(word);
+            Assert.AreEqual(1, applied);
+            var firstSyll = ShowSyllables(word);
+
+            // now repeat and verify that we didn't change anything
+            rule.Apply(word);
+            Assert.AreEqual(firstSyll, ShowSyllables(word));
+        }
+
+        [Test]
+        public void MultiOnsetBCAC()
+        {
+            var syll = new SyllableBuilder();
 
             syll.Onsets.Add(new IRuleSegment[] { SegmentC });
             syll.Onsets.Add(new IRuleSegment[] { SegmentB, SegmentC });
@@ -234,50 +207,13 @@ namespace Phonix.Test
             rule.Apply(word);
 
             Assert.IsTrue(applied);
-
-            var seg = word.GetEnumerator();
-
-            Assert.IsTrue(seg.MoveNext());
-            Assert.AreSame(seg.Current.Matrix, FeatureMatrixTest.MatrixB);
-            Assert.IsTrue(seg.Current.HasAncestor(Tier.Syllable));
-            Assert.IsTrue(seg.Current.HasAncestor(Tier.Onset));
-            var syllSegment = seg.Current.FindAncestor(Tier.Syllable);
-            var onsetSegment = seg.Current.FindAncestor(Tier.Onset);
-
-            Assert.IsTrue(seg.MoveNext());
-            Assert.AreSame(seg.Current.Matrix, FeatureMatrixTest.MatrixC);
-            Assert.IsTrue(seg.Current.HasAncestor(Tier.Syllable));
-            Assert.IsTrue(seg.Current.HasAncestor(Tier.Onset));
-            Assert.AreSame(syllSegment, seg.Current.FindAncestor(Tier.Syllable));
-            Assert.AreSame(onsetSegment, seg.Current.FindAncestor(Tier.Onset));
-
-            Assert.IsTrue(seg.MoveNext());
-            Assert.AreSame(seg.Current.Matrix, FeatureMatrixTest.MatrixA);
-            Assert.IsTrue(seg.Current.HasAncestor(Tier.Syllable));
-            Assert.IsTrue(seg.Current.HasAncestor(Tier.Rime));
-            Assert.IsTrue(seg.Current.HasAncestor(Tier.Nucleus));
-            Assert.AreSame(syllSegment, seg.Current.FindAncestor(Tier.Syllable));
-            var rimeSegment = seg.Current.FindAncestor(Tier.Rime);
-
-            Assert.IsTrue(seg.MoveNext());
-            Assert.AreSame(seg.Current.Matrix, FeatureMatrixTest.MatrixC);
-            Assert.IsTrue(seg.Current.HasAncestor(Tier.Syllable));
-            Assert.IsTrue(seg.Current.HasAncestor(Tier.Rime));
-            Assert.IsTrue(seg.Current.HasAncestor(Tier.Coda));
-            Assert.AreSame(syllSegment, seg.Current.FindAncestor(Tier.Syllable));
-            Assert.AreSame(rimeSegment, seg.Current.FindAncestor(Tier.Rime));
-
-            Assert.IsTrue(seg.MoveNext());
-            Assert.AreSame(seg.Current.Matrix, FeatureMatrixTest.MatrixB);
-            Assert.IsFalse(seg.Current.HasAncestor(Tier.Syllable));
-
-            Assert.IsFalse(seg.MoveNext());
+            Assert.AreEqual("<bc:a.c>b", ShowSyllables(word));
         }
 
         [Test]
-        public void MultiCodaCVC()
+        public void MultiCodaCACB()
         {
-            var syll = new Syllable();
+            var syll = new SyllableBuilder();
 
             syll.Onsets.Add(new IRuleSegment[] { SegmentC });
             syll.Nuclei.Add(new IRuleSegment[] { SegmentA });
@@ -292,46 +228,94 @@ namespace Phonix.Test
             rule.Apply(word);
 
             Assert.IsTrue(applied);
+            Assert.AreEqual("b<c:a.cb>", ShowSyllables(word));
+        }
 
-            var seg = word.GetEnumerator();
+        [Test]
+        public void MultiSyllBCCB()
+        {
+            var syll = new SyllableBuilder();
 
-            Assert.IsTrue(seg.MoveNext());
-            Assert.AreSame(seg.Current.Matrix, FeatureMatrixTest.MatrixB);
-            Assert.IsFalse(seg.Current.HasAncestor(Tier.Syllable));
+            syll.Onsets.Add(new IRuleSegment[] { SegmentB });
+            syll.Onsets.Add(new IRuleSegment[] { SegmentC });
+            syll.Nuclei.Add(new IRuleSegment[] { SegmentB });
+            syll.Nuclei.Add(new IRuleSegment[] { SegmentC });
 
-            Assert.IsTrue(seg.MoveNext());
-            Assert.AreSame(seg.Current.Matrix, FeatureMatrixTest.MatrixC);
-            Assert.IsTrue(seg.Current.HasAncestor(Tier.Syllable));
-            Assert.IsTrue(seg.Current.HasAncestor(Tier.Onset));
-            var syllSegment = seg.Current.FindAncestor(Tier.Syllable);
+            var rule = syll.GetSyllableRule();
+            var word = GetTestWord();
 
-            Assert.IsTrue(seg.MoveNext());
-            Assert.AreSame(seg.Current.Matrix, FeatureMatrixTest.MatrixA);
-            Assert.IsTrue(seg.Current.HasAncestor(Tier.Syllable));
-            Assert.IsTrue(seg.Current.HasAncestor(Tier.Rime));
-            Assert.IsTrue(seg.Current.HasAncestor(Tier.Nucleus));
-            Assert.AreSame(syllSegment, seg.Current.FindAncestor(Tier.Syllable));
-            var rimeSegment = seg.Current.FindAncestor(Tier.Rime);
+            bool applied = false;
+            rule.Applied += (r, w, s) => { applied = true; };
+            rule.Apply(word);
 
-            Assert.IsTrue(seg.MoveNext());
-            Assert.AreSame(seg.Current.Matrix, FeatureMatrixTest.MatrixC);
-            Assert.IsTrue(seg.Current.HasAncestor(Tier.Syllable));
-            Assert.IsTrue(seg.Current.HasAncestor(Tier.Rime));
-            Assert.IsTrue(seg.Current.HasAncestor(Tier.Coda));
-            Assert.AreSame(syllSegment, seg.Current.FindAncestor(Tier.Syllable));
-            Assert.AreSame(rimeSegment, seg.Current.FindAncestor(Tier.Rime));
-            var codaSegment = seg.Current.FindAncestor(Tier.Coda);
+            Assert.IsTrue(applied);
+            Assert.AreEqual("<b:c>a<c:b>", ShowSyllables(word));
+        }
 
-            Assert.IsTrue(seg.MoveNext());
-            Assert.AreSame(seg.Current.Matrix, FeatureMatrixTest.MatrixB);
-            Assert.IsTrue(seg.Current.HasAncestor(Tier.Syllable));
-            Assert.IsTrue(seg.Current.HasAncestor(Tier.Rime));
-            Assert.IsTrue(seg.Current.HasAncestor(Tier.Coda));
-            Assert.AreSame(syllSegment, seg.Current.FindAncestor(Tier.Syllable));
-            Assert.AreSame(rimeSegment, seg.Current.FindAncestor(Tier.Rime));
-            Assert.AreSame(codaSegment, seg.Current.FindAncestor(Tier.Coda));
+        [Test]
+        public void OverlappedCACCB()
+        {
+            var syll = new SyllableBuilder();
 
-            Assert.IsFalse(seg.MoveNext());
+            syll.Onsets.Add(new IRuleSegment[] { SegmentC });
+            syll.Nuclei.Add(new IRuleSegment[] { SegmentA });
+            syll.Nuclei.Add(new IRuleSegment[] { SegmentB });
+            syll.Codas.Add(new IRuleSegment[] { SegmentC });
+            syll.Codas.Add(new IRuleSegment[] {});
+
+            var rule = syll.GetSyllableRule();
+            var word = GetTestWord();
+
+            bool applied = false;
+            rule.Applied += (r, w, s) => { applied = true; };
+            rule.Apply(word);
+
+            Assert.IsTrue(applied);
+            Assert.AreEqual("b<c:a><c:b>", ShowSyllables(word));
+        }
+
+        [Test]
+        public void Right()
+        {
+            var syll = new SyllableBuilder();
+
+            syll.Onsets.Add(new IRuleSegment[] { SegmentA });
+            syll.Onsets.Add(new IRuleSegment[] { SegmentC });
+            syll.Nuclei.Add(new IRuleSegment[] { SegmentA });
+            syll.Nuclei.Add(new IRuleSegment[] { SegmentC });
+            syll.Direction = SyllableBuilder.NucleusDirection.Right;
+
+            var rule = syll.GetSyllableRule();
+            var word = GetTestWord();
+
+            bool applied = false;
+            rule.Applied += (r, w, s) => { applied = true; };
+            rule.Apply(word);
+
+            Assert.IsTrue(applied);
+            Assert.AreEqual("bc<a:c>b", ShowSyllables(word));
+        }
+
+        [Test]
+        public void Left()
+        {
+            var syll = new SyllableBuilder();
+
+            syll.Onsets.Add(new IRuleSegment[] { SegmentA });
+            syll.Onsets.Add(new IRuleSegment[] { SegmentC });
+            syll.Nuclei.Add(new IRuleSegment[] { SegmentA });
+            syll.Nuclei.Add(new IRuleSegment[] { SegmentC });
+            syll.Direction = SyllableBuilder.NucleusDirection.Left;
+
+            var rule = syll.GetSyllableRule();
+            var word = GetTestWord();
+
+            bool applied = false;
+            rule.Applied += (r, w, s) => { applied = true; };
+            rule.Apply(word);
+
+            Assert.IsTrue(applied);
+            Assert.AreEqual("b<c:a>cb", ShowSyllables(word));
         }
     }
 }

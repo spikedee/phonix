@@ -303,6 +303,125 @@ namespace Phonix.Test
         }
 
         [Test]
+        public void SegmentSpan()
+        {
+            var word = GetTestWord();
+            var iter = word.GetSliceEnumerator(Direction.Rightward);
+            iter.MoveNext();
+
+            var slice = iter.Current;
+            var segmentIter = slice.GetEnumerator();
+
+            // basic case: begin mark is before end mark
+            segmentIter.MoveNext(); // should be on A
+            var startMark = segmentIter.Mark();
+
+            segmentIter.MoveNext(); // should be on B
+            segmentIter.MoveNext(); // should be on C
+            var endMark = segmentIter.Mark();
+
+            Assert.AreNotSame(startMark, endMark);
+
+            var matrixList = new List<Segment>(segmentIter.Span(startMark, endMark)).ConvertAll(seg => seg.Matrix);
+            Assert.IsTrue(matrixList.SequenceEqual(new FeatureMatrix[] { FeatureMatrixTest.MatrixB, FeatureMatrixTest.MatrixC }));
+        }
+
+        [Test]
+        public void SegmentSpanToEnd()
+        {
+            var word = GetTestWord();
+            var iter = word.GetSliceEnumerator(Direction.Rightward);
+            iter.MoveNext();
+
+            var slice = iter.Current;
+            var segmentIter = slice.GetEnumerator();
+
+            // end mark is at end of iteration
+            segmentIter.MoveNext(); // should be on A
+            var startMark = segmentIter.Mark();
+
+            while (segmentIter.MoveNext()) {} // iterate to end
+            var endMark = segmentIter.Mark();
+
+            Assert.AreNotSame(startMark, endMark);
+
+            var matrixList = new List<Segment>(segmentIter.Span(startMark, endMark)).ConvertAll(seg => seg.Matrix);
+            Assert.IsTrue(matrixList.SequenceEqual(new FeatureMatrix[] { FeatureMatrixTest.MatrixB, FeatureMatrixTest.MatrixC }));
+        }
+
+        [Test]
+        public void SegmentSpanFromStart()
+        {
+            var word = GetTestWord();
+            var iter = word.GetSliceEnumerator(Direction.Rightward);
+            iter.MoveNext();
+
+            var slice = iter.Current;
+            var segmentIter = slice.GetEnumerator();
+
+            // begin mark is at beginning of iteration
+            var startMark = segmentIter.Mark();
+
+            segmentIter.MoveNext(); // should be on A
+            segmentIter.MoveNext(); // should be on B
+            var endMark = segmentIter.Mark();
+
+            Assert.AreNotSame(startMark, endMark);
+
+            var matrixList = new List<Segment>(segmentIter.Span(startMark, endMark)).ConvertAll(seg => seg.Matrix);
+            Assert.IsTrue(matrixList.SequenceEqual(new FeatureMatrix[] { FeatureMatrixTest.MatrixA, FeatureMatrixTest.MatrixB }));
+        }
+
+        [Test]
+        public void SegmentSpanEmpty()
+        {
+            var word = GetTestWord();
+            var iter = word.GetSliceEnumerator(Direction.Rightward);
+            iter.MoveNext();
+
+            var slice = iter.Current;
+            var segmentIter = slice.GetEnumerator();
+
+            // begin mark and end mark are at same position
+            segmentIter.MoveNext(); // should be on A
+            var startMark = segmentIter.Mark();
+            var endMark = segmentIter.Mark();
+
+            Assert.AreNotSame(startMark, endMark);
+            Assert.AreEqual(0, segmentIter.Span(startMark, endMark).Count());
+        }
+
+        [Test]
+        public void SegmentSpanInvalid()
+        {
+            var word = GetTestWord();
+            var iter = word.GetSliceEnumerator(Direction.Rightward);
+            iter.MoveNext();
+
+            var slice = iter.Current;
+            var segmentIter = slice.GetEnumerator();
+
+            // end mark is before start mark
+            segmentIter.MoveNext(); // should be on A
+            var endMark = segmentIter.Mark();
+
+            segmentIter.MoveNext(); // should be on B
+            segmentIter.MoveNext(); // should be on C
+            var startMark = segmentIter.Mark();
+
+            Assert.AreNotSame(startMark, endMark);
+
+            try
+            {
+                segmentIter.Span(startMark, endMark);
+                Assert.Fail("Should have thrown exception");
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+            }
+        }
+
+        [Test]
         public void LeftBoundary()
         {
             var word = GetTestWord();

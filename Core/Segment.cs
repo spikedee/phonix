@@ -73,7 +73,7 @@ namespace Phonix
             }
         }
 
-        protected Segment(Tier tier, FeatureMatrix fm, IEnumerable<Segment> children)
+        protected internal Segment(Tier tier, FeatureMatrix fm, IEnumerable<Segment> children)
         {
             if (fm == null)
             {
@@ -92,92 +92,90 @@ namespace Phonix
             Children = children;
         }
 
-        public bool TryFindAncestor(Tier ancestorTier, out Segment ancestor)
+        public IEnumerable<Segment> FindAncestors(Tier tier)
         {
-            ancestor = null;
-            if (!this.Tier.HasAncestor(ancestorTier))
-            {
-                return false;
-            }
-
+            var ancestors = new List<Segment>();
             foreach (var parent in Parents)
             {
-                if (parent.Tier == ancestorTier)
+                if (parent.Tier == tier)
                 {
-                    ancestor = parent;
-                    return true;
+                    ancestors.Add(parent);
                 }
-                else if (parent.Tier.HasAncestor(ancestorTier) && parent.TryFindAncestor(ancestorTier, out ancestor))
+                else
                 {
-                    return true;
+                    ancestors.AddRange(parent.FindAncestors(tier));
                 }
             }
-            return false;
+            return ancestors.Distinct();
         }
 
-        public Segment FindAncestor(Tier tier)
+        public Segment FirstAncestor(Tier tier)
         {
-            Segment ancestor;
-            if (TryFindAncestor(tier, out ancestor))
+            try
             {
-                return ancestor;
+                return FindAncestors(tier).First();
             }
-            throw new InvalidOperationException(String.Format("no ancestor found on {0} tier", tier));
+            catch (InvalidOperationException ex)
+            {
+                throw new InvalidOperationException(String.Format("no ancestors on {0} tier", tier), ex);
+            }
         }
 
         public bool HasAncestor(Tier tier)
         {
-            Segment ignored;
-            return TryFindAncestor(tier, out ignored);
+            return FindAncestors(tier).Count() > 0;
         }
 
-        public bool TryFindDescendant(Tier descendantTier, out Segment descendant)
+        public IEnumerable<Segment> FindDescendants(Tier tier)
         {
-            descendant = null;
-            if (!this.Tier.HasDescendant(descendantTier))
-            {
-                return false;
-            }
-
+            var descendants = new List<Segment>();
             foreach (var child in Children)
             {
-                if (child.Tier == descendantTier)
+                if (child.Tier == tier)
                 {
-                    descendant = child;
-                    return true;
+                    descendants.Add(child);
                 }
-                else if (child.Tier.HasDescendant(descendantTier) && child.TryFindDescendant(descendantTier, out descendant))
+                else
                 {
-                    return true;
+                    descendants.AddRange(child.FindDescendants(tier));
                 }
             }
-            return false;
+            return descendants.Distinct();
         }
 
-        public Segment FindDescendant(Tier tier)
+        public Segment FirstDescendant(Tier tier)
         {
-            Segment descendant;
-            if (TryFindDescendant(tier, out descendant))
+            try
             {
-                return descendant;
+                return FindDescendants(tier).First();
             }
-            throw new InvalidOperationException(String.Format("no ancestor found on {0} tier", tier));
+            catch (InvalidOperationException ex)
+            {
+                throw new InvalidOperationException(String.Format("no descendants on {0} tier", tier), ex);
+            }
         }
 
         public bool HasDescendant(Tier tier)
         {
-            Segment ignored;
-            return TryFindDescendant(tier, out ignored);
+            return FindDescendants(tier).Count() > 0;
         }
 
-        protected void Detach()
+        protected void Detach(Tier detachedTier)
         {
+            var removedParents = new List<Segment>();
+
             foreach (var parent in Parents)
             {
-                parent._children.Remove(this);
+                if (parent.Tier == detachedTier || parent.Tier.HasAncestor(detachedTier))
+                {
+                    parent._children.Remove(this);
+                    removedParents.Add(parent);
+                }
             }
-            _parents.Clear();
+            foreach (var removed in removedParents)
+            {
+                _parents.Remove(removed);
+            }
         }
-
     }
 }

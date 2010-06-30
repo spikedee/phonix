@@ -48,9 +48,9 @@ namespace Phonix
             }
         }
 
-        new public void Detach()
+        new public void Detach(Tier detachedTier)
         {
-            base.Detach();
+            base.Detach(detachedTier);
         }
     }
 }

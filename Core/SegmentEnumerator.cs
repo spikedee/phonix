@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Phonix
 {
@@ -47,7 +48,7 @@ namespace Phonix
                 seg._afterLast = _afterLast;
             }
             
-            public bool Equals(Marker other)
+            public override bool Equals(object other)
             {
                 var otherMark = other as MarkerImpl;
                 if (otherMark == null)
@@ -57,6 +58,11 @@ namespace Phonix
                 return _beforeFirst == otherMark._beforeFirst
                     && _afterLast == otherMark._afterLast
                     && _node == otherMark._node;
+            }
+
+            public override int GetHashCode()
+            {
+                return _beforeFirst.GetHashCode() ^ _afterLast.GetHashCode() ^ _node.GetHashCode();
             }
         }
 
@@ -179,8 +185,18 @@ namespace Phonix
             {
                 var list = new List<Segment>();
 
+                // return an empty enumeration in case of equality
+                if (start.Equals(end))
+                {
+                    return Enumerable.Empty<Segment>();
+                }
+
                 Revert(end);
-                Segment endSeg = Current;
+
+                // get the expected end state
+                bool endAfterLast = _afterLast;
+                Segment endSeg = endAfterLast ? null : Current;
+
                 Revert(start);
 
                 bool hasCurrent;
@@ -191,6 +207,11 @@ namespace Phonix
                 if (hasCurrent)
                 {
                     list.Add(Current);
+                }
+                if (!hasCurrent && !endAfterLast)
+                {
+                    // this should only happen if start is after end
+                    throw new ArgumentOutOfRangeException("the start and end markers do not represent a valid range");
                 }
 
                 return list;

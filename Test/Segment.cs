@@ -121,21 +121,21 @@ namespace Phonix.Test
             Assert.IsTrue(top.HasDescendant(TierTest.MidA));
             Assert.IsTrue(top.HasDescendant(TierTest.MidB));
             Assert.IsTrue(top.HasDescendant(TierTest.Bottom));
-            Assert.AreSame(top.FindDescendant(TierTest.MidA), midA);
-            Assert.AreSame(top.FindDescendant(TierTest.MidB), midB);
-            Assert.AreSame(top.FindDescendant(TierTest.Bottom), bottom);
+            Assert.AreSame(top.FirstDescendant(TierTest.MidA), midA);
+            Assert.AreSame(top.FirstDescendant(TierTest.MidB), midB);
+            Assert.AreSame(top.FirstDescendant(TierTest.Bottom), bottom);
 
             Assert.IsFalse(midA.HasDescendant(TierTest.Top));
             Assert.IsFalse(midA.HasDescendant(TierTest.MidA));
             Assert.IsFalse(midA.HasDescendant(TierTest.MidB));
             Assert.IsTrue(midA.HasDescendant(TierTest.Bottom));
-            Assert.AreSame(top.FindDescendant(TierTest.Bottom), bottom);
+            Assert.AreSame(top.FirstDescendant(TierTest.Bottom), bottom);
 
             Assert.IsFalse(midB.HasDescendant(TierTest.Top));
             Assert.IsFalse(midB.HasDescendant(TierTest.MidA));
             Assert.IsFalse(midB.HasDescendant(TierTest.MidB));
             Assert.IsTrue(midB.HasDescendant(TierTest.Bottom));
-            Assert.AreSame(top.FindDescendant(TierTest.Bottom), bottom);
+            Assert.AreSame(top.FirstDescendant(TierTest.Bottom), bottom);
 
             Assert.IsFalse(bottom.HasDescendant(TierTest.Top));
             Assert.IsFalse(bottom.HasDescendant(TierTest.MidA));
@@ -155,26 +155,51 @@ namespace Phonix.Test
             Assert.IsTrue(bottom.HasAncestor(TierTest.MidA));
             Assert.IsTrue(bottom.HasAncestor(TierTest.MidB));
             Assert.IsFalse(bottom.HasAncestor(TierTest.Bottom));
-            Assert.AreSame(bottom.FindAncestor(TierTest.Top), top);
-            Assert.AreSame(bottom.FindAncestor(TierTest.MidA), midA);
-            Assert.AreSame(bottom.FindAncestor(TierTest.MidB), midB);
+            Assert.AreSame(bottom.FirstAncestor(TierTest.Top), top);
+            Assert.AreSame(bottom.FirstAncestor(TierTest.MidA), midA);
+            Assert.AreSame(bottom.FirstAncestor(TierTest.MidB), midB);
 
             Assert.IsTrue(midA.HasAncestor(TierTest.Top));
             Assert.IsFalse(midA.HasAncestor(TierTest.MidA));
             Assert.IsFalse(midA.HasAncestor(TierTest.MidB));
             Assert.IsFalse(midA.HasAncestor(TierTest.Bottom));
-            Assert.AreSame(midA.FindAncestor(TierTest.Top), top);
+            Assert.AreSame(midA.FirstAncestor(TierTest.Top), top);
 
             Assert.IsTrue(midB.HasAncestor(TierTest.Top));
             Assert.IsFalse(midB.HasAncestor(TierTest.MidA));
             Assert.IsFalse(midB.HasAncestor(TierTest.MidB));
             Assert.IsFalse(midB.HasAncestor(TierTest.Bottom));
-            Assert.AreSame(midB.FindAncestor(TierTest.Top), top);
+            Assert.AreSame(midB.FirstAncestor(TierTest.Top), top);
 
             Assert.IsFalse(top.HasAncestor(TierTest.Top));
             Assert.IsFalse(top.HasAncestor(TierTest.MidA));
             Assert.IsFalse(top.HasAncestor(TierTest.MidB));
             Assert.IsFalse(top.HasAncestor(TierTest.Bottom));
+        }
+
+        [Test]
+        public void Detach()
+        {
+            var bottom = new MutableSegment(TierTest.Bottom, FeatureMatrixTest.MatrixA, new Segment[] {});
+            var midA = new MutableSegment(TierTest.MidA, FeatureMatrixTest.MatrixA, new Segment[] { bottom });
+            var midA2 = new MutableSegment(TierTest.MidA, FeatureMatrixTest.MatrixA, new Segment[] { bottom });
+            var midB = new MutableSegment(TierTest.MidB, FeatureMatrixTest.MatrixA, new Segment[] { bottom });
+            var top = new MutableSegment(TierTest.Top, FeatureMatrixTest.MatrixA, new Segment[] { midA, midA2, midB });
+
+            bottom.Detach(TierTest.Top);
+
+            // bottom should now be unattached
+            Assert.IsFalse(bottom.HasAncestor(TierTest.MidA));
+            Assert.IsFalse(bottom.HasAncestor(TierTest.MidB));
+            Assert.IsFalse(bottom.HasAncestor(TierTest.Top));
+
+            // midA and midB should be unaffected
+            Assert.IsTrue(midA.HasAncestor(TierTest.Top));
+            Assert.AreSame(top, midA.FirstAncestor(TierTest.Top));
+            Assert.IsTrue(midA2.HasAncestor(TierTest.Top));
+            Assert.AreSame(top, midA2.FirstAncestor(TierTest.Top));
+            Assert.IsTrue(midB.HasAncestor(TierTest.Top));
+            Assert.AreSame(top, midB.FirstAncestor(TierTest.Top));
         }
     }
 }

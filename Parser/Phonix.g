@@ -341,10 +341,10 @@ binaryVal returns [FeatureValue val]:
 unaryVal returns [FeatureValue val]: 
     unaryFeature { $val = $unaryFeature.val.Value; };
 
-nullVal returns [IMatchCombine val]:
+nullVal returns [IFeatureValue val]:
     NULL feature { $val = $feature.val.NullValue; };
 
-variableVal returns [IMatchCombine val]: 
+variableVal returns [IFeatureValue val]: 
     '$' feature { $val = $feature.val.VariableValue; };
 
 /* the bareVal can be a unary match or a node-exists match. it exists here to
