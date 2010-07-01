@@ -136,7 +136,7 @@ namespace Phonix
             var list = new List<IRuleSegment>();
             var ctx = new SyllableContext(syllableList);
 
-            if (onset != null)
+            if (onset != null && onset.Count() > 0)
             {
                 list.Add(new TierBegin(ctx));
                 list.AddRange(onset);
@@ -148,7 +148,7 @@ namespace Phonix
             list.AddRange(nucleus);
             list.Add(new TierEnd(ctx, ctx.Nucleus));
 
-            if (coda != null)
+            if (coda != null && coda.Count() > 0)
             {
                 list.Add(new TierBegin(ctx));
                 list.AddRange(coda);
