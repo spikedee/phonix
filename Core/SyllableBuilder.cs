@@ -10,14 +10,15 @@ namespace Phonix
     {
         public enum NucleusDirection
         {
+            Neutral,
             Left,
             Right
         }
 
-        public readonly List<IEnumerable<IRuleSegment>> Onsets = new List<IEnumerable<IRuleSegment>>();
-        public readonly List<IEnumerable<IRuleSegment>> Nuclei = new List<IEnumerable<IRuleSegment>>();
-        public readonly List<IEnumerable<IRuleSegment>> Codas = new List<IEnumerable<IRuleSegment>>();
-        public NucleusDirection Direction = NucleusDirection.Left;
+        public readonly List<IEnumerable<IMatrixMatcher>> Onsets = new List<IEnumerable<IMatrixMatcher>>();
+        public readonly List<IEnumerable<IMatrixMatcher>> Nuclei = new List<IEnumerable<IMatrixMatcher>>();
+        public readonly List<IEnumerable<IMatrixMatcher>> Codas = new List<IEnumerable<IMatrixMatcher>>();
+        public NucleusDirection Direction = NucleusDirection.Neutral;
 
         public AbstractRule GetSyllableRule()
         {
@@ -97,8 +98,8 @@ namespace Phonix
         {
             var rules = new List<Rule>();
 
-            var activeOnsets = new List<IEnumerable<IRuleSegment>>();
-            var activeCodas = new List<IEnumerable<IRuleSegment>>();
+            var activeOnsets = new List<IEnumerable<IMatrixMatcher>>();
+            var activeCodas = new List<IEnumerable<IMatrixMatcher>>();
 
             activeOnsets.AddRange(Onsets);
             activeCodas.AddRange(Codas);
@@ -128,36 +129,33 @@ namespace Phonix
             return rules;
         }
 
-        private Rule BuildRule(IEnumerable<IRuleSegment> onset, 
-                               IEnumerable<IRuleSegment> nucleus, 
-                               IEnumerable<IRuleSegment> coda,
+        private Rule BuildRule(IEnumerable<IMatrixMatcher> onset, 
+                               IEnumerable<IMatrixMatcher> nucleus, 
+                               IEnumerable<IMatrixMatcher> coda,
                                List<Syllable> syllableList)
         {
             var list = new List<IRuleSegment>();
             var ctx = new SyllableContext(syllableList);
 
-            if (onset != null && onset.Count() > 0)
+            list.Add(new SyllableBegin(ctx));
+
+            if (onset != null)
             {
-                list.Add(new TierBegin(ctx));
-                list.AddRange(onset);
-                list.Add(new TierEnd(ctx, ctx.Onset));
+                list.AddRange(onset.Select(onsetSeg => (IRuleSegment) new TierSegment(onsetSeg, ctx.Onset)));
             }
 
             Debug.Assert(nucleus != null);
-            list.Add(new TierBegin(ctx));
-            list.AddRange(nucleus);
-            list.Add(new TierEnd(ctx, ctx.Nucleus));
+            list.AddRange(nucleus.Select(nucleusSeg => (IRuleSegment) new TierSegment(nucleusSeg, ctx.Nucleus)));
 
-            if (coda != null && coda.Count() > 0)
+            if (coda != null)
             {
-                list.Add(new TierBegin(ctx));
-                list.AddRange(coda);
-                list.Add(new TierEnd(ctx, ctx.Coda));
+                list.AddRange(coda.Select(codaSeg => (IRuleSegment) new TierSegment(codaSeg, ctx.Coda)));
             }
 
             list.Add(new SyllableEnd(ctx));
 
             var rule = new Rule("syllable", list, new IRuleSegment[] {});
+            rule.Direction = Phonix.Direction.Leftward;
 
             return rule;
         }
@@ -165,14 +163,14 @@ namespace Phonix
         private string BuildDescription()
         {
             var str = new StringBuilder();
-            str.Append("syllable ");
+            str.AppendLine("syllable");
 
-            foreach (var onset in Onsets)
+            foreach (var onset in Onsets.Where(o => o.Count() > 0))
             {
                 str.Append("onset ");
-                foreach (var rs in onset)
+                foreach (var match in onset)
                 {
-                    str.Append(rs.MatchString);
+                    str.Append(match.ToString());
                 }
                 str.AppendLine();
             }
@@ -180,19 +178,19 @@ namespace Phonix
             foreach (var nucleus in Nuclei)
             {
                 str.Append("nucleus ");
-                foreach (var rs in nucleus)
+                foreach (var match in nucleus)
                 {
-                    str.Append(rs.MatchString);
+                    str.Append(match.ToString());
                 }
                 str.AppendLine();
             }
 
-            foreach (var coda in Codas)
+            foreach (var coda in Codas.Where(o => o.Count() > 0))
             {
                 str.Append("coda ");
-                foreach (var rs in coda)
+                foreach (var match in coda)
                 {
-                    str.Append(rs.MatchString);
+                    str.Append(match.ToString());
                 }
                 str.AppendLine();
             }
@@ -281,6 +279,24 @@ namespace Phonix
                 return b;
             }
 
+            // select on alignment, if not neutral
+            if (direction != NucleusDirection.Neutral)
+            {
+                var wordList = new List<Segment>(word);
+                int aNucleusSum = a.Aggregate(0, (sum, syllable) => { return sum + wordList.IndexOf(syllable.Nucleus.First()); });
+                int bNucleusSum = b.Aggregate(0, (sum, syllable) => { return sum + wordList.IndexOf(syllable.Nucleus.First()); });
+                if (direction == NucleusDirection.Left)
+                {
+                    // select the set with nuclei more to the left (smaller indices)
+                    return aNucleusSum < bNucleusSum ? a : b;
+                }
+                else if (direction == NucleusDirection.Right)
+                {
+                    // select the set with nuclei more to the right (larger indices)
+                    return aNucleusSum > bNucleusSum ? a : b;
+                }
+            }
+
             // select based on most onsets
             int aOnsets = a.Aggregate(0, (sum, syllable) => { return sum + syllable.Onset.Count(); });
             int bOnsets = b.Aggregate(0, (sum, syllable) => { return sum + syllable.Onset.Count(); });
@@ -291,21 +307,6 @@ namespace Phonix
             if (bOnsets > aOnsets)
             {
                 return b;
-            }
-
-            // select on alignment
-            var wordList = new List<Segment>(word);
-            int aNucleusSum = a.Aggregate(0, (sum, syllable) => { return sum + wordList.IndexOf(syllable.Nucleus.First()); });
-            int bNucleusSum = b.Aggregate(0, (sum, syllable) => { return sum + wordList.IndexOf(syllable.Nucleus.First()); });
-            if (direction == NucleusDirection.Left)
-            {
-                // select the set with nuclei more to the left (smaller indices)
-                return aNucleusSum < bNucleusSum ? a : b;
-            }
-            else if (direction == NucleusDirection.Right)
-            {
-                // select the set with nuclei more to the right (larger indices)
-                return aNucleusSum > bNucleusSum ? a : b;
             }
 
             // no choice? return the first one
@@ -332,7 +333,6 @@ namespace Phonix
             public readonly List<Segment> Onset = new List<Segment>();
             public readonly List<Segment> Nucleus = new List<Segment>();
             public readonly List<Segment> Coda = new List<Segment>();
-            public SegmentEnumerator.Marker TierBeginMark;
             public readonly List<Syllable> SyllableList;
 
             public SyllableContext(List<Syllable> syllableList)
@@ -341,15 +341,11 @@ namespace Phonix
             }
         }
 
-        private abstract class SyllableSegment : IRuleSegment
+        // this abstract class provides an implementation of IRuleSegment that
+        // the syllable segments use, leaving only Combine and (optionally)
+        // Matches as methods that the subclasses need to implement.
+        private abstract class SyllableSegment : IRuleSegment 
         {
-            protected readonly SyllableContext SyllableCtx;
-
-            protected SyllableSegment(SyllableContext syll)
-            {
-                SyllableCtx = syll;
-            }
-
             public virtual bool Matches(RuleContext ctx, SegmentEnumerator segment)
             {
                 return true;
@@ -374,62 +370,58 @@ namespace Phonix
 
         private class SyllableBegin : SyllableSegment
         {
-            public SyllableBegin(SyllableContext syll)
-                : base(syll)
+            private readonly SyllableContext _syllCtx;
+
+            public SyllableBegin(SyllableContext syllCtx)
             {
+                _syllCtx = syllCtx;
             }
 
             public override void Combine(RuleContext ctx, MutableSegmentEnumerator segment)
             {
                 // set up the context for the new syllable
-                SyllableCtx.Onset.Clear();
-                SyllableCtx.Nucleus.Clear();
-                SyllableCtx.Coda.Clear();
+                _syllCtx.Onset.Clear();
+                _syllCtx.Nucleus.Clear();
+                _syllCtx.Coda.Clear();
             }
         }
 
         private class SyllableEnd : SyllableSegment
         {
-            public SyllableEnd(SyllableContext syll)
-                : base(syll)
+            private readonly SyllableContext _syllCtx;
+
+            public SyllableEnd(SyllableContext syllCtx)
             {
+                _syllCtx = syllCtx;
             }
             
             public override void Combine(RuleContext ctx, MutableSegmentEnumerator segment)
             {
-                var syllable = new Syllable(SyllableCtx.Onset, SyllableCtx.Nucleus, SyllableCtx.Coda);
-                SyllableCtx.SyllableList.Add(syllable);
+                var syllable = new Syllable(_syllCtx.Onset, _syllCtx.Nucleus, _syllCtx.Coda);
+                _syllCtx.SyllableList.Add(syllable);
             }
         }
 
-        private class TierBegin : SyllableSegment
+        private class TierSegment : SyllableSegment
         {
-            public TierBegin(SyllableContext syll)
-                : base(syll)
-            {
-            }
-
-            public override void Combine(RuleContext ctx, MutableSegmentEnumerator seg)
-            {
-                SyllableCtx.TierBeginMark = seg.Mark();
-            }
-        }
-
-        private class TierEnd : SyllableSegment
-        {
+            private readonly IMatrixMatcher _match;
             private readonly List<Segment> _list;
 
-            public TierEnd(SyllableContext syll, List<Segment> list)
-                : base(syll)
+            public TierSegment(IMatrixMatcher match, List<Segment> list)
             {
+                _match = match;
                 _list = list;
             }
 
+            public override bool Matches(RuleContext ctx, SegmentEnumerator seg)
+            {
+                return seg.MoveNext() && _match.Matches(ctx, seg.Current);
+            }
+
             public override void Combine(RuleContext ctx, MutableSegmentEnumerator seg)
             {
-                // TODO: this doesn't work because of a bug in Span(). Fix that bug, add a test, then come back to this
-                var endMark = seg.Mark();
-                _list.AddRange(seg.Span(SyllableCtx.TierBeginMark, endMark));
+                seg.MoveNext();
+                _list.Add(seg.Current);
             }
         }
     }

@@ -301,6 +301,51 @@ namespace Phonix.Parse
             }
         }
 
+        public static void MakeAndAddSyllable(SyllableBuilder syll, ParamList plist, RuleSet ruleSet)
+        {
+            if (plist == null || !plist.ContainsKey("onsetRequired"))
+            {
+                // onsets not required, so add the implicit empty onset
+                syll.Onsets.Add(Enumerable.Empty<IMatrixMatcher>());
+            }
+            if (plist == null || !plist.ContainsKey("codaRequired"))
+            {
+                // codas not required, so add the implicit empty coda
+                syll.Codas.Add(Enumerable.Empty<IMatrixMatcher>());
+            }
+            if (plist != null && plist.ContainsKey("nucleusPreference"))
+            {
+                var pref = plist["nucleusPreference"];
+                if (pref == null)
+                {
+                    throw new InvalidParameterValueException("nucleusPreference", 
+                            pref == null ? "<empty>" : pref.ToString());
+                }
+                if (pref.Equals("left"))
+                {
+                    syll.Direction = SyllableBuilder.NucleusDirection.Left;
+                }
+                else if (pref.Equals("right"))
+                {
+                    syll.Direction = SyllableBuilder.NucleusDirection.Right;
+                }
+                else
+                {
+                    throw new InvalidParameterValueException("nucleusPreference", pref.ToString());
+                }
+            }
+
+            var rule = syll.GetSyllableRule();
+            if (plist != null && plist.ContainsKey("persist"))
+            {
+                ruleSet.AddPersistent(rule);
+            }
+            else
+            {
+                ruleSet.Add(rule);
+            }
+        }
+
         public static List<IRuleSegment> MakeRuleAction(
                 List<IMatrixMatcher> left, 
                 List<IMatrixCombiner> right)

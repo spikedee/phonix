@@ -7,11 +7,11 @@ namespace Phonix.Test
     using NUnit.Framework;
 
     [TestFixture]
-    public class SyllableTest
+    public class SyllableBuilderTest
     {
-        private readonly IRuleSegment SegmentA = new ContextSegment(new MatrixMatcher(FeatureMatrixTest.MatrixA));
-        private readonly IRuleSegment SegmentB = new ContextSegment(new MatrixMatcher(FeatureMatrixTest.MatrixB));
-        private readonly IRuleSegment SegmentC = new ContextSegment(new MatrixMatcher(FeatureMatrixTest.MatrixC));
+        private readonly IMatrixMatcher SegmentA = new MatrixMatcher(FeatureMatrixTest.MatrixA);
+        private readonly IMatrixMatcher SegmentB = new MatrixMatcher(FeatureMatrixTest.MatrixB);
+        private readonly IMatrixMatcher SegmentC = new MatrixMatcher(FeatureMatrixTest.MatrixC);
 
         private Word GetTestWord()
         {
@@ -26,12 +26,16 @@ namespace Phonix.Test
             return new Word(segs);
         }
 
-        private string ShowSyllables(Word word)
+        private static string ShowSyllables(Word word)
+        {
+            return ShowSyllables(SymbolSetTest.GetTestSet(), word);
+        }
+
+        public static string ShowSyllables(SymbolSet symbols, Word word)
         {
             StringBuilder str = new StringBuilder();
             Segment lastSyll = null;
             Segment lastSegment = null;
-            var symbols = SymbolSetTest.GetTestSet();
 
             foreach (var segment in word)
             {
@@ -101,9 +105,9 @@ namespace Phonix.Test
         {
             var syll = new SyllableBuilder();
 
-            syll.Onsets.Add(new IRuleSegment[] { SegmentB });
-            syll.Nuclei.Add(new IRuleSegment[] { SegmentA });
-            syll.Codas.Add(new IRuleSegment[] { SegmentC });
+            syll.Onsets.Add(new IMatrixMatcher[] { SegmentB });
+            syll.Nuclei.Add(new IMatrixMatcher[] { SegmentA });
+            syll.Codas.Add(new IMatrixMatcher[] { SegmentC });
 
             var rule = syll.GetSyllableRule();
 
@@ -120,7 +124,7 @@ namespace Phonix.Test
             }
             catch (InvalidOperationException)
             {
-                syll.Nuclei.Add(new IRuleSegment[] { SegmentA });
+                syll.Nuclei.Add(new IMatrixMatcher[] { SegmentA });
             }
         }
 
@@ -129,9 +133,9 @@ namespace Phonix.Test
         {
             var syll = new SyllableBuilder();
 
-            syll.Onsets.Add(new IRuleSegment[] { SegmentB });
-            syll.Nuclei.Add(new IRuleSegment[] { SegmentA });
-            syll.Codas.Add(new IRuleSegment[] { SegmentC });
+            syll.Onsets.Add(new IMatrixMatcher[] { SegmentB });
+            syll.Nuclei.Add(new IMatrixMatcher[] { SegmentA });
+            syll.Codas.Add(new IMatrixMatcher[] { SegmentC });
 
             var rule = syll.GetSyllableRule();
 
@@ -140,9 +144,9 @@ namespace Phonix.Test
             Assert.IsTrue(rule.Description.Contains("nucleus"));
             Assert.IsTrue(rule.Description.Contains("coda"));
 
-            Assert.IsTrue(rule.Description.Contains(SegmentA.CombineString));
-            Assert.IsTrue(rule.Description.Contains(SegmentB.CombineString));
-            Assert.IsTrue(rule.Description.Contains(SegmentC.CombineString));
+            Assert.IsTrue(rule.Description.Contains(SegmentA.ToString()));
+            Assert.IsTrue(rule.Description.Contains(SegmentB.ToString()));
+            Assert.IsTrue(rule.Description.Contains(SegmentC.ToString()));
         }
 
         [Test]
@@ -150,9 +154,9 @@ namespace Phonix.Test
         {
             var syll = new SyllableBuilder();
 
-            syll.Onsets.Add(new IRuleSegment[] { SegmentC });
-            syll.Nuclei.Add(new IRuleSegment[] { SegmentA });
-            syll.Codas.Add(new IRuleSegment[] { SegmentC });
+            syll.Onsets.Add(new IMatrixMatcher[] { SegmentC });
+            syll.Nuclei.Add(new IMatrixMatcher[] { SegmentA });
+            syll.Codas.Add(new IMatrixMatcher[] { SegmentC });
 
             var rule = syll.GetSyllableRule();
             var word = GetTestWord();
@@ -170,9 +174,9 @@ namespace Phonix.Test
         {
             var syll = new SyllableBuilder();
 
-            syll.Onsets.Add(new IRuleSegment[] { SegmentC });
-            syll.Nuclei.Add(new IRuleSegment[] { SegmentA });
-            syll.Codas.Add(new IRuleSegment[] { SegmentC });
+            syll.Onsets.Add(new IMatrixMatcher[] { SegmentC });
+            syll.Nuclei.Add(new IMatrixMatcher[] { SegmentA });
+            syll.Codas.Add(new IMatrixMatcher[] { SegmentC });
 
             var rule = syll.GetSyllableRule();
             var word = GetTestWord();
@@ -194,10 +198,10 @@ namespace Phonix.Test
         {
             var syll = new SyllableBuilder();
 
-            syll.Onsets.Add(new IRuleSegment[] { SegmentC });
-            syll.Onsets.Add(new IRuleSegment[] { SegmentB, SegmentC });
-            syll.Nuclei.Add(new IRuleSegment[] { SegmentA });
-            syll.Codas.Add(new IRuleSegment[] { SegmentC });
+            syll.Onsets.Add(new IMatrixMatcher[] { SegmentC });
+            syll.Onsets.Add(new IMatrixMatcher[] { SegmentB, SegmentC });
+            syll.Nuclei.Add(new IMatrixMatcher[] { SegmentA });
+            syll.Codas.Add(new IMatrixMatcher[] { SegmentC });
 
             var rule = syll.GetSyllableRule();
             var word = GetTestWord();
@@ -215,10 +219,10 @@ namespace Phonix.Test
         {
             var syll = new SyllableBuilder();
 
-            syll.Onsets.Add(new IRuleSegment[] { SegmentC });
-            syll.Nuclei.Add(new IRuleSegment[] { SegmentA });
-            syll.Codas.Add(new IRuleSegment[] { SegmentC });
-            syll.Codas.Add(new IRuleSegment[] { SegmentC, SegmentB });
+            syll.Onsets.Add(new IMatrixMatcher[] { SegmentC });
+            syll.Nuclei.Add(new IMatrixMatcher[] { SegmentA });
+            syll.Codas.Add(new IMatrixMatcher[] { SegmentC });
+            syll.Codas.Add(new IMatrixMatcher[] { SegmentC, SegmentB });
 
             var rule = syll.GetSyllableRule();
             var word = GetTestWord();
@@ -236,10 +240,10 @@ namespace Phonix.Test
         {
             var syll = new SyllableBuilder();
 
-            syll.Onsets.Add(new IRuleSegment[] { SegmentB });
-            syll.Onsets.Add(new IRuleSegment[] { SegmentC });
-            syll.Nuclei.Add(new IRuleSegment[] { SegmentB });
-            syll.Nuclei.Add(new IRuleSegment[] { SegmentC });
+            syll.Onsets.Add(new IMatrixMatcher[] { SegmentB });
+            syll.Onsets.Add(new IMatrixMatcher[] { SegmentC });
+            syll.Nuclei.Add(new IMatrixMatcher[] { SegmentB });
+            syll.Nuclei.Add(new IMatrixMatcher[] { SegmentC });
 
             var rule = syll.GetSyllableRule();
             var word = GetTestWord();
@@ -257,11 +261,11 @@ namespace Phonix.Test
         {
             var syll = new SyllableBuilder();
 
-            syll.Onsets.Add(new IRuleSegment[] { SegmentC });
-            syll.Nuclei.Add(new IRuleSegment[] { SegmentA });
-            syll.Nuclei.Add(new IRuleSegment[] { SegmentB });
-            syll.Codas.Add(new IRuleSegment[] { SegmentC });
-            syll.Codas.Add(new IRuleSegment[] {});
+            syll.Onsets.Add(new IMatrixMatcher[] { SegmentC });
+            syll.Nuclei.Add(new IMatrixMatcher[] { SegmentA });
+            syll.Nuclei.Add(new IMatrixMatcher[] { SegmentB });
+            syll.Codas.Add(new IMatrixMatcher[] { SegmentC });
+            syll.Codas.Add(new IMatrixMatcher[] {});
 
             var rule = syll.GetSyllableRule();
             var word = GetTestWord();
@@ -279,10 +283,10 @@ namespace Phonix.Test
         {
             var syll = new SyllableBuilder();
 
-            syll.Onsets.Add(new IRuleSegment[] { SegmentA });
-            syll.Onsets.Add(new IRuleSegment[] { SegmentC });
-            syll.Nuclei.Add(new IRuleSegment[] { SegmentA });
-            syll.Nuclei.Add(new IRuleSegment[] { SegmentC });
+            syll.Onsets.Add(new IMatrixMatcher[] { SegmentA });
+            syll.Onsets.Add(new IMatrixMatcher[] { SegmentC });
+            syll.Nuclei.Add(new IMatrixMatcher[] { SegmentA });
+            syll.Nuclei.Add(new IMatrixMatcher[] { SegmentC });
             syll.Direction = SyllableBuilder.NucleusDirection.Right;
 
             var rule = syll.GetSyllableRule();
@@ -301,10 +305,10 @@ namespace Phonix.Test
         {
             var syll = new SyllableBuilder();
 
-            syll.Onsets.Add(new IRuleSegment[] { SegmentA });
-            syll.Onsets.Add(new IRuleSegment[] { SegmentC });
-            syll.Nuclei.Add(new IRuleSegment[] { SegmentA });
-            syll.Nuclei.Add(new IRuleSegment[] { SegmentC });
+            syll.Onsets.Add(new IMatrixMatcher[] { SegmentA });
+            syll.Onsets.Add(new IMatrixMatcher[] { SegmentC });
+            syll.Nuclei.Add(new IMatrixMatcher[] { SegmentA });
+            syll.Nuclei.Add(new IMatrixMatcher[] { SegmentC });
             syll.Direction = SyllableBuilder.NucleusDirection.Left;
 
             var rule = syll.GetSyllableRule();
@@ -323,13 +327,13 @@ namespace Phonix.Test
         {
             var syll = new SyllableBuilder();
 
-            syll.Onsets.Add(new IRuleSegment[] {});
-            syll.Onsets.Add(new IRuleSegment[] { SegmentA });
-            syll.Onsets.Add(new IRuleSegment[] { SegmentB });
-            syll.Nuclei.Add(new IRuleSegment[] { SegmentC });
-            syll.Codas.Add(new IRuleSegment[] { SegmentA });
-            syll.Codas.Add(new IRuleSegment[] { SegmentB });
-            syll.Codas.Add(new IRuleSegment[] {});
+            syll.Onsets.Add(new IMatrixMatcher[] {});
+            syll.Onsets.Add(new IMatrixMatcher[] { SegmentA });
+            syll.Onsets.Add(new IMatrixMatcher[] { SegmentB });
+            syll.Nuclei.Add(new IMatrixMatcher[] { SegmentC });
+            syll.Codas.Add(new IMatrixMatcher[] { SegmentA });
+            syll.Codas.Add(new IMatrixMatcher[] { SegmentB });
+            syll.Codas.Add(new IMatrixMatcher[] {});
 
             var rule = syll.GetSyllableRule();
             var word = GetTestWord();
@@ -340,6 +344,31 @@ namespace Phonix.Test
 
             Assert.IsTrue(applied);
             Assert.AreEqual("<b:c><a:c.b>", ShowSyllables(word));
+        }
+
+        [Test]
+        public void MultiFeatureMatrix()
+        {
+            var syll = new SyllableBuilder();
+
+            syll.Onsets.Add(new IMatrixMatcher[] {});
+            syll.Onsets.Add(new IMatrixMatcher[] {
+                    new MatrixMatcher(
+                        new IMatchable[] { FeatureSetTest.GetTestSet().Get<BinaryFeature>("bn").PlusValue }
+                        )
+                    });
+            syll.Nuclei.Add(new IMatrixMatcher[] { SegmentC });
+            syll.Codas.Add(new IMatrixMatcher[] {});
+
+            var rule = syll.GetSyllableRule();
+            var word = GetTestWord();
+
+            bool applied = false;
+            rule.Applied += (r, w, s) => { applied = true; };
+            rule.Apply(word);
+
+            Assert.IsTrue(applied);
+            Assert.AreEqual("<b:c><a:c>b", ShowSyllables(word));
         }
     }
 }

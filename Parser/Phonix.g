@@ -23,6 +23,10 @@ tokens
     FEATURE = 'feature';
     SYMBOL = 'symbol';
     RULE = 'rule';
+    SYLLABLE = 'syllable';
+    ONSET = 'onset';
+    NUCLEUS = 'nucleus';
+    CODA = 'coda';
     SLASH = '/';
     POUND = '#';
     ARROW = '=>';
@@ -34,6 +38,7 @@ tokens
 {
     using Phonix;
     using System.Collections.Generic;
+    using System.Linq;
 }
 
 @parser::namespace { Phonix.Parse }
@@ -134,8 +139,9 @@ parseRoot[string currentFile, Phonology phono]
 phonixDecl:
         importDecl
     |   featureDecl { _phono.FeatureSet.Add($featureDecl.val); }
-    |   symbolDecl /* Adding to the SymbolSet is handled by ruleDecl itself */
+    |   symbolDecl /* Adding to the SymbolSet is handled by symbolDecl itself */
     |   ruleDecl /* Adding to the RuleSet is handled by ruleDecl itself */
+    |   syllableDecl
     ;
 
 /* File import */
@@ -222,6 +228,15 @@ matchTerm returns [IEnumerable<IMatrixMatcher> val]:
     |   NULL { $val = new IMatrixMatcher[] { null }; }
     ;
 
+optionalMatchTerm returns [IEnumerable<IMatrixMatcher> val]:
+    LPAREN
+    (
+            matchableMatrix { $val = new IMatrixMatcher[] { new MatrixMatcher($matchableMatrix.val) }; }
+        |   symbolStr { $val = $symbolStr.val.ConvertAll<IMatrixMatcher>(s => s); }
+    )+
+    RPAREN
+    ;
+
 actionTerm returns [IEnumerable<IMatrixCombiner> val]: 
         combinableMatrix { $val = new IMatrixCombiner[] { new MatrixCombiner($combinableMatrix.val) }; }
     |   symbolStr { $val = $symbolStr.val.ConvertAll<IMatrixCombiner>(s => s); }
@@ -244,18 +259,45 @@ contextTerm returns [IEnumerable<IRuleSegment> val]
     |   multiTerm { $val = new IRuleSegment[] { $multiTerm.val }; }
     ;
 
-multiTerm returns [MultiSegment val]
-    @init { List<IRuleSegment> inner = new List<IRuleSegment>(); }:
-    LPAREN
-    (
-        matchableMatrix { inner.Add(new ContextSegment(new MatrixMatcher($matchableMatrix.val))); }
-    |   symbolStr { inner.AddRange($symbolStr.val.ConvertAll<IRuleSegment>(s => new ContextSegment(s))); }
-    )+ 
-    RPAREN { $val = new MultiSegment(inner, 0, 1); }
+multiTerm returns [MultiSegment val]:
+    optionalMatchTerm 
+    {
+        var inner = $optionalMatchTerm.val.ToList().ConvertAll<IRuleSegment>(term => new ContextSegment(term));
+        $val = new MultiSegment(inner, 0, 1); 
+    }
     (
         NULL { $val = new MultiSegment(inner, 0, null); }
     |   PLUS { $val = new MultiSegment(inner, 1, null); }
     )?
+    ;
+
+/* Syllable declarations */
+syllableDecl
+    @init { var syll = new SyllableBuilder(); }:
+    SYLLABLE paramList?
+    (ONSET onsetDecl=syllableTermList { $onsetDecl.val.ForEach(list => syll.Onsets.Add(list)); })*
+    (NUCLEUS nucleusDecl=syllableTermList { $nucleusDecl.val.ForEach(list => syll.Nuclei.Add(list)); })+
+    (CODA codaDecl=syllableTermList { $codaDecl.val.ForEach(list => syll.Codas.Add(list)); })*
+    { Util.MakeAndAddSyllable(syll, $paramList.val, _phono.RuleSet); }
+    ;
+
+syllableTermList returns [List<List<IMatrixMatcher>> val]
+    @init { $val = new List<List<IMatrixMatcher>>(); $val.Add(new List<IMatrixMatcher>()); }:
+    (   matchTerm { $val.ForEach(list => list.AddRange($matchTerm.val)); }
+    |   optionalMatchTerm { 
+            var newval = new List<List<IMatrixMatcher>>();
+            // add without the optional match
+            $val.ForEach(list => newval.Add(list));
+            // add with the optional match
+            foreach (var list in $val)
+            {
+                var newlist = new List<IMatrixMatcher>(list); 
+                newlist.AddRange($optionalMatchTerm.val); 
+                newval.Add(newlist);
+            }
+            $val = newval;
+        }
+    )+
     ;
 
 /* Feature matrices */

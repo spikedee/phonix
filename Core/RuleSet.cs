@@ -6,14 +6,14 @@ namespace Phonix
 {
     public class RuleSet
     {
-        private List<Rule> _persistent = new List<Rule>();
-        public IEnumerable<Rule> PersistentRules
+        private List<AbstractRule> _persistent = new List<AbstractRule>();
+        public IEnumerable<AbstractRule> PersistentRules
         { 
             get { return _persistent; }
         }
 
-        private List<Rule> _ordered = new List<Rule>();
-        public IEnumerable<Rule> OrderedRules
+        private List<AbstractRule> _ordered = new List<AbstractRule>();
+        public IEnumerable<AbstractRule> OrderedRules
         { 
             get { return _ordered; }
         }
@@ -33,32 +33,33 @@ namespace Phonix
         public event Action<AbstractRule, Word, IWordSlice> RuleApplied;
         public event Action<AbstractRule, Word> RuleExited;
 
-        public void Add(Rule rule)
+        public void Add(AbstractRule rule)
         {
             RuleDefined(rule);
-            foreach (Rule existing in OrderedRules)
+            foreach (AbstractRule dup in OrderedRules.Where(existing => existing.Name.Equals(rule.Name)))
             {
-                if (existing.Name.Equals(rule.Name))
-                {
-                    RuleRedefined(existing, rule);
-                }
+                RuleRedefined(dup, rule);
             }
-            AddRuleEventHandlers(rule);
+
+            if (rule is Rule)
+            {
+                AddRuleEventHandlers((Rule) rule);
+            }
 
             _ordered.Add(rule);
         }
 
-        public void AddPersistent(Rule rule)
+        public void AddPersistent(AbstractRule rule)
         {
             RuleDefined(rule);
-            foreach (Rule existing in PersistentRules)
+            foreach (AbstractRule dup in OrderedRules.Where(existing => existing.Name.Equals(rule.Name)))
             {
-                if (existing.Name.Equals(rule.Name))
-                {
-                    RuleRedefined(existing, rule);
-                }
+                RuleRedefined(dup, rule);
             }
-            AddRuleEventHandlers(rule);
+            if (rule is Rule)
+            {
+                AddRuleEventHandlers((Rule) rule);
+            }
 
             _persistent.Add(rule);
         }

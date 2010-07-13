@@ -23,6 +23,7 @@ namespace Phonix
 
             Segments = new List<IRuleSegment>(segments);
             ExcludedSegments = new List<IRuleSegment>(excluded);
+            _hasExcluded = ExcludedSegments.Count() > 0;
 
             UndefinedVariableUsed += (r, v) => {};
             ScalarValueRangeViolation += (r, f, v) => {};
@@ -31,11 +32,15 @@ namespace Phonix
 
         public readonly IEnumerable<IRuleSegment> Segments;
         public readonly IEnumerable<IRuleSegment> ExcludedSegments;
+        private readonly bool _hasExcluded = false;
 
         public IMatrixMatcher Filter { get; set; }
         public Direction Direction { get; set; }
 
-        // Application rate should vary from 0 to 1000
+        public event Action<Rule, IFeatureValue> UndefinedVariableUsed;
+        public event Action<Rule, ScalarFeature, int> ScalarValueRangeViolation;
+        public event Action<Rule, ScalarFeature, string> InvalidScalarValueOp;
+
         private double _applicationRate = 1.0;
         public double ApplicationRate
         {
@@ -107,10 +112,6 @@ namespace Phonix
 
         private Random _random = new Random();
 
-        public event Action<Rule, IFeatureValue> UndefinedVariableUsed;
-        public event Action<Rule, ScalarFeature, int> ScalarValueRangeViolation;
-        public event Action<Rule, ScalarFeature, string> InvalidScalarValueOp;
-
         public override string ToString()
         {
             return Name;
@@ -144,7 +145,7 @@ namespace Phonix
                     }
 
                     // ensure that we don't match the excluded segments
-                    if (ExcludedSegments.Count() > 0 && MatchesSegments(slice.Current, ExcludedSegments, ctx))
+                    if (_hasExcluded && MatchesSegments(slice.Current, ExcludedSegments, ctx))
                     {
                         continue;
                     }

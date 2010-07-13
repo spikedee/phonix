@@ -126,7 +126,7 @@ namespace Phonix
 
         private void LogRuleEntered(AbstractRule rule, Word word)
         {
-            WriteLog(Level.Verbose, "rule {0} entered", rule);
+            WriteLog(Level.Verbose, "rule {0} entered: {1}", rule, rule.Description);
         }
 
         private void LogRuleExited(AbstractRule rule, Word word)
@@ -150,7 +150,7 @@ namespace Phonix
                 return;
             }
 
-            WriteLog(Level.Info, "rule {0} applied: {1}", rule.Name, rule.Description);
+            WriteLog(Level.Info, "rule {0} applied", rule.Name);
 
             // match until we get to the current segment, so that we can
             // display which segment was acted upon

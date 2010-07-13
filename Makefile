@@ -37,6 +37,7 @@ parser: $(PARSER_FILES)
 
 test: parser $(PHONIX_TEST) $(ANTLR)
 	rm -f *NUnitPrimaryTrace.txt
+	#mono --profile=logging:c,ts,a,o=phonix.mprof /usr/lib/nunit/nunit-console.exe $(PHONIX_TEST) -fixture=Phonix.Test.ParserTest -labels
 	mono --debug /usr/lib/nunit/nunit-console.exe $(PHONIX_TEST) -labels
 
 prof: $(PHONIX)

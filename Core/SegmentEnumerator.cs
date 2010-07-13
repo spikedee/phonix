@@ -175,57 +175,6 @@ namespace Phonix
             mark.Restore(this);
         }
 
-        public IEnumerable<Segment> Span(Marker start, Marker end)
-        {
-            // this method should not change our state, so we save our current
-            // state and restore it at the end
-            var current = Mark();
-
-            try
-            {
-                var list = new List<Segment>();
-
-                // return an empty enumeration in case of equality
-                if (start.Equals(end))
-                {
-                    return Enumerable.Empty<Segment>();
-                }
-
-                Revert(end);
-
-                // get the expected end state
-                bool endAfterLast = _afterLast;
-                Segment endSeg = endAfterLast ? null : Current;
-
-                Revert(start);
-
-                bool hasCurrent;
-                while ((hasCurrent = MoveNext()) && Current != endSeg)
-                {
-                    list.Add(Current);
-                }
-                if (hasCurrent)
-                {
-                    list.Add(Current);
-                }
-                if (!hasCurrent && !endAfterLast)
-                {
-                    // this should only happen if start is after end
-                    throw new ArgumentOutOfRangeException("the start and end markers do not represent a valid range");
-                }
-
-                return list;
-            }
-            catch (InvalidOperationException ex)
-            {
-                throw new ArgumentOutOfRangeException("the start and end markers do not represent a valid range", ex);
-            }
-            finally
-            {
-                Revert(current);
-            }
-        }
-
         protected void CheckValid()
         {
             if (_beforeFirst)

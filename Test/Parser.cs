@@ -41,6 +41,23 @@ namespace Phonix.Test
             }
         }
 
+        public void ApplySyllableRule(Phonology phono, string input, string syllableOutput)
+        {
+            var log = new Log(Log.Level.Verbose, Log.Level.Error, Console.Out, phono);
+            log.Start();
+
+            try
+            {
+                var word = new Word(phono.SymbolSet.Pronounce(input));
+                phono.RuleSet.ApplyAll(word);
+                Assert.AreEqual(syllableOutput, SyllableBuilderTest.ShowSyllables(phono.SymbolSet, word));
+            }
+            finally
+            {
+                log.Stop();
+            }
+        }
+
         [Test]
         public void RuleWithVariable()
         {
@@ -325,7 +342,7 @@ namespace Phonix.Test
         {
             var phono = ParseWithStdImports("rule sporadic (applicationRate=0.25) a => b");
             var rule = phono.RuleSet.OrderedRules.First();
-            Assert.AreEqual(0.25, rule.ApplicationRate);
+            Assert.AreEqual(0.25, ((Rule) rule).ApplicationRate);
         }
 
         [Test]
@@ -506,6 +523,111 @@ namespace Phonix.Test
             Assert.IsTrue(gotTrace);
             Assert.AreSame(rule, phono.RuleSet.OrderedRules.Where(r => r.Name.Equals("subtract")).First());
             Assert.AreSame(feature, phono.FeatureSet.Get<Feature>("sc"));
+        }
+
+        [Test]
+        public void SyllableCV()
+        {
+            var phono = ParseWithStdImports("syllable onset [+cons] nucleus [-cons +son]");
+            ApplySyllableRule(phono, "basiho", "<b:a><s:i><h:o>");
+            ApplySyllableRule(phono, "asiho", "<a><s:i><h:o>");
+            ApplySyllableRule(phono, "basih", "<b:a><s:i>h");
+        }
+
+        [Test]
+        public void SyllableCVC()
+        {
+            var phono = ParseWithStdImports("syllable onset [+cons] nucleus [-cons +son] coda [+son]");
+            ApplySyllableRule(phono, "basihon", "<b:a><s:i><h:o.n>");
+            ApplySyllableRule(phono, "asihon", "<a><s:i><h:o.n>");
+            ApplySyllableRule(phono, "basih", "<b:a><s:i>h");
+            ApplySyllableRule(phono, "bai", "<b:a.i>");
+        }
+
+        [Test]
+        public void SyllableCVCOnsetRequired()
+        {
+            var phono = ParseWithStdImports("syllable (onsetRequired) onset [+cons] nucleus [-cons +son] coda [+son]");
+            ApplySyllableRule(phono, "basihon", "<b:a><s:i><h:o.n>");
+            ApplySyllableRule(phono, "asihon", "a<s:i><h:o.n>");
+            ApplySyllableRule(phono, "basih", "<b:a><s:i>h");
+            ApplySyllableRule(phono, "bai", "<b:a.i>");
+        }
+
+        [Test]
+        public void SyllableCVCCodaRequired()
+        {
+            var phono = ParseWithStdImports("syllable (codaRequired) onset [+cons] nucleus [-cons +son] coda [+cons]");
+            ApplySyllableRule(phono, "basihon", "<b:a.s><i.h><o.n>");
+            ApplySyllableRule(phono, "asihon", "<a.s><i.h><o.n>");
+            ApplySyllableRule(phono, "basih", "<b:a.s><i.h>");
+            ApplySyllableRule(phono, "bai", "bai");
+        }
+
+        [Test]
+        public void SyllableCVCOnsetAndCodaRequired()
+        {
+            var phono = ParseWithStdImports(
+                    "syllable (onsetRequired codaRequired) " + 
+                    "onset [+cons] nucleus [-cons +son] coda [+cons]");
+            ApplySyllableRule(phono, "basihon", "<b:a.s>i<h:o.n>");
+            ApplySyllableRule(phono, "asihon", "a<s:i.h>on");
+            ApplySyllableRule(phono, "basih", "<b:a.s>ih");
+            ApplySyllableRule(phono, "bai", "bai");
+        }
+
+        [Test]
+        public void SyllableCCV()
+        {
+            var phono = ParseWithStdImports("syllable onset [+cons]([+cons]) nucleus [-cons +son]");
+            ApplySyllableRule(phono, "basiho", "<b:a><s:i><h:o>");
+            ApplySyllableRule(phono, "brastihno", "<br:a><st:i><hn:o>");
+            ApplySyllableRule(phono, "aszihxon", "<a><sz:i><hx:o>n");
+            ApplySyllableRule(phono, "barsih", "<b:a><rs:i>h");
+        }
+
+        [Test]
+        public void SyllableCCVC()
+        {
+            var phono = ParseWithStdImports(
+                    "syllable onset ([-son])([+cons]) nucleus [-cons +son] coda [+son]");
+            ApplySyllableRule(phono, "basihon", "<b:a><s:i><h:o.n>");
+            ApplySyllableRule(phono, "bramstihnorl", "<br:a.m><st:i><hn:o.r>l");
+            ApplySyllableRule(phono, "alszihxon", "<a.l><sz:i><hx:o.n>");
+            ApplySyllableRule(phono, "barsih", "<b:a.r><s:i>h");
+            ApplySyllableRule(phono, "btai", "<bt:a.i>");
+        }
+
+        [Test]
+        public void SyllableCCVCC()
+        {
+            var phono = ParseWithStdImports(
+                    "syllable onset ([-son])([+cons]) nucleus [-cons +son] coda ([+son])([+cons])");
+            ApplySyllableRule(phono, "basihon", "<b:a><s:i><h:o.n>");
+            ApplySyllableRule(phono, "bramstihnorl", "<br:a.m><st:i><hn:o.rl>");
+            ApplySyllableRule(phono, "alszihxon", "<a.l><sz:i><hx:o.n>");
+            ApplySyllableRule(phono, "barsih", "<b:a.r><s:i.h>");
+            ApplySyllableRule(phono, "btaif", "<bt:a.if>");
+        }
+
+        [Test]
+        public void SyllableCVCNucleusRight()
+        {
+            var phono = ParseWithStdImports(
+                    "syllable (nucleusPreference=right) " + 
+                    "onset [+cons]([+son]) nucleus [-cons +son] coda []");
+            ApplySyllableRule(phono, "bui", "<bu:i>");
+            ApplySyllableRule(phono, "biu", "<bi:u>");
+        }
+
+        [Test]
+        public void SyllableCVCNucleusLeft()
+        {
+            var phono = ParseWithStdImports(
+                    "syllable (nucleusPreference=left) " + 
+                    "onset [+cons][+son] onset [+cons] nucleus [-cons +son] coda []");
+            ApplySyllableRule(phono, "bui", "<b:u.i>");
+            ApplySyllableRule(phono, "biu", "<b:i.u>");
         }
     }
 }
