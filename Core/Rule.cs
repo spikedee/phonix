@@ -116,47 +116,57 @@ namespace Phonix
         {
             return Name;
         }
-
         public override void Apply(Word word)
         {
             OnEntered(word);
-
             try
             {
-                var slice = word.GetSliceEnumerator(Direction, Filter);
-
-                while (slice.MoveNext())
+                foreach (var slice in AppliedEnumeration(word))
                 {
-                    if (_applicationRate < 1.0)
-                    {
-                        if (_random.NextDouble() > _applicationRate)
-                        {
-                            // skip this potential application of the rule
-                            continue;
-                        }
-                    }
+                    OnApplied(word, slice);
+                }
+            }
+            finally
+            {
+                OnExited(word);
+            }
+        }
 
-                    var ctx = new RuleContext();
-
-                    // match all of the segments
-                    if (!MatchesSegments(slice.Current, Segments, ctx))
+        internal IEnumerable<IWordSlice> AppliedEnumeration(Word word)
+        {
+            foreach (var slice in word.Slice(Direction, Filter))
+            {
+                if (_applicationRate < 1.0)
+                {
+                    if (_random.NextDouble() > _applicationRate)
                     {
+                        // skip this potential application of the rule
                         continue;
                     }
+                }
 
-                    // ensure that we don't match the excluded segments
-                    if (_hasExcluded && MatchesSegments(slice.Current, ExcludedSegments, ctx))
-                    {
-                        continue;
-                    }
+                var ctx = new RuleContext();
 
-                    // apply all of the segments
-                    var wordSegment = slice.Current.GetMutableEnumerator();
-                    foreach (var segment in Segments)
+                // match all of the segments
+                if (!MatchesSegments(slice, Segments, ctx))
+                {
+                    continue;
+                }
+
+                // ensure that we don't match the excluded segments
+                if (_hasExcluded && MatchesSegments(slice, ExcludedSegments, ctx))
+                {
+                    continue;
+                }
+
+                // apply all of the segments
+                using (var mutableSegment = slice.GetMutableEnumerator())
+                {
+                    foreach (var ruleSegment in Segments)
                     {
                         try
                         {
-                            segment.Combine(ctx, wordSegment);
+                            ruleSegment.Combine(ctx, mutableSegment);
                         }
                         catch (UndefinedFeatureVariableException ex)
                         {
@@ -171,14 +181,10 @@ namespace Phonix
                             InvalidScalarValueOp(this, ex.Feature, ex.Message);
                         }
                     }
-                    wordSegment.Dispose();
-                    OnApplied(word, slice.Current);
+                    yield return slice;
                 }
             }
-            finally
-            {
-                OnExited(word);
-            }
+            yield break;
         }
 
         private static bool MatchesSegments(IWordSlice slice, IEnumerable<IRuleSegment> segments, RuleContext ctx)

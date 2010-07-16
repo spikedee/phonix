@@ -141,15 +141,15 @@ namespace Phonix
 
             if (onset != null)
             {
-                list.AddRange(onset.Select(onsetSeg => (IRuleSegment) new TierSegment(onsetSeg, ctx.Onset)));
+                list.AddRange(onset.Select(onsetSeg => (IRuleSegment) new SyllableElement(onsetSeg, ctx.Onset)));
             }
 
             Debug.Assert(nucleus != null);
-            list.AddRange(nucleus.Select(nucleusSeg => (IRuleSegment) new TierSegment(nucleusSeg, ctx.Nucleus)));
+            list.AddRange(nucleus.Select(nucleusSeg => (IRuleSegment) new SyllableElement(nucleusSeg, ctx.Nucleus)));
 
             if (coda != null)
             {
-                list.AddRange(coda.Select(codaSeg => (IRuleSegment) new TierSegment(codaSeg, ctx.Coda)));
+                list.AddRange(coda.Select(codaSeg => (IRuleSegment) new SyllableElement(codaSeg, ctx.Coda)));
             }
 
             list.Add(new SyllableEnd(ctx));
@@ -398,16 +398,19 @@ namespace Phonix
             public override void Combine(RuleContext ctx, MutableSegmentEnumerator segment)
             {
                 var syllable = new Syllable(_syllCtx.Onset, _syllCtx.Nucleus, _syllCtx.Coda);
-                _syllCtx.SyllableList.Add(syllable);
+                if (!_syllCtx.SyllableList.Contains(syllable))
+                {
+                    _syllCtx.SyllableList.Add(syllable);
+                }
             }
         }
 
-        private class TierSegment : SyllableSegment
+        private class SyllableElement : SyllableSegment
         {
             private readonly IMatrixMatcher _match;
             private readonly List<Segment> _list;
 
-            public TierSegment(IMatrixMatcher match, List<Segment> list)
+            public SyllableElement(IMatrixMatcher match, List<Segment> list)
             {
                 _match = match;
                 _list = list;

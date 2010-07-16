@@ -11,11 +11,17 @@ namespace Phonix
         private readonly List<Segment> _nucleus = new List<Segment>();
         private readonly List<Segment> _coda = new List<Segment>();
 
+        private readonly Segment _firstSegment;
+        private readonly Segment _lastSegment;
+
         public Syllable(IEnumerable<Segment> onset, IEnumerable<Segment> nucleus, IEnumerable<Segment> coda)
         {
             _onset.AddRange(onset);
             _nucleus.AddRange(nucleus);
             _coda.AddRange(coda);
+
+            _firstSegment = this.First();
+            _lastSegment = this.Last();
         }
 
         public IEnumerable<Segment> Onset
@@ -35,14 +41,13 @@ namespace Phonix
 
         public bool Overlaps(Syllable other)
         {
-            foreach (var seg in this)
-            {
-                if (other.Contains(seg))
-                {
-                    return true;
-                }
-            }
-            return false;
+
+            // we only check the *first* and the *last* here. This assumes that
+            // Syllables checked for overlap are always contiguous parts of the
+            // same Word. If that assumption ever isn't true, this will not be
+            // a valid test
+
+            return other.Contains(_firstSegment) || other.Contains(_lastSegment);
         }
 
         public override bool Equals(object other)
@@ -50,7 +55,9 @@ namespace Phonix
             var otherSyllable = other as Syllable;
             if (otherSyllable != null)
             {
-                return this.SequenceEqual(otherSyllable);
+                return this.Onset.SequenceEqual(otherSyllable.Onset)
+                    && this.Nucleus.SequenceEqual(otherSyllable.Nucleus)
+                    && this.Coda.SequenceEqual(otherSyllable.Coda);
             }
             else
             {

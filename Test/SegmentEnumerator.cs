@@ -15,7 +15,7 @@ namespace Phonix.Test
         public void MoveNextPrev()
         {
             var word = WordTest.GetTestWord();
-            var slice = word.GetSliceEnumerator(Direction.Rightward);
+            var slice = word.Slice(Direction.Rightward).GetEnumerator();
             slice.MoveNext();
             var iter = slice.Current.GetEnumerator();
 

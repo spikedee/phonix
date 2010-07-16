@@ -49,11 +49,11 @@ namespace Phonix.Test
         }
 
         [Test]
-        public void GetSliceEnumeratorRightward()
+        public void SliceRightward()
         {
             var word = GetTestWord();
 
-            var iter = word.GetSliceEnumerator(Direction.Rightward);
+            var iter = word.Slice(Direction.Rightward).GetEnumerator();
             Assert.IsTrue(iter.MoveNext());
             Assert.AreEqual("abc", SpellSlice(iter.Current));
             
@@ -67,11 +67,11 @@ namespace Phonix.Test
         }
 
         [Test]
-        public void GetSliceEnumeratorLeftward()
+        public void SliceLeftward()
         {
             var word = GetTestWord();
 
-            var iter = word.GetSliceEnumerator(Direction.Leftward);
+            var iter = word.Slice(Direction.Leftward).GetEnumerator();
             Assert.IsTrue(iter.MoveNext());
             Assert.AreEqual("c", SpellSlice(iter.Current));
             
@@ -94,7 +94,7 @@ namespace Phonix.Test
             });
             var filter = new MatrixMatcher(fm);
 
-            var iter = word.GetSliceEnumerator(Direction.Rightward, filter);
+            var iter = word.Slice(Direction.Rightward, filter).GetEnumerator();
             Assert.IsTrue(iter.MoveNext());
             Assert.AreEqual("ac", SpellSlice(iter.Current));
             
@@ -114,7 +114,7 @@ namespace Phonix.Test
             });
             var filter = new MatrixMatcher(fm);
 
-            var iter = word.GetSliceEnumerator(Direction.Leftward, filter);
+            var iter = word.Slice(Direction.Leftward, filter).GetEnumerator();
             Assert.IsTrue(iter.MoveNext());
             Assert.AreEqual("c", SpellSlice(iter.Current));
             
@@ -128,7 +128,7 @@ namespace Phonix.Test
         public void LeftBoundary()
         {
             var word = GetTestWord();
-            var iter = word.GetSliceEnumerator(Direction.Rightward);
+            var iter = word.Slice(Direction.Rightward).GetEnumerator();
             iter.MoveNext();
 
             var slice = iter.Current;
@@ -144,7 +144,7 @@ namespace Phonix.Test
         public void RightBoundary()
         {
             var word = GetTestWord();
-            var iter = word.GetSliceEnumerator(Direction.Leftward);
+            var iter = word.Slice(Direction.Leftward).GetEnumerator();
             iter.MoveNext();
             iter.MoveNext(); // get two segments in the slice
 
@@ -165,7 +165,7 @@ namespace Phonix.Test
             var fs = FeatureSetTest.GetTestSet();
             var filter = new MatrixMatcher(new IMatchable[] { fs.Get<Feature>("bn2").NullValue });
 
-            var iter = word.GetSliceEnumerator(Direction.Rightward, filter);
+            var iter = word.Slice(Direction.Rightward, filter).GetEnumerator();
             iter.MoveNext();
 
             var slice = iter.Current;
@@ -184,7 +184,7 @@ namespace Phonix.Test
             var fs = FeatureSetTest.GetTestSet();
             var filter = new MatrixMatcher(new IMatchable[] { fs.Get<BinaryFeature>("bn").PlusValue });
 
-            var iter = word.GetSliceEnumerator(Direction.Rightward, filter);
+            var iter = word.Slice(Direction.Rightward, filter).GetEnumerator();
             iter.MoveNext(); // get one segment into the slice
 
             var slice = iter.Current;

@@ -20,7 +20,7 @@ namespace Phonix.Test
             )
         {
             var word = WordTest.GetTestWord();
-            var slice = word.GetSliceEnumerator(Direction.Rightward);
+            var slice = word.Slice(Direction.Rightward).GetEnumerator();
             slice.MoveNext();
 
             SegmentEnumerator iter = slice.Current.GetEnumerator();
@@ -62,7 +62,7 @@ namespace Phonix.Test
             )
         {
             var word = WordTest.GetTestWord();
-            var slice = word.GetSliceEnumerator(Direction.Rightward);
+            var slice = word.Slice(Direction.Rightward).GetEnumerator();
             slice.MoveNext();
 
             MutableSegmentEnumerator iter = slice.Current.GetMutableEnumerator();
@@ -86,7 +86,7 @@ namespace Phonix.Test
             }
 
             // get a new slice rather than reusing the old one
-            slice = word.GetSliceEnumerator(Direction.Rightward);
+            slice = word.Slice(Direction.Rightward).GetEnumerator();
             if (slice.MoveNext())
             {
                 Assert.AreEqual(finalSlice, WordTest.SpellSlice(slice.Current), "resulting string");
@@ -256,7 +256,7 @@ namespace Phonix.Test
         {
             var step = new BackstepSegment();
             var word = WordTest.GetTestWord();
-            var slice = word.GetSliceEnumerator(Direction.Rightward);
+            var slice = word.Slice(Direction.Rightward).GetEnumerator();
 
             Assert.IsTrue(slice.MoveNext());
             Assert.IsTrue(slice.MoveNext());

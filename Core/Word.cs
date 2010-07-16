@@ -92,12 +92,12 @@ namespace Phonix
 
         public static IRuleSegment RightBoundary = new BoundarySegment();
 
-        public IEnumerator<IWordSlice> GetSliceEnumerator(Direction dir)
+        public IEnumerable<IWordSlice> Slice(Direction dir)
         {
-            return GetSliceEnumerator(dir, MatrixMatcher.AlwaysMatches);
+            return Slice(dir, MatrixMatcher.AlwaysMatches);
         }
 
-        public IEnumerator<IWordSlice> GetSliceEnumerator(Direction dir, IMatrixMatcher filter)
+        public IEnumerable<IWordSlice> Slice(Direction dir, IMatrixMatcher filter)
         {
             LinkedListNode<MutableSegment> currNode;
             if (dir == Direction.Rightward)

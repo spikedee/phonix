@@ -172,9 +172,10 @@ namespace Phonix.Test
                 rule.Apply(word);
             }
 
+            // assert that the rule actually applied between 49% and 51% of the
+            // time that it could have applied
             Assert.IsTrue(appliedCount > (callCount * word.Count() * 0.49), "appliedCount: " + appliedCount);
             Assert.IsTrue(appliedCount < (callCount * word.Count() * 0.51), "appliedCount: " + appliedCount);
-
         }
 
         [Test]

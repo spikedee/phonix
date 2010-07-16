@@ -15,7 +15,7 @@ namespace Phonix.Test
         public void InsertBefore()
         {
             var word = WordTest.GetTestWord();
-            var iter = word.GetSliceEnumerator(Direction.Rightward);
+            var iter = word.Slice(Direction.Rightward).GetEnumerator();
             iter.MoveNext();
 
             var slice = iter.Current;
@@ -45,7 +45,7 @@ namespace Phonix.Test
             Assert.IsFalse(sliceIter.MoveNext(), "last MoveNext()");
             sliceIter.InsertBefore(new MutableSegment(FeatureMatrixTest.MatrixC));
 
-            iter = word.GetSliceEnumerator(Direction.Rightward);
+            iter = word.Slice(Direction.Rightward).GetEnumerator();
             iter.MoveNext();
             Assert.AreEqual("cacbccc", WordTest.SpellSlice(iter.Current));
         }
@@ -54,7 +54,7 @@ namespace Phonix.Test
         public void InsertAfter()
         {
             var word = WordTest.GetTestWord();
-            var iter = word.GetSliceEnumerator(Direction.Rightward);
+            var iter = word.Slice(Direction.Rightward).GetEnumerator();
             iter.MoveNext();
 
             var slice = iter.Current;
@@ -93,7 +93,7 @@ namespace Phonix.Test
             {
             }
 
-            iter = word.GetSliceEnumerator(Direction.Rightward);
+            iter = word.Slice(Direction.Rightward).GetEnumerator();
             iter.MoveNext();
             Assert.AreEqual("cacbccc", WordTest.SpellSlice(iter.Current));
         }
@@ -102,7 +102,7 @@ namespace Phonix.Test
         public void Delete()
         {
             var word = WordTest.GetTestWord();
-            var iter = word.GetSliceEnumerator(Direction.Rightward);
+            var iter = word.Slice(Direction.Rightward).GetEnumerator();
             iter.MoveNext();
 
             var slice = iter.Current;
@@ -122,7 +122,7 @@ namespace Phonix.Test
 
             Assert.IsFalse(sliceIter.MoveNext(), "last MoveNext()");
 
-            iter = word.GetSliceEnumerator(Direction.Rightward);
+            iter = word.Slice(Direction.Rightward).GetEnumerator();
             Assert.IsFalse(iter.MoveNext());
         }
     }
