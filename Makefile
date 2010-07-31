@@ -59,7 +59,7 @@ debug: CS_DEBUG=-debug -define:debug
 debug: clean $(PHONIX)
 
 $(PHONIX_TEST): $(TEST_FILES) $(RESX_FILES)
-	$(GMCS) -optimize- -debug -r:nunit.framework.dll -lib:/usr/lib/cli/nunit-2.4/ $(TEST_FILES) $(PARSER_FILES)
+	$(GMCS) -optimize- -debug -r:nunit.framework.dll -lib:/usr/lib/cli/nunit.framework-2.4/ $(TEST_FILES) $(PARSER_FILES)
 
 doc: $(DOC_FILES)
 
@@ -106,7 +106,7 @@ clean:
 	rm -f TestResult.xml
 	rm -f *NUnitPrimaryTrace.txt
 	rm -f $(PARSER_FILES)
-	rm -f $(BIN_DIR)/*
+	rm -rf $(BIN_DIR)/*
 	rm -f $(DOC_FILES)
 	rm -f phonix
 
