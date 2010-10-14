@@ -134,7 +134,7 @@ namespace Phonix
             WriteLog(Level.Verbose, "rule {0} exited", rule);
         }
 
-        private void LogRuleApplied(AbstractRule abstractRule, Word word, IWordSlice slice)
+        private void LogRuleApplied(AbstractRule rule, Word word, IWordSlice slice)
         {
             // since this method is potentially expensive, skip it if we're not
             // going to log anything
@@ -143,62 +143,8 @@ namespace Phonix
                 return;
             }
 
-            var rule = abstractRule as Rule;
-            if (rule == null)
-            {
-                // TODO
-                return;
-            }
-
             WriteLog(Level.Info, "rule {0} applied", rule.Name);
-
-            // match until we get to the current segment, so that we can
-            // display which segment was acted upon
-            FeatureMatrix current = null;
-            try
-            {
-                var ctx = new RuleContext();
-                var seg = rule.Segments.GetEnumerator();
-                var pos = slice.GetEnumerator();
-
-                while (seg.MoveNext() && seg.Current.IsMatchOnlySegment)
-                {
-                    seg.Current.Matches(ctx, pos);
-                }
-
-                current = pos.MoveNext() ? pos.Current.Matrix : null;
-            }
-            catch (SegmentDeletedException)
-            {
-                // this occurs when we try to get the enumerator for a deleted
-                // segment. this exception (and only this exception) can be
-                // safely swallowed
-            }
-
-            var str = new StringBuilder();
-            foreach (var seg in word)
-            {
-                string marker = " ";
-                Symbol symbol;
-
-                if (current != null && seg.Matrix == current)
-                {
-                    marker = ">";
-                }
-
-                try
-                {
-                    symbol = _phono.SymbolSet.Spell(seg.Matrix);
-                }
-                catch (SpellingException)
-                {
-                    symbol = Symbol.Unknown;
-                }
-
-                str.AppendLine(String.Format("{0} {1} : {2}", marker, symbol, seg.Matrix));
-            }
-
-            WriteLog(Level.Info, str.ToString());
+            WriteLog(Level.Info, rule.ShowApplication(word, slice, _phono.SymbolSet));
         }
 
         private void LogUndefinedVariableUsed(Rule rule, IFeatureValue var)

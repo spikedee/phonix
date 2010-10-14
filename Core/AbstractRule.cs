@@ -53,5 +53,11 @@ namespace Phonix
 
         public abstract void Apply(Word word);
 
+        public abstract string ShowApplication(Word word, IWordSlice slice, SymbolSet symbolSet);
+
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 }

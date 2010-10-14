@@ -303,40 +303,69 @@ namespace Phonix.Parse
 
         public static void MakeAndAddSyllable(SyllableBuilder syll, ParamList plist, RuleSet ruleSet)
         {
-            if (plist == null || !plist.ContainsKey("onsetRequired"))
+            bool onsetRequired = false;
+            bool codaRequired = false;
+            bool persist = false;
+
+            if (plist != null)
+            {
+                foreach (var key in plist.Keys)
+                {
+                    switch (key)
+                    {
+                        case "onsetRequired":
+                            onsetRequired = true;
+                        break;
+
+                        case "codaRequired":
+                            codaRequired = true;
+                        break;
+
+                        case "nucleusPreference":
+                        {
+                            var pref = plist["nucleusPreference"];
+                            if (pref == null)
+                            {
+                                throw new InvalidParameterValueException("nucleusPreference", "<empty");
+                            }
+                            else if (pref.Equals("left"))
+                            {
+                                syll.Direction = SyllableBuilder.NucleusDirection.Left;
+                            }
+                            else if (pref.Equals("right"))
+                            {
+                                syll.Direction = SyllableBuilder.NucleusDirection.Right;
+                            }
+                            else
+                            {
+                                throw new InvalidParameterValueException("nucleusPreference", pref.ToString());
+                            }
+                            break;
+                        }
+
+                        case "persist":
+                            persist = true;
+                        break;
+
+                        default:
+                            throw new UnknownParameterException(key);
+                    }
+                }
+            }
+
+            if (!onsetRequired)
             {
                 // onsets not required, so add the implicit empty onset
                 syll.Onsets.Add(Enumerable.Empty<IMatrixMatcher>());
             }
-            if (plist == null || !plist.ContainsKey("codaRequired"))
+            if (!codaRequired)
             {
                 // codas not required, so add the implicit empty coda
                 syll.Codas.Add(Enumerable.Empty<IMatrixMatcher>());
             }
-            if (plist != null && plist.ContainsKey("nucleusPreference"))
-            {
-                var pref = plist["nucleusPreference"];
-                if (pref == null)
-                {
-                    throw new InvalidParameterValueException("nucleusPreference", 
-                            pref == null ? "<empty>" : pref.ToString());
-                }
-                if (pref.Equals("left"))
-                {
-                    syll.Direction = SyllableBuilder.NucleusDirection.Left;
-                }
-                else if (pref.Equals("right"))
-                {
-                    syll.Direction = SyllableBuilder.NucleusDirection.Right;
-                }
-                else
-                {
-                    throw new InvalidParameterValueException("nucleusPreference", pref.ToString());
-                }
-            }
 
             var rule = syll.GetSyllableRule();
-            if (plist != null && plist.ContainsKey("persist"))
+            if (persist)
             {
                 ruleSet.AddPersistent(rule);
             }

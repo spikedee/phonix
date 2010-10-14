@@ -62,5 +62,34 @@ namespace Phonix.Test
             Assert.IsFalse(Bottom.HasChild(MidB));
             Assert.IsFalse(Bottom.HasChild(null));
         }
+
+        [Test]
+        public void AncestorMatcher()
+        {
+            var bottom = new Segment(Bottom, FeatureMatrix.Empty, new Segment[] {});
+            var midA = new Segment(MidA, FeatureMatrix.Empty, new Segment[] { bottom });
+            var midB = new Segment(MidB, FeatureMatrix.Empty, new Segment[] { bottom });
+            var top = new Segment(Top, FeatureMatrix.Empty, new Segment[] { midA, midB });
+
+            Assert.IsFalse(Bottom.AncestorMatcher.Matches(null, bottom));
+            Assert.IsTrue(MidA.AncestorMatcher.Matches(null, bottom));
+            Assert.IsTrue(MidB.AncestorMatcher.Matches(null, bottom));
+            Assert.IsTrue(Top.AncestorMatcher.Matches(null, bottom));
+
+            Assert.IsFalse(Bottom.AncestorMatcher.Matches(null, midA));
+            Assert.IsFalse(MidA.AncestorMatcher.Matches(null, midA));
+            Assert.IsFalse(MidB.AncestorMatcher.Matches(null, midA));
+            Assert.IsTrue(Top.AncestorMatcher.Matches(null, midA));
+
+            Assert.IsFalse(Bottom.AncestorMatcher.Matches(null, midB));
+            Assert.IsFalse(MidA.AncestorMatcher.Matches(null, midB));
+            Assert.IsFalse(MidB.AncestorMatcher.Matches(null, midB));
+            Assert.IsTrue(Top.AncestorMatcher.Matches(null, midB));
+
+            Assert.IsFalse(Bottom.AncestorMatcher.Matches(null, top));
+            Assert.IsFalse(MidA.AncestorMatcher.Matches(null, top));
+            Assert.IsFalse(MidB.AncestorMatcher.Matches(null, top));
+            Assert.IsFalse(Top.AncestorMatcher.Matches(null, top));
+        }
     }
 }

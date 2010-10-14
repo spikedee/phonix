@@ -518,7 +518,7 @@ namespace Phonix.Test
             Parse.Util.ParseString(phono, scalarDefs + "rule subtract [] => [sc=-1]");
             phono.RuleSet.InvalidScalarValueOp += tracer;
 
-            ApplyRules(phono, "scX", "scX"); // assert that this doesn't blow up
+            ApplyRules(phono, "scX", "scX"); // this shouldn't throw an exception
 
             Assert.IsTrue(gotTrace);
             Assert.AreSame(rule, phono.RuleSet.OrderedRules.Where(r => r.Name.Equals("subtract")).First());
@@ -629,5 +629,129 @@ namespace Phonix.Test
             ApplySyllableRule(phono, "bui", "<b:u.i>");
             ApplySyllableRule(phono, "biu", "<b:i.u>");
         }
+
+        [Test]
+        [ExpectedException(typeof(ParseException))]
+        public void SyllableInvalidNoSegmentInOnset()
+        {
+            ParseWithStdImports("syllable onset nucleus [] coda []");
+        }
+
+        [Test]
+        [ExpectedException(typeof(ParseException))]
+        public void SyllableInvalidNoSegmentInNucleus()
+        {
+            ParseWithStdImports("syllable onset [] nucleus coda []");
+        }
+
+        [Test]
+        [ExpectedException(typeof(ParseException))]
+        public void SyllableInvalidNoSegmentInCoda()
+        {
+            ParseWithStdImports("syllable onset [] nucleus [] coda ");
+        }
+
+        [Test]
+        [ExpectedException(typeof(ParseException))]
+        public void SyllableInvalidRegexPlus()
+        {
+            ParseWithStdImports("syllable onset ([])+ nucleus [] coda []");
+        }
+
+        [Test]
+        [ExpectedException(typeof(ParseException))]
+        public void SyllableInvalidRegexStar()
+        {
+            ParseWithStdImports("syllable onset ([])* nucleus [] coda []");
+        }
+
+        [Test]
+        [ExpectedException(typeof(ParseException))]
+        public void SyllableInvalidParameter()
+        {
+            ParseWithStdImports("syllable (invalid) onset [] nucleus [] coda []");
+        }
+
+        [Test]
+        public void MatchOnset()
+        {
+            var phono = ParseWithStdImports(
+                    "syllable onset [+cons]([+cons]) nucleus [-cons +son] coda [+cons] " +
+                    "rule markOnset [<onset>] => x / _ [<*onset>]");
+            ApplyRules(phono, "basiho", "xaxixo");
+            ApplyRules(phono, "brastihno", "bxasxihxo");
+            ApplyRules(phono, "aszihgon", "asxihxon");
+            ApplyRules(phono, "barsih", "xarxih");
+        }
+
+        [Test]
+        public void MatchCoda()
+        {
+            var phono = ParseWithStdImports(
+                    "syllable onset [+cons] nucleus [-cons +son] coda [+cons] " +
+                    "rule markCoda [<coda>] => x / [<*coda>] _ ");
+            ApplyRules(phono, "basiho", "basiho");
+            ApplyRules(phono, "brastihno", "braxtixno");
+            ApplyRules(phono, "aszihgon", "axzixgox");
+            ApplyRules(phono, "barsih", "baxsix");
+        }
+
+        [Test]
+        public void MatchNucleus()
+        {
+            var phono = ParseWithStdImports(
+                    "syllable onset [+cons] nucleus [-cons +son] coda [+cons] " +
+                    "rule markCoda [<nucleus>] => x ");
+            ApplyRules(phono, "basiho", "bxsxhx");
+            ApplyRules(phono, "brastihno", "brxstxhnx");
+            ApplyRules(phono, "aszihgon", "xszxhgxn");
+            ApplyRules(phono, "barsih", "bxrsxh");
+        }
+
+        [Test]
+        public void MatchSyllable()
+        {
+            var phono = ParseWithStdImports(
+                    "syllable (onsetRequired codaRequired) onset [+cons] nucleus [-cons +son] coda [+cons] " +
+                    "rule markSyllable [<syllable>] => x ");
+            ApplyRules(phono, "basiho", "xxxiho");
+            ApplyRules(phono, "brastihno", "bxxxxxxno");
+            ApplyRules(phono, "aszihgon", "asxxxxxx");
+            ApplyRules(phono, "barsih", "xxxxxx");
+        }
+
+        [Test]
+        public void MatchNoSyllable()
+        {
+            var phono = ParseWithStdImports(
+                    "syllable (onsetRequired codaRequired) onset [+cons] nucleus [-cons +son] coda [+cons] " +
+                    "rule markNoSyllable [<*syllable>] => x ");
+            ApplyRules(phono, "basiho", "basxxx");
+            ApplyRules(phono, "brastihno", "xrastihxx");
+            ApplyRules(phono, "aszihgon", "xxzihgon");
+            ApplyRules(phono, "barsih", "barsih");
+        }
+
+        [Test]
+        [ExpectedException(typeof(ParseException))]
+        public void MatchInvalidUnmatchedLeftBracket()
+        {
+            ParseWithStdImports("rule markInvalid [<syllable] => x");
+        }
+
+        [Test]
+        [ExpectedException(typeof(ParseException))]
+        public void MatchInvalidUnmatchedRightBracket()
+        {
+            ParseWithStdImports("rule markInvalid [syllable>] => x");
+        }
+
+        [Test]
+        [ExpectedException(typeof(ParseException))]
+        public void MatchInvalidUnrecognizedName()
+        {
+            ParseWithStdImports("rule markInvalid [<wrong>] => x");
+        }
+
     }
 }

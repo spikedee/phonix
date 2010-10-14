@@ -139,7 +139,6 @@ namespace Phonix.Test
 
             var rule = syll.GetSyllableRule();
 
-            Assert.IsTrue(rule.Description.Contains("syllable"));
             Assert.IsTrue(rule.Description.Contains("onset"));
             Assert.IsTrue(rule.Description.Contains("nucleus"));
             Assert.IsTrue(rule.Description.Contains("coda"));
@@ -147,6 +146,8 @@ namespace Phonix.Test
             Assert.IsTrue(rule.Description.Contains(SegmentA.ToString()));
             Assert.IsTrue(rule.Description.Contains(SegmentB.ToString()));
             Assert.IsTrue(rule.Description.Contains(SegmentC.ToString()));
+
+            Assert.IsFalse(rule.Description.Contains(Environment.NewLine));
         }
 
         [Test]

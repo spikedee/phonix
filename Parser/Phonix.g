@@ -216,7 +216,7 @@ ruleAction returns [List<IRuleSegment> val]
         var left = new List<IMatrixMatcher>(); 
         var right = new List<IMatrixCombiner>(); 
     }: 
-    (matchTerm { left.AddRange($matchTerm.val); })+
+    (nullableMatchTerm { left.AddRange($nullableMatchTerm.val); })+
     ARROW 
     (actionTerm { right.AddRange($actionTerm.val); })+
     { $val = Util.MakeRuleAction(left, right); }
@@ -225,17 +225,16 @@ ruleAction returns [List<IRuleSegment> val]
 matchTerm returns [IEnumerable<IMatrixMatcher> val]:
         matchableMatrix { $val = new IMatrixMatcher[] { new MatrixMatcher($matchableMatrix.val) }; }
     |   symbolStr { $val = $symbolStr.val.ConvertAll<IMatrixMatcher>(s => s); }
+    ;
+
+nullableMatchTerm returns [IEnumerable<IMatrixMatcher> val]:
+        matchTerm { $val = $matchTerm.val; }
     |   NULL { $val = new IMatrixMatcher[] { null }; }
     ;
 
-optionalMatchTerm returns [IEnumerable<IMatrixMatcher> val]:
-    LPAREN
-    (
-            matchableMatrix { $val = new IMatrixMatcher[] { new MatrixMatcher($matchableMatrix.val) }; }
-        |   symbolStr { $val = $symbolStr.val.ConvertAll<IMatrixMatcher>(s => s); }
-    )+
-    RPAREN
-    ;
+optionalMatchTerm returns [IEnumerable<IMatrixMatcher> val]
+    @init { var list = new List<IMatrixMatcher>(); $val = list; }:
+    LPAREN ( matchTerm { list.AddRange($matchTerm.val); })+ RPAREN ;
 
 actionTerm returns [IEnumerable<IMatrixCombiner> val]: 
         combinableMatrix { $val = new IMatrixCombiner[] { new MatrixCombiner($combinableMatrix.val) }; }
@@ -347,6 +346,7 @@ matchableVal returns [IMatchable val]:
     |   bareVal { $val = $bareVal.val; }
     |   nullVal { $val = $nullVal.val; }
     |   variableVal { $val = $variableVal.val; }
+    |   tierVal { $val = $tierVal.val; }
     ;
 
 combinableVal returns [ICombinable val]:
@@ -384,13 +384,13 @@ unaryVal returns [FeatureValue val]:
     unaryFeature { $val = $unaryFeature.val.Value; };
 
 nullVal returns [IFeatureValue val]:
-    NULL feature { $val = $feature.val.NullValue; };
+        NULL feature { $val = $feature.val.NullValue; };
 
 variableVal returns [IFeatureValue val]: 
     '$' feature { $val = $feature.val.VariableValue; };
 
-/* the bareVal can be a unary match or a node-exists match. it exists here to
- * help the parser handle the ambiguity that otherwise results. 
+/* the bareVal can be a unary match, a node-exists match, or a tier value. it
+ * exists here to help the parser handle the ambiguity that otherwise results. 
  */
 bareVal returns [IMatchable val]:
     feature 
@@ -399,6 +399,19 @@ bareVal returns [IMatchable val]:
         else if ($feature.val is UnaryFeature) $val = ($feature.val as UnaryFeature).Value;
         else throw new FeatureTypeException($feature.val.Name, "unary or node");
     }
+    ;
+
+tierVal returns [IMatchable val]
+    @init { bool nulled = false; }:
+    LANGLE 
+    (NULL { nulled = true; })?
+    (
+        SYLLABLE    { $val = nulled ? Tier.Syllable.NoAncestorMatcher : Tier.Syllable.AncestorMatcher; }
+    |   ONSET       { $val = nulled ? Tier.Onset.NoAncestorMatcher : Tier.Onset.AncestorMatcher; }
+    |   NUCLEUS     { $val = nulled ? Tier.Nucleus.NoAncestorMatcher : Tier.Nucleus.AncestorMatcher; }
+    |   CODA        { $val = nulled ? Tier.Coda.NoAncestorMatcher : Tier.Coda.AncestorMatcher; }
+    )
+    RANGLE
     ;
 
 /* Parameters */

@@ -17,8 +17,8 @@ namespace Phonix.Test
             var inputData = new StringBuilder();
 
             inputData.AppendLine("Unit");
-            inputData.AppendLine("test");
-            inputData.AppendLine("data");
+            inputData.AppendLine("Test");
+            inputData.AppendLine("Data");
 
             CrashHandler.BuildReportFile(ex, new StringReader(inputData.ToString()));
 

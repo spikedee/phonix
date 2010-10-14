@@ -92,7 +92,65 @@ namespace Phonix
                     OnExited(word);
                 }
             }
-        }
+
+            public override string ShowApplication(Word word, IWordSlice slice, SymbolSet symbolSet)
+            {
+                StringBuilder str = new StringBuilder();
+                Segment lastSyll = null;
+                Segment lastSegment = null;
+
+                foreach (var segment in word)
+                {
+                    Segment thisSyll;
+                    if (segment.HasAncestor(Tier.Syllable))
+                    {
+                        var ancestors = segment.FindAncestors(Tier.Syllable);
+
+                        thisSyll = ancestors.First();
+                        if (thisSyll != lastSyll)
+                        {
+                            if (lastSyll != null)
+                            {
+                                str.Append("> ");
+                            }
+                            str.Append(" <");
+                            lastSyll = thisSyll;
+                        }
+                    }
+                    else
+                    {
+                        if (lastSyll != null)
+                        {
+                            str.Append("> ");
+                        }
+                        lastSyll = null;
+                    }
+
+                    if (lastSegment != null)
+                    {
+                        if (segment.HasAncestor(Tier.Nucleus) && lastSegment.HasAncestor(Tier.Onset))
+                        {
+                            str.Append(" :: ");
+                        }
+                        else if (segment.HasAncestor(Tier.Coda) && lastSegment.HasAncestor(Tier.Nucleus))
+                        {
+                            str.Append(" : ");
+                        }
+                    }
+
+                    str.Append(symbolSet.Spell(segment.Matrix));
+                    lastSegment = segment;
+                }
+                if (lastSyll != null)
+                {
+                    str.Append(">");
+                }
+                str.AppendLine();
+
+                return str.ToString();
+            }
+
+        } // end SyllableRule
 
         private IEnumerable<Rule> BuildRuleList(List<Syllable> syllableList)
         {
@@ -163,7 +221,6 @@ namespace Phonix
         private string BuildDescription()
         {
             var str = new StringBuilder();
-            str.AppendLine("syllable");
 
             foreach (var onset in Onsets.Where(o => o.Count() > 0))
             {
@@ -172,27 +229,24 @@ namespace Phonix
                 {
                     str.Append(match.ToString());
                 }
-                str.AppendLine();
             }
 
             foreach (var nucleus in Nuclei)
             {
-                str.Append("nucleus ");
+                str.Append(" nucleus ");
                 foreach (var match in nucleus)
                 {
                     str.Append(match.ToString());
                 }
-                str.AppendLine();
             }
 
             foreach (var coda in Codas.Where(o => o.Count() > 0))
             {
-                str.Append("coda ");
+                str.Append(" coda ");
                 foreach (var match in coda)
                 {
                     str.Append(match.ToString());
                 }
-                str.AppendLine();
             }
 
             return str.ToString();

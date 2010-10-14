@@ -226,6 +226,7 @@ and feature matrices.
 * Feature Matrices::
 * Symbols::
 * Rules::
+* Syllables::
 * Imports::
 * Comments::
 * Strings::
@@ -1195,6 +1196,203 @@ Note that if you create sporadic rules in this fashion, Phonix's output will no
 longer be predictable or consistent from run to run. There is no way to ensure
 that a sporadic rule will always apply to given word, nor can you predict which
 words will be affected by which rules in any given invocation.
+
+@node Syllables
+@section Syllables
+
+Many languages use syllables as an important phonological unit. For this reason
+Phonix provides special syntax both for dividing input words into syllables
+with syllable templates and for creating phonological rules that depend on
+syllable structure.
+
+@menu
+* Syllable templates::
+* Syllable rules::
+* Syllable parameters::
+* Syllable-conditioned rules::
+@end menu
+
+@node Syllable templates
+@subsection Syllable templates
+
+The @code{syllable} declaration is used to describe the valid templates that
+are used for syllabification. The form of the syllable template is:
+
+@example
+syllable onset @var{onset-segments} nucleus @var{nucleus-segments} coda @var{coda-segments}
+@end example
+
+The entries @var{onset-segments}, @var{nucleus-segments}, @var{coda-segments}
+are sequences of segments (feature matrices or symbols) as used in the match
+portion of a rule. These define the segments that are allowed at every position
+in the syllable. As a full example, consider the following:
+
+@example
+syllable onset [+cons] nucleus [-cons +son] coda [+son]
+@end example
+
+This allows any @code{[+cons]} segment in syllable onsets, any @code{[-cons
++son]} segment as a nucleus, and only @code{[+son]} segments as the coda. Also
+note that this creates (C)V(C) syllables. Onset clusters and coda clusters are
+not allowed, since only one segment is allowed in the onset, and both the onset
+and the coda are currently optional.
+
+If we wanted to allow an optional liquid to follow a stop in the onset cluster,
+we could rewrite the syllable template this way:
+
+@example
+# Here we split the parts of the syllable template onto different lines for
+# greater readability
+syllable
+    onset [+cons]
+    onset [+cons -cont -son][+son +cont]
+    nucleus [-cons +son]
+    coda [+son]
+@end example
+
+Here @code{onset} appears twice, giving two alternate templates for syllable
+onsets, one which allows any single @code{[+cons]} segment, and another which
+allows a stop (@code{[+cons -cont -son]}) followed by a liquid (@code{[+son
++cont]}). Phonix will attempt to create syllables matching either of the given
+templates.
+
+Any of the syllable parts @code{onset}, @code{nucleus}, and @code{coda} can be
+repeated as many times as desired. You can also abbreviate optional segments in
+a syllable template with @code{()}, as in the following example that allows an
+optional sonorant to precede a non-sonorant in a syllable coda:
+
+@example
+syllable
+    onset [+cons]
+    nucleus [-cons +son]
+    coda ([+son])[+cons -son]
+@end example
+
+However, @code{()} is the only regex-like operator that can be used in a
+syllable template. The extended operators @code{()+} and @code{()*} are not
+allowed, and will result in parsing errors.
+
+To specify that a syllable template should not allow codas (or, more rarely,
+allow no onsets), the @code{coda} or @code{onset} element should be omitted:
+
+@example
+syllable
+    onset [+cons]
+    nucleus [-cons +son]
+@end example
+
+This creates (C)V syllables and does not allow codas. The @code{nucleus}
+element may not be omitted.
+
+@node Syllable rules
+@subsection Syllable rules
+
+A @code{syllable} template is actually a special kind of rule. All rules,
+including syllable rules, apply only once, and apply in the order that they are
+declared. This means that:
+
+@itemize
+
+@item Words are not automatically syllabified when a @code{syllable} rule is
+declared. Rather, input words are syllabified once when the @code{syllable}
+rule occurs.
+
+@item Not every segment will necessarily be assigned to a syllable if there is
+no syllable template that can cover every segment. Phonix does not do anything
+with unsyllabified segments by default. If you want to avoid this, you need to
+write your own rule to delete, add an epenthetic segment, or otherwise modify
+the unsyllabified segments.
+
+@item The syllabification built by a @code{syllable} rule persists after the
+syllable rule occurs, even if segments are inserted or deleted.
+
+@item Insertions, deletions, and other phonological modifications do not
+automatically trigger resyllabification. This means that an inserted segment is
+not automatically added to a syllable, and deleted segments may leave behind
+incomplete syllables.
+
+@item If you want to force a word to be resyllabified after every change, you
+may use the @code{persist} syllable parameter (@pxref{Syllable parameters}).
+However, since insertions and deletions often accompany changes in the syllable
+template, you may want to follow an insertion or deletion rule with a new
+@code{syllable} rule.
+
+@end itemize
+
+If you use the @code{-d} or @code{--debug} flags to @file{phonix}, then when a
+syllable rule applies, the new syllabification of the word is printed. Every
+syllable is written inside angle brackets (@code{<>}), with a double colon (@code{::})
+between the onset and the nucleus, and a single colon (@code{:}) between the nucleus
+and the coda. For example, the syllabification of hypothetical word like
+@code{abarno} with a (C)V(C) template is presented as:
+
+@example
+<a> <b :: a : r> <n : o>
+@end example
+
+The spacing is used to avoid confusing the syllable separators with the colon
+symbol.
+
+@node Syllable parameters
+@subsection Syllable parameters
+
+Syllable parameters affect the way that the syllable template is evaluated and
+the syllable rule is applied. Syllable parameters appear in parenthesis
+directly immediately after @code{syllable}, e.g.:
+
+@example
+syllable (@var{parameter-list}) 
+    onset @var{onset-segments} 
+    nucleus @var{nucleus-segments} 
+    coda @var{coda-segments} 
+@end example
+
+@subsubsection @code{onsetRequired} and @code{codaRequired}
+
+The parameters @code{onsetRequired} and @code{codaRequired} cause the
+@code{onset} and @code{coda} portions of the syllable template respectively to
+be required in all complete syllables. By default the onset and the coda are
+optional. Because of this, the following syllable declaration with no
+parameters creates (C)V(C) syllables:
+
+@example
+syllable
+    onset [+cons]
+    nucleus [-cons +son]
+    coda [+cons]
+@end example
+
+Given an input string such as @code{alona}, this rule will present the
+syllabification @code{<a> <l :: o> <n :: a>}, in which the first syllable has
+neither onset nor coda, and the remaining syllables have no coda.
+
+However, we can make onsets obligatory by adding @code{onsetRequired}:
+
+@example
+syllable (onsetRequired)
+    onset [+cons]
+    nucleus [-cons +son]
+    coda [+cons]
+@end example
+
+Given the input @code{alona}, this syllabifies @code{a <l :: o> <n :: a>},
+leaving the initial @code{a} unsyllabified, since no onset can be found for
+that nucleus. Only the latter two syllables are constructed, since only those
+syllables can onsets as required.
+
+Likewise, we can require both onsets and codas:
+
+@example
+syllable (onsetRequired codaRequired)
+    onset [+cons]
+    nucleus [-cons +son]
+    coda [+cons]
+@end example
+
+
+
+@node Syllable-conditioned rules
+@subsection Syllable-conditioned rules
 
 @node Imports
 @section Imports

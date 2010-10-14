@@ -33,6 +33,7 @@ namespace Phonix
         public readonly IEnumerable<IRuleSegment> Segments;
         public readonly IEnumerable<IRuleSegment> ExcludedSegments;
         private readonly bool _hasExcluded = false;
+        private Random _random = new Random();
 
         public IMatrixMatcher Filter { get; set; }
         public Direction Direction { get; set; }
@@ -110,12 +111,6 @@ namespace Phonix
             }
         }
 
-        private Random _random = new Random();
-
-        public override string ToString()
-        {
-            return Name;
-        }
         public override void Apply(Word word)
         {
             OnEntered(word);
@@ -200,6 +195,69 @@ namespace Phonix
                 }
             }
             return true;
+        }
+
+        public override string ShowApplication(Word word, IWordSlice slice, SymbolSet symbolSet)
+        {
+            FeatureMatrix current = null;
+            Segment firstSliceSeg = null;
+            try
+            {
+                var ctx = new RuleContext();
+                var seg = Segments.GetEnumerator();
+                var pos = slice.GetEnumerator();
+
+                // get the first segment in the slice
+                pos.MoveNext();
+                firstSliceSeg = pos.Current;
+                pos = slice.GetEnumerator(); // reset the pos
+
+                // match until we get to the current segment, so that we can
+                // display which segment was acted upon
+                while (seg.MoveNext() && seg.Current.IsMatchOnlySegment)
+                {
+                    // we call Matches() but throw away the value, since we're
+                    // only calling this in order to move the enumerator
+                    seg.Current.Matches(ctx, pos);
+                }
+                current = pos.MoveNext() ? pos.Current.Matrix : null;
+            }
+            catch (SegmentDeletedException)
+            {
+                // this occurs when we try to get the enumerator for a deleted
+                // segment. this exception (and only this exception) can be
+                // safely swallowed
+            }
+
+            var str = new StringBuilder();
+            bool inSlice = false;
+            foreach (var seg in word)
+            {
+                string marker = " ";
+                Symbol symbol;
+                if (seg == firstSliceSeg)
+                {
+                    inSlice = true;
+                }
+
+                if (current != null && inSlice && seg.Matrix == current)
+                {
+                    marker = ">";
+                }
+
+                try
+                {
+                    symbol = symbolSet.Spell(seg.Matrix);
+                }
+                catch (SpellingException)
+                {
+                    symbol = Symbol.Unknown;
+                }
+
+                str.AppendLine(String.Format("{0} {1} : {2}", marker, symbol, seg.Matrix));
+            }
+
+            return str.ToString();
         }
     }
 }

@@ -14,6 +14,9 @@ namespace Phonix
         public IEnumerable<Tier> Children { get { return _children; } }
         public IEnumerable<Tier> Parents { get { return _parents; } }
 
+        public readonly IMatchable AncestorMatcher;
+        public readonly IMatchable NoAncestorMatcher;
+
         static public readonly Tier Segment = new Tier("segment", new Tier[] {});
         static public readonly Tier Onset = new Tier("onset", new Tier[] { Segment });
         static public readonly Tier Nucleus = new Tier("nucleus", new Tier[] { Segment });
@@ -35,6 +38,9 @@ namespace Phonix
                 this._children.Add(child);
                 child._parents.Add(this);
             }
+
+            AncestorMatcher = new AncestorMatchable(this, true);
+            NoAncestorMatcher = new AncestorMatchable(this, false);
         }
 
         public bool HasChild(Tier tier)
@@ -60,6 +66,29 @@ namespace Phonix
         override public string ToString()
         {
             return Name;
+        }
+
+        private class AncestorMatchable : IMatchable
+        {
+            private readonly Tier _tier;
+            private readonly bool _matchIfHasAncestor;
+
+            public AncestorMatchable(Tier tier, bool matchIfHasAncestor)
+            {
+                _tier = tier;
+                _matchIfHasAncestor = matchIfHasAncestor;
+            }
+
+            public bool Matches(RuleContext ctx, Segment segment)
+            {
+                bool hasAncestor = segment.HasAncestor(_tier);
+                return _matchIfHasAncestor ? hasAncestor : !hasAncestor;
+            }
+
+            override public string ToString()
+            {
+                return (_matchIfHasAncestor ? "" : "*") + _tier.ToString();
+            }
         }
     }
 }
