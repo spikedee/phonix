@@ -87,7 +87,7 @@ namespace Phonix
 
             override public string ToString()
             {
-                return (_matchIfHasAncestor ? "" : "*") + _tier.ToString();
+                return String.Format("<{0}{1}>", _matchIfHasAncestor ? "" : "*", _tier.ToString());
             }
         }
     }

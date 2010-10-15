@@ -67,8 +67,8 @@ The first line above automatically adds the standard feature set to your
 phonology. The second line adds the standard symbol set. Together, these
 provide you with a set of contrastive features and phonetic symbols to allow
 you express whatever phonological processes you desire. You can find out
-exactly what these imports contain by reading @ref{std.features} and
-@ref{std.symbols}.
+exactly what these imports contain by reading @ref{@code{std.features}} and
+@ref{@code{std.symbols}}.
 
 But you've only started. Your phonology contains rules and processes that
 convert underlying forms to surface forms, and the first and most important
@@ -374,7 +374,7 @@ node feature.
 
 Feature nodes can have any kind of feature as a child, including other nodes.
 This allows you to create a multi-level hierarchies. For an example of such a
-feature tree, see @ref{std.features}.
+feature tree, see @ref{@code{std.features}}.
 
 Feature nodes are @dfn{present} if any of their child features are present
 (i.e. if any child feature has a value other than @code{*feature}), otherwise
@@ -491,7 +491,7 @@ to the symbol /sk/, and not to the sequence /s/+/k/. To disambiguate such
 strings in your rules, you can add spaces. The string @code{s k} appearing in a
 rule will be interpreted as /s/+/k/.
 
-For many examples of symbol definitions, see @ref{std.symbols}.
+For many examples of symbol definitions, see @ref{@code{std.symbols}}.
 
 @node Diacritic Symbols
 @subsection Diacritic Symbols
@@ -533,7 +533,8 @@ diacritics necessary to represent your output.
 
 @end enumerate
 
-For many examples of diacritic definitions, see @ref{std.symbols.diacritics}.
+For many examples of diacritic definitions, see
+@ref{@code{std.symbols.diacritics}}.
 
 @node Rules
 @section Rules
@@ -866,8 +867,8 @@ this can get very cumbersome--consider that to write a @emph{total}
 assimilation rule, you would need include every single feature as a variable!
 
 However, these processes are considerably simplified by using node features.
-For example, using @ref{std.features}, we can write a nasal place assimilation
-rule as follows:
+For example, using @ref{@code{std.features}}, we can write a nasal place
+assimilation rule as follows:
 
 @example
 rule nasal-place-assimilation
@@ -891,8 +892,8 @@ rule intervocalic-gemination
 
 Here a consonantal segment is doubled when surrounded on either side by
 non-consonantal segments. The feature @code{ROOT} has as its children every
-feature in @code{std.features}, and so the inserted segment copies every value
-from the preceding segment.
+feature in @code{@code{std.features}}, and so the inserted segment copies every
+value from the preceding segment.
 
 @node Scalar feature value operators
 @subsection Scalar feature value operators
@@ -1049,7 +1050,7 @@ can). There are no non-greedy match operators in Phonix.
 @end itemize
 
 Many rules using multiple match segments can be expressed more succinctly by
-using a filter instead. @xref{Filter}.
+using a filter instead. @xref{@code{filter}}.
 
 @node Rule parameters
 @subsection Rule parameters
@@ -1072,14 +1073,14 @@ parameters are separated by a space, not by a comma.
 Supported rule parameters are discussed below.
 
 @menu
-* Direction::
-* Filter::
-* Persistent rules::
-* Sporadic rules::
+* @code{direction}::
+* @code{filter}::
+* @code{persist}::
+* @code{applicationRate}::
 @end menu
 
-@node Direction
-@subsubsection Direction
+@node @code{direction}
+@subsubsection @code{direction}
 
 The rule direction defines in which direction the rule scans for matching
 contexts. This can be important if one application of a rule may create the
@@ -1115,8 +1116,8 @@ This rule will transform @code{astga} into @code{azdga} as expected. First /t/
 followed by /g/ is evaluated, transforming the /t/ into /d/. Then /s/ followed
 by /d/ is evaluated, and the /s/ becomes /z/.
 
-@node Filter
-@subsubsection Filter
+@node @code{filter}
+@subsubsection @code{filter}
 
 Rule filters are a powerful way to express rules that only apply to certain
 classes of segments and ignore intervening segments. A familiar real-world
@@ -1141,8 +1142,8 @@ non-syllabic constants from the input for the duration of the rule. Therefore,
 the context of the rule is written as if the front vowel that triggers vowel
 harmony immediately follows the matching vowel.
 
-@node Persistent rules
-@subsubsection Persistent rules
+@node @code{persist}
+@subsubsection @code{persist}
 
 A @dfn{persistent rule} is a rule that applies at all stages of the phonology,
 rather than at a specific point in the derivation of the output form.
@@ -1167,8 +1168,8 @@ regardless of where in your Phonix file the persistent rule is
 defined--persistent rules ignore normal rule ordering. However, the ordering of
 persistent rules relative to each other is maintained.
 
-@node Sporadic rules
-@subsubsection Sporadic rules
+@node @code{applicationRate}
+@subsubsection @code{applicationRate}
 
 A @dfn{sporadic rule} is a rule which does not apply to every word in the input
 lexicon, but rather applies randomly to some words and not others. Phonix
@@ -1209,7 +1210,7 @@ syllable structure.
 * Syllable templates::
 * Syllable rules::
 * Syllable parameters::
-* Syllable-conditioned rules::
+* Using syllable elements in rules::
 @end menu
 
 @node Syllable templates
@@ -1389,10 +1390,73 @@ syllable (onsetRequired codaRequired)
     coda [+cons]
 @end example
 
+This will syllabify @code{alona} as @code{a <l :: o : n> a}, leaving both the
+initial and the final @code{a} unsyllabified, since the medial @code{lon} is
+the only syllable that can be constructed with both an onset and a coda.
 
+Finally, in the unusual case that we wish to require codas but not onsets, we
+can create the following:
 
-@node Syllable-conditioned rules
-@subsection Syllable-conditioned rules
+@example
+syllable (codaRequired)
+    onset [+cons]
+    nucleus [-cons +son]
+    coda [+cons]
+@end example
+
+This syllabifies @code{alona} as @code{<a : l> <o : n> a}, with the first two
+syllables having no onsets, and the final @code{a} unsyllabified since no coda
+can be found for it.
+
+@subsubsection @code{nucleusPreference}
+
+The @code{nucleusPreference} parameter controls whether syllable nuclei prefer
+to fall to the right or to the left in situations where there is ambiguity as
+to where the nucleus should fall. It takes two values, @code{right} and
+@code{left}. The value @code{right} is the default.
+
+This in turn controls whether rising diphthongs or falling diphthongs are
+preferred in situations where either one is allowed by the syllable template.
+Consider an underlying vowel sequence /ui/ with allophonic rules that allow /u/
+to be both [u] and [w], and /i/ to be [i] and [j]. We'll represent this by the
+following extremely simplified syllable template:
+
+@example
+syllable
+    onset []([+son])
+    nucleus [-cons +son]
+    coda []
+@end example
+
+This template requires vowels in the nuclear position, but allows anything into
+onsets and codas. Onsets may also form clusters with sonorants as the second
+element. Given this template, the input string @code{bui} could be syllabified
+as @code{<bu :: i>} (i.e. [bwi]) or @code{<b :: u : i>} (i.e. [buj]).
+
+The default case is to produce @code{<bu :: i>}, which is equivalent to
+@code{nucleusPreference=right}. To force the nucleus to the left, use
+@code{nucleusPreference=left}:
+
+@example
+syllable (nucleusPreference=left)
+    onset []([+son])
+    nucleus [-cons +son]
+    coda []
+@end example
+
+This template will always produce syllables with the nuclei aligned to the left
+whenever possible, creating @code{<b :: u : i>} as the syllabification of
+@code{bui}.
+
+@subsubsection @code{persist}
+
+The @code{persist} parameter has the same affect as the @code{persist}
+parameter on rule declarations: it causes the syllabification rule to apply
+after every other rule, ensuring that words are automatically resyllabified
+after every change.
+
+@node Using syllable elements in rules
+@subsection Using syllable elements in rules
 
 @node Imports
 @section Imports
@@ -1403,11 +1467,11 @@ covered in this section.
 
 @menu
 * Importing files::
-* std.features::
-* std.symbols::
-* std.symbols.diacritics::
-* std.symbols.ipa::
-* std.symbols.ipa.diacritics::
+* @code{std.features}::
+* @code{std.symbols}::
+* @code{std.symbols.diacritics}::
+* @code{std.symbols.ipa}::
+* @code{std.symbols.ipa.diacritics}::
 @end menu
 
 @node Importing files
@@ -1449,8 +1513,8 @@ The @dfn{named resources} that Phonix looks for are special "filenames" that
 represent built-in feature or symbol sets meant to simplify common linguistic
 tasks. The following sections describe these resources.
 
-@node std.features
-@subsection std.features
+@node @code{std.features}
+@subsection @code{std.features}
 
 The standard feature set contains the commonly used features that you probably
 learned about in your introductory Phonology class. You include the standard
@@ -1496,8 +1560,8 @@ The @code{std.features} file itself looks like this:
 @verbatiminclude Resx/std.features
 @end example
 
-@node std.symbols
-@subsection std.symbols
+@node @code{std.symbols}
+@subsection @code{std.symbols}
 
 The standard symbol set contains over 100 phonetic symbols that you can use for
 input and output. In order to use the standard symbol set, you have to first
@@ -1510,8 +1574,8 @@ ASCII characters and is based on the X-SAMPA IPA encoding.
 @verbatiminclude Resx/std.symbols
 @end example
 
-@node std.symbols.diacritics
-@subsection std.symbols.diacritics
+@node @code{std.symbols.diacritics}
+@subsection @code{std.symbols.diacritics}
 
 The standard diacritic set includes diacritics intended for use with
 @code{std.symbols}. These diacritics are 7-bit ASCII characters based on the
@@ -1521,8 +1585,8 @@ X-SAMPA IPA encoding.
 @verbatiminclude Resx/std.symbols.diacritics
 @end example
 
-@node std.symbols.ipa
-@subsection std.symbols.ipa
+@node @code{std.symbols.ipa}
+@subsection @code{std.symbols.ipa}
 
 The IPA symbol set contains the same notional symbols as @code{std.symbols},
 but it uses IPA Unicode characters instead of ASCII X-SAMPA. To use the IPA
@@ -1538,8 +1602,8 @@ used in this PDF, so many of these symbols may appear to be blank.
 @verbatiminclude Resx/std.symbols.ipa
 @end example
 
-@node std.symbols.ipa.diacritics
-@subsection std.symbols.ipa.diacritics
+@node @code{std.symbols.ipa.diacritics}
+@subsection @code{std.symbols.ipa.diacritics}
 
 This set contains IPA diacritics for use with @code{std.symbols.ipa}. The
 diacritics contained here are the same as those in

@@ -224,7 +224,7 @@ namespace Phonix
 
             foreach (var onset in Onsets.Where(o => o.Count() > 0))
             {
-                str.Append("onset ");
+                str.Append(" onset ");
                 foreach (var match in onset)
                 {
                     str.Append(match.ToString());
