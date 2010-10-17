@@ -91,7 +91,7 @@ install: $(PHONIX) $(ANTLR) $(DOC_INFO)
 	chmod 755 phonix
 	cp phonix $(bindir)
 	cp $(DOC_INFO) /usr/share/info
-	install-info $(DOC_INFO)
+	ginstall-info $(DOC_INFO) /usr/share/info/dir
 
 uninstall: prefix?=/usr/local
 uninstall: exec_prefix?=$(prefix)

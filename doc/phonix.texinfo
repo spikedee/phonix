@@ -79,7 +79,7 @@ Phonix, you will write this as such:
 
 @example
 rule i-nasal 
-[-cons +fr] => i / _ n
+    [-cons +fr] => i / _ n
 @end example
 
 A well educated phonologist such as yourself will immediately recognize the
@@ -253,9 +253,7 @@ rules.
 The simplest feature declaration looks like this:
 
 @example
-
 feature @var{feature-name}
-
 @end example
 
 The name of a feature can generally be anything, so long as it doesn't contain
@@ -263,9 +261,7 @@ spaces or characters with a special meaning in Phonix. For detailed rules, see
 @ref{Strings}. For example:
 
 @example
-
 feature voice
-
 @end example
 
 The preceding example creates @code{voice} as a @dfn{binary feature}, meaning
@@ -276,9 +272,7 @@ default all features are binary. To declare a feature of a different type, you
 must use the extended syntax:
 
 @example
-
 feature @var{feature-name} (@var{parameter-name}=@var{parameter-value})
-
 @end example
 
 Note that the parentheses around the parameter list are part of the syntax and
@@ -295,9 +289,7 @@ These feature types are discussed in detail in the following sections.
 The following example declares a unary feature @samp{un}:
 
 @example
-
 feature un (type=unary)
-
 @end example
 
 Unary features are either @dfn{present} or @dfn{absent}. A unary feature which
@@ -312,17 +304,15 @@ Unary features are also called "privative features" in linguistic literature.
 The following example declares a binary feature @samp{bn}:
 
 @example
-
 feature bn (type=binary)
-
 @end example
 
 Binary features have both @dfn{positive} and @dfn{negative} values, written as
 @code{+bn} and @code{-bn} respectively. Additionally, a binary feature may be
 @dfn{absent}, which is written the same way as for unary features: @code{*bn}.
 For example, the features @samp{anterior} and @samp{distributed} are not
-meaningful except as applied to coronals, so a labial segment would have the
-value @code{*anterior}. 
+meaningful for labials, so a labial segment would have the value
+@code{*anterior}. 
 
 @node Scalar Features
 @subsection Scalar Features
@@ -335,9 +325,9 @@ feature sc (type=scalar)
 
 Scalar features may have any non-negative integer value, and are written as
 @code{sc=@var{value}}. For example, @code{sc=0}, @code{sc=1}, and
-@code{sc=123456789} are all valid scalar feature values. However, @code{sc=-1}
-and @code{sc=foo} are not valid. Scalar features may also be absent, in which
-case they are written @code{*sc}.
+@code{sc=123456789} are all valid scalar feature values. However, negative
+values such as @code{sc=-1} and strings such as @code{sc=foo} are not valid.
+Scalar features may also be absent, in which case they are written @code{*sc}.
 
 Scalar features may take two additional parameters @code{min} and @code{max} to
 specify the minimum and maximum value for the feature, as in the following
@@ -428,7 +418,7 @@ Symbols in Phonix are used for three things:
 
 @enumerate
 
-@item To define the feature matrices represented by the strings in your lexicon
+@item To define the phonetic symbols represented by the strings in your lexicon
 files.
 
 @item To provide a convenient shortcut for writing rules that refer to specific
@@ -462,9 +452,15 @@ symbol s [+cons -son +cont +str -vc +ant -dist]
 Having this symbol declaration does three things:
 
 @enumerate
-@item Allows you to use the string @code{s} in your lexicon files or other input to Phonix
-@item Allows you to use @code{s} as a shorthand for @code{[+cons -son +cont +str -vc +ant -dist]} in your rules
-@item Causes the feature matrix @code{[+cons -son +cont +str -vc +ant -dist]} to be translated to @code{s} in your rule output.
+
+@item Allows you to use the string @code{s} in your input to Phonix.
+
+@item Allows you to use @code{s} as a shorthand for @code{[+cons -son +cont
++str -vc +ant -dist]} in your rules.
+
+@item Causes the feature matrix @code{[+cons -son +cont +str -vc +ant -dist]}
+to be translated to @code{s} in phonix output.
+
 @end enumerate
 
 Every character you use in in your lexicon file must be defined as a symbol, or
@@ -473,7 +469,7 @@ feature matrix for which there is no symbol, Phonix will print a warning and
 insert the dummy symbol @code{[?]} as a placeholder in your output.
 
 Any Unicode character that doesn't have a special meaning in Phonix can be used
-in a symbol. So if you want to define ☃ (Unicode snowman) as a symbol in your
+as a symbol. So if you want to define ☃ (Unicode snowman) as a symbol in your
 phonology, you're welcome to do so.
 
 Symbols can have any number of characters in them. Phonix always maps input
@@ -487,9 +483,7 @@ symbol sk [...]
 @end example
 
 If your input or rules contain the characters @samp{sk}, these will be mapped
-to the symbol /sk/, and not to the sequence /s/+/k/. To disambiguate such
-strings in your rules, you can add spaces. The string @code{s k} appearing in a
-rule will be interpreted as /s/+/k/.
+to the symbol /sk/, and not to the sequence /s/+/k/.
 
 For many examples of symbol definitions, see @ref{@code{std.symbols}}.
 
@@ -651,10 +645,6 @@ rule final-postnasal-voicing
     [+cont] => [+vc] / [+nas] _ $
 @end example
 
-(Note that we've broken this rule into two lines. This is perfectly acceptable:
-Phonix is usually indifferent to the spaces and line breaks in your phonology
-file.)
-
 If we wish to add an exception to this rule, we use the @emph{excluded
 context}. This is indicated by a double-slash @code{//} after the context. If
 the rule includes an excluded context, then phonix will check both that the
@@ -685,9 +675,9 @@ rule voicing-with-exception
 @end example
 
 Here, we specify that voicing occurs when the continuant is preceded by any
-segment. (A feature matrix with no values @code{[]} effectively acts as a match
-for any segment.) This illustrates that an excluded context can usually be
-indicated by a properly constructed matching context and vice-versa. The
+segment. (A feature matrix with no values, indicated by @code{[]}, acts as a
+match for any segment.) This illustrates that an excluded context can usually
+be indicated by a properly constructed matching context and vice-versa.  The
 excluded context construct is provided only to make rules clearer and easier to
 understand.
 
@@ -824,8 +814,8 @@ especially convenient because it allows us to capture both @code{+ro} segments
 can't be represented in a natural class.
 
 Conversely, you can test for the absence of a particular node by preceding the
-node name with @code{*},as with other features. For example, the following rule
-centralizes vowels after non-@code{Coronal} segments.
+node name with @code{*}, as with other features. For example, the following
+rule centralizes vowels after non-@code{Coronal} segments.
 
 @example
 rule nonlabial-centralization
@@ -1042,7 +1032,7 @@ Phonix engine.
 not optional.
 
 @item Phonix does not do @dfn{backtracking}, so a rule context involving
-multiple @code{*} or @code{+} expressions may not work correctly.
+multiple @code{*} or @code{+} expressions may not work as expected.
 
 @item Phonix matches are always greedy (taking in as many segments as they
 can). There are no non-greedy match operators in Phonix.
@@ -1082,12 +1072,12 @@ Supported rule parameters are discussed below.
 @node @code{direction}
 @subsubsection @code{direction}
 
-The rule direction defines in which direction the rule scans for matching
-contexts. This can be important if one application of a rule may create the
-context for further applications. To specify the direction for a rule, specify
-the parameter @code{direction=@var{direction-value}}. Valid direction values
-are @code{left-to-right} and @code{right-to-left}, with @code{left-to-right} as
-the default.
+The @code{direction} parameter defines the direction in which the rule scans
+for matching contexts. This can be important if one application of a rule may
+create the context for further applications. To specify the direction for a
+rule, specify the parameter @code{direction=@var{direction-value}}. Valid
+direction values are @code{left-to-right} and @code{right-to-left}, with
+@code{left-to-right} as the default.
 
 A good example for a direction-sensitive rule is voice agreement. Suppose we
 have a rule that all consonants in a cluster must agree with the voice of the
@@ -1104,8 +1094,8 @@ Given an input word like @code{astga}, the output of this rule will be
 because the default rule direction is to the right. First the /s/ is evaluated,
 but this /s/ is followed by /t/, so the rule does not apply. Then /t/ followed
 by /g/ is evaluated. This does match the required context, so /t/ becomes /d/.
-However, the /s/ is never reevaluated. To fix this, specify that the rule
-applies from the right to the left:
+However, the /s/ is never reevaluated, leaving @code{asdga} as the result. To
+fix this, specify that the rule applies from the right to the left:
 
 @example
 rule voicing-agreement (direction=right-to-left)
@@ -1181,12 +1171,12 @@ allows you to create this kind of rule with the rule parameter
 # This rule deletes /b/ 25% of the time
 rule sometimes-delete (applicationRate=0.25) b => *
 
-# With applicationRate=1, the rule applies 100% of the time. This is equivalent
-# to omitting the applicationRate parameter entirely.
+# With applicationRate=1, the rule applies 100% of the time. This is
+# equivalent to omitting the applicationRate parameter entirely.
 rule always-delete (applicationRate=1) a => *
 
-# With applictionRate=0, the rule applies 0% of the time. This is equivalent to
-# leaving the rule out.
+# With applictionRate=0, the rule applies 0% of the time. This is
+# equivalent to leaving the rule out.
 rule never-delete (applicationRate=0) c => * 
 @end example
 
@@ -1220,7 +1210,10 @@ The @code{syllable} declaration is used to describe the valid templates that
 are used for syllabification. The form of the syllable template is:
 
 @example
-syllable onset @var{onset-segments} nucleus @var{nucleus-segments} coda @var{coda-segments}
+syllable 
+    onset @var{onset-segments} 
+    nucleus @var{nucleus-segments} 
+    coda @var{coda-segments}
 @end example
 
 The entries @var{onset-segments}, @var{nucleus-segments}, @var{coda-segments}
@@ -1233,17 +1226,15 @@ syllable onset [+cons] nucleus [-cons +son] coda [+son]
 @end example
 
 This allows any @code{[+cons]} segment in syllable onsets, any @code{[-cons
-+son]} segment as a nucleus, and only @code{[+son]} segments as the coda. Also
-note that this creates (C)V(C) syllables. Onset clusters and coda clusters are
-not allowed, since only one segment is allowed in the onset, and both the onset
-and the coda are currently optional.
++son]} segment as a nucleus, and only @code{[+son]} segments as the coda.  This
+creates (C)V(C) syllables, since onsets and codas are optional by default. Onset
+clusters and coda clusters are not allowed by this template, since only one
+segment is allowed in the onset.
 
 If we wanted to allow an optional liquid to follow a stop in the onset cluster,
 we could rewrite the syllable template this way:
 
 @example
-# Here we split the parts of the syllable template onto different lines for
-# greater readability
 syllable
     onset [+cons]
     onset [+cons -cont -son][+son +cont]
@@ -1293,10 +1284,6 @@ including syllable rules, apply only once, and apply in the order that they are
 declared. This means that:
 
 @itemize
-
-@item Words are not automatically syllabified when a @code{syllable} rule is
-declared. Rather, input words are syllabified once when the @code{syllable}
-rule occurs.
 
 @item Not every segment will necessarily be assigned to a syllable if there is
 no syllable template that can cover every segment. Phonix does not do anything
@@ -1444,9 +1431,9 @@ syllable (nucleusPreference=left)
     coda []
 @end example
 
-This template will always produce syllables with the nuclei aligned to the left
-whenever possible, creating @code{<b :: u : i>} as the syllabification of
-@code{bui}.
+This template will produce syllables with the nuclei aligned to the left
+whenever possible, creating @code{<b :: u : i>} ([buj]) as the syllabification
+of @code{bui}.
 
 @subsubsection @code{persist}
 
@@ -1457,6 +1444,51 @@ after every change.
 
 @node Using syllable elements in rules
 @subsection Using syllable elements in rules
+
+To write a rule that is triggered by a particular syllable position, you can
+include the syllable position inside angle brackets (@code{<>}) inside a
+feature matrix, as if it were a special feature value. The recognized syllable
+features are @code{<syllable>}, @code{<onset>}, @code{<nucleus>}, and
+@code{<coda>}. For example, the following rule devoices non-sonorant obstruents
+in coda positions:
+
+@example
+rule coda-devoice
+    [-son +cons <coda>] => [-vc]
+@end example
+
+In the same vein, the following rule ensures that all nuclear segments are
+marked as @code{+syll}:
+
+@example
+rule nucleus-syllabic
+    [<nucleus>] => [+syll]
+@end example
+
+The syllable features @code{<onset>}, @code{<nucleus>}, and @code{<coda>} work
+exactly as expected, matching any segment which is assigned to the onset,
+nucleus, and coda portions of the syllable, respectively. The @code{<syllable>}
+feature matches any segment that has been assigned to any syllable, and fails
+to match only when the segment in question is unsyllabified.
+
+There are also features that match segments @emph{not} in a particular syllable
+portion, marked with an asterisk (@code{*}) inside the angle brackets, as with
+null feature values: @code{<*onset>}, @code{<*nucleus>}, @code{<*coda>}, and
+@code{<*syllable>}. The following rule deletes segments which could not be
+assigned to any syllable:
+
+@example
+rule delete-unsyllabified
+    [<*syllable>] => *
+@end example
+
+Likewise, the following inserts an epenthetic /i/ before unsyllabified
+consonants:
+
+@example
+rule epenthetic-i
+    * => i / _ [+cons <*syllable>]
+@end example
 
 @node Imports
 @section Imports
@@ -1494,9 +1526,8 @@ import "/home/linguist/latin.phonix"
 import "C:\greek.phonix"
 @end example
 
-If the file name that you give after @code{import} is not an absolute path
-(however such a path is defined on your local system), Phonix looks for the
-file you imported in the following places:
+If the file name that you give after @code{import} is not an absolute path,
+Phonix looks for the file you imported in the following places:
 
 @enumerate
 
@@ -1567,8 +1598,8 @@ The standard symbol set contains over 100 phonetic symbols that you can use for
 input and output. In order to use the standard symbol set, you have to first
 import the standard feature set @code{std.features}, since the standard symbols
 depend on the features defined in that set. You include the standard symbols by
-writing @code{import std.symbols}. The standard symbol set uses only 7-bit
-ASCII characters and is based on the X-SAMPA IPA encoding.
+writing @code{import std.symbols}. The standard symbol set uses only 7-bit ASCII
+characters and is based on the X-SAMPA IPA encoding.
 
 @example
 @verbatiminclude Resx/std.symbols
@@ -1629,7 +1660,7 @@ feature ex # this comment explains what 'ex' means
 @section Strings
 
 Any time that Phonix expects you to provide a string, as for feature names,
-symbols, or a rule names, you can type almost anything you want.  The only
+symbols, or rule names, you can type almost anything you want.  The only
 exception is if the contents of the string somehow confuse the Phonix compiler.
 Don't do that. Everything else is fine.
 
