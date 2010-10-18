@@ -138,7 +138,14 @@ namespace Phonix
                         }
                     }
 
-                    str.Append(symbolSet.Spell(segment.Matrix));
+                    try
+                    {
+                        str.Append(symbolSet.Spell(segment.Matrix));
+                    }
+                    catch (SpellingException)
+                    {
+                        str.Append(Symbol.Unknown);
+                    }
                     lastSegment = segment;
                 }
                 if (lastSyll != null)

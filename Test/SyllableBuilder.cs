@@ -150,6 +150,8 @@ namespace Phonix.Test
             Assert.IsFalse(rule.Description.Contains(Environment.NewLine));
         }
 
+        // TODO: write a test for ShowApplication
+
         [Test]
         public void CAC()
         {
