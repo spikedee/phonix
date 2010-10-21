@@ -49,18 +49,18 @@ namespace Phonix
         }
     }
 
-    public class SpellingException : PhonixException 
+    public class RuleFormatException : PhonixException
     {
-        public SpellingException(string desc) 
-            : base(desc) 
+        public RuleFormatException(string message)
+            : base(message)
         {
         }
     }
 
-    public class RuleException : PhonixException
+    public class SpellingException : PhonixException 
     {
-        public RuleException(string message)
-            : base(message)
+        public SpellingException(string desc) 
+            : base(desc) 
         {
         }
     }

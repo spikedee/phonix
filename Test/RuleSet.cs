@@ -94,6 +94,22 @@ namespace Phonix.Test
         }
 
         [Test]
+        public void SyllableRuleRedefined()
+        {
+            int calledRedefined = 0;
+            var rs = new RuleSet();
+            var syll = new SyllableBuilder();
+            syll.Nuclei.Add(new IMatrixMatcher[] { new MatrixMatcher(FeatureMatrixTest.MatrixA) });
+
+            rs.RuleRedefined += (old, newer) => { calledRedefined++; };
+
+            rs.Add(syll.GetSyllableRule());
+            rs.Add(syll.GetSyllableRule());
+
+            Assert.AreEqual(0, calledRedefined);
+        }
+
+        [Test]
         public void RuleApplied()
         {
             int entered = 0;

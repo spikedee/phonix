@@ -36,7 +36,7 @@ namespace Phonix
         public void Add(AbstractRule rule)
         {
             RuleDefined(rule);
-            foreach (AbstractRule dup in OrderedRules.Where(existing => existing.Name.Equals(rule.Name)))
+            foreach (AbstractRule dup in OrderedRules.OfType<Rule>().Where(existing => existing.Name.Equals(rule.Name)))
             {
                 RuleRedefined(dup, rule);
             }

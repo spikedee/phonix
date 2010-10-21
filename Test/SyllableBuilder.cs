@@ -150,7 +150,21 @@ namespace Phonix.Test
             Assert.IsFalse(rule.Description.Contains(Environment.NewLine));
         }
 
-        // TODO: write a test for ShowApplication
+        [Test]
+        public void ShowApplication()
+        {
+            var syll = new SyllableBuilder();
+
+            syll.Onsets.Add(new IMatrixMatcher[] { SegmentC });
+            syll.Nuclei.Add(new IMatrixMatcher[] { SegmentA });
+            syll.Codas.Add(new IMatrixMatcher[] { SegmentC });
+
+            var rule = syll.GetSyllableRule();
+            var word = GetTestWord();
+
+            // guarantee that this doesn't throw an exception
+            rule.ShowApplication(word, word.Slice(Direction.Rightward).First(), new SymbolSet());
+        }
 
         [Test]
         public void CAC()

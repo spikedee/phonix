@@ -13,12 +13,18 @@ namespace Phonix
 
         private static StringBuilder _inputBuffer = new StringBuilder();
 
-        private enum ExitCodes : int
+#if test
+        // this is used to force exceptions inside Main()
+        public static event Action TestCallback;
+#endif
+
+        internal enum ExitCode : int
         {
             Success = 0,
             BadArgument = 1,
             ParseError = 2,
             FileNotFound = 3,
+            FatalWarning = 4,
             UnhandledException = Int32.MaxValue
         }
 
@@ -31,9 +37,9 @@ namespace Phonix
             public Log.Level WarningLevel = Log.Level.Error;
         }
 
-        public static int Main(string[] args)
+        public static int Main(params string[] args)
         {
-            ExitCodes rv = ExitCodes.Success;
+            ExitCode rv = ExitCode.Success;
 
             // set up our crash handler
             AppDomain.CurrentDomain.UnhandledException += 
@@ -43,6 +49,14 @@ namespace Phonix
             Log logger = null;
             try
             {
+#if test
+                // call the test callback if necessary
+                var callback = TestCallback;
+                if (callback != null)
+                {
+                    callback();
+                }
+#endif
                 config = ParseArgs(args);
 
                 Phonology phono = new Phonology();
@@ -55,17 +69,22 @@ namespace Phonix
             catch (ArgumentException ex)
             {
                 Console.Error.WriteLine(ex.Message);
-                rv = ExitCodes.BadArgument;
+                rv = ExitCode.BadArgument;
             }
             catch (ParseException px)
             {
                 Console.Error.WriteLine(px.Message);
-                rv = ExitCodes.ParseError;
+                rv = ExitCode.ParseError;
             }
             catch (FileNotFoundException fex)
             {
                 Console.Error.WriteLine("Could not find file '{0}'.", fex.Message);
-                rv = ExitCodes.FileNotFound;
+                rv = ExitCode.FileNotFound;
+            }
+            catch (FatalWarningException)
+            {
+                Console.Error.WriteLine("Exiting due to errors");
+                rv = ExitCode.FatalWarning;
             }
             finally
             {

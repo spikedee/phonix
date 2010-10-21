@@ -59,7 +59,7 @@ debug: CS_DEBUG=-debug -define:debug
 debug: clean $(PHONIX)
 
 $(PHONIX_TEST): $(TEST_FILES) $(RESX_FILES)
-	$(GMCS) -optimize- -debug -r:nunit.framework.dll -lib:/usr/lib/cli/nunit.framework-2.4/ $(TEST_FILES) $(PARSER_FILES)
+	$(GMCS) -optimize- -debug -d:test -r:nunit.framework.dll -lib:/usr/lib/cli/nunit.framework-2.4/ $(TEST_FILES) $(PARSER_FILES)
 
 doc: $(DOC_FILES)
 

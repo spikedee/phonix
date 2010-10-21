@@ -385,7 +385,7 @@ namespace Phonix.Parse
                         "unbalanced rule action ({0} segments before '=>', {1} segments after)", 
                         left.Count, 
                         right.Count);
-                throw new RuleException(msg);
+                throw new RuleFormatException(msg);
             }
 
             var result = new List<IRuleSegment>();
@@ -396,7 +396,7 @@ namespace Phonix.Parse
             {
                 if (leftObj.Current == null && rightObj.Current == null)
                 {
-                    throw new RuleException("can't map zero to zero");
+                    throw new RuleFormatException("can't map zero to zero");
                 }
                 else if (leftObj.Current == null)
                 {
