@@ -244,11 +244,11 @@ actionTerm returns [IEnumerable<IMatrixCombiner> val]:
 
 ruleContext returns [RuleContext val]
     @init { $val = new RuleContext(); }:
-    (BOUNDARY { $val.Left.Add(Word.LeftBoundary); })? 
+    (BOUNDARY { $val.Left.Add(WordBoundary.Left); })? 
     (left=contextTerm { $val.Left.AddRange($left.val); })* 
     UNDERSCORE
     (right=contextTerm { $val.Right.AddRange($right.val); })* 
-    (BOUNDARY { $val.Right.Add(Word.RightBoundary); })?
+    (BOUNDARY { $val.Right.Add(WordBoundary.Right); })?
     ;
 
 contextTerm returns [IEnumerable<IRuleSegment> val]

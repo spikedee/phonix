@@ -7,13 +7,30 @@ namespace Phonix
 {
     public abstract class SegmentEnumerator : IEnumerator<Segment>
     {
+        internal SegmentEnumerator(Word.Node node, IMatrixMatcher filter)
+        {
+            if (node == null)
+            {
+                throw new ArgumentNullException("node");
+            }
+            if (node.Deleted)
+            {
+                throw new SegmentDeletedException();
+            }
+
+            _startNode = node;
+            _lastNode = node.Word.Last;
+            _filter = filter;
+            Reset();
+        }
+
         private readonly IMatrixMatcher _filter;
 
-        protected internal LinkedListNode<MutableSegment> _node;
-        protected internal LinkedListNode<MutableSegment> _startNode;
-        protected internal LinkedListNode<MutableSegment> _lastNode;
-        protected internal bool _beforeFirst = false;
-        protected internal bool _afterLast = false;
+        internal Word.Node _node;
+        internal Word.Node _startNode;
+        internal Word.Node _lastNode;
+        protected bool _beforeFirst = false;
+        protected bool _afterLast = false;
 
         public abstract class Marker
         {
@@ -24,7 +41,7 @@ namespace Phonix
         private sealed class MarkerImpl : Marker
         {
             private SegmentEnumerator _seg;
-            private LinkedListNode<MutableSegment> _node;
+            private Word.Node _node;
             private bool _beforeFirst = false;
             private bool _afterLast = false;
 
@@ -66,30 +83,13 @@ namespace Phonix
             }
         }
 
-        protected SegmentEnumerator(LinkedListNode<MutableSegment> node, IMatrixMatcher filter)
-        {
-            if (node == null)
-            {
-                throw new ArgumentNullException("node");
-            }
-            if (node.List == null)
-            {
-                throw new SegmentDeletedException();
-            }
-
-            _startNode = node;
-            _lastNode = node.List.Last;
-            _filter = filter;
-            Reset();
-        }
-
         public bool MoveNext()
         {
             if (!_beforeFirst)
             {
                 _node = _node.Next;
             }
-            while (_node != null && _filter != null && !_filter.Matches(null, _node.Value))
+            while (_node != null && _filter != null && !_filter.Matches(null, _node.Segment))
             {
                 _node = _node.Next;
             }
@@ -107,18 +107,18 @@ namespace Phonix
         {
             if (!_afterLast)
             {
-                _node = _node.Previous;
+                _node = _node.Prev;
             }
-            while (_node != null && _filter != null && !_filter.Matches(null, _node.Value))
+            while (_node != null && _filter != null && !_filter.Matches(null, _node.Segment))
             {
-                _node = _node.Previous;
+                _node = _node.Prev;
             }
             _afterLast = false;
 
             if (_node == null)
             {
                 _beforeFirst = true;
-                _node = _startNode.List.First;
+                _node = _startNode.Word.First;
             }
 
             return !_beforeFirst;
@@ -129,12 +129,12 @@ namespace Phonix
             get 
             { 
                 CheckValid();
-                return _node.Value;
+                return _node.Segment;
             }
             set 
             {
                 CheckValid();
-                _node.Value = value; 
+                _node.Segment = value; 
             }
         }
 
@@ -184,6 +184,10 @@ namespace Phonix
             if (_afterLast)
             {
                 throw new InvalidOperationException("The segment enumeration has passed the end of the set");
+            }
+            if (_node.Deleted)
+            {
+                throw new SegmentDeletedException();
             }
         }
     }

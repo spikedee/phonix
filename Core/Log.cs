@@ -134,7 +134,7 @@ namespace Phonix
             WriteLog(Level.Verbose, "rule {0} exited", rule);
         }
 
-        private void LogRuleApplied(AbstractRule rule, Word word, IWordSlice slice)
+        private void LogRuleApplied(AbstractRule rule, Word word, WordSlice slice)
         {
             // since this method is potentially expensive, skip it if we're not
             // going to log anything

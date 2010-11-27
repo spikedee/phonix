@@ -127,7 +127,7 @@ namespace Phonix
             }
         }
 
-        internal IEnumerable<IWordSlice> AppliedEnumeration(Word word)
+        internal IEnumerable<WordSlice> AppliedEnumeration(Word word)
         {
             foreach (var slice in word.Slice(Direction, Filter))
             {
@@ -182,7 +182,7 @@ namespace Phonix
             yield break;
         }
 
-        private static bool MatchesSegments(IWordSlice slice, IEnumerable<IRuleSegment> segments, RuleContext ctx)
+        private static bool MatchesSegments(WordSlice slice, IEnumerable<IRuleSegment> segments, RuleContext ctx)
         {
             using (var seg = slice.GetEnumerator())
             {
@@ -197,7 +197,7 @@ namespace Phonix
             return true;
         }
 
-        public override string ShowApplication(Word word, IWordSlice slice, SymbolSet symbolSet)
+        public override string ShowApplication(Word word, WordSlice slice, SymbolSet symbolSet)
         {
             FeatureMatrix current = null;
             Segment firstSliceSeg = null;

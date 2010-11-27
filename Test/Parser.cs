@@ -9,7 +9,7 @@ namespace Phonix.Test
     using NUnit.Framework;
 
     [TestFixture]
-    public class ParserTest
+    public class yyParserTest
     {
         public Phonology ParseWithStdImports(string toParse)
         {
@@ -219,16 +219,43 @@ namespace Phonix.Test
         public void Delete()
         {
             // middle
-            var phono = ParseWithStdImports("rule delete a => * / b _ b");
+            var phono = ParseWithStdImports("rule delete-middle a => * / b _ b");
             ApplyRules(phono, "bab", "bb");
 
             // beginning
-            phono = ParseWithStdImports("rule delete a => * / _ bb");
+            phono = ParseWithStdImports("rule delete-beginning a => * / _ bb");
             ApplyRules(phono, "abb", "bb");
 
             // end
-            phono = ParseWithStdImports("rule delete a => * / bb _");
+            phono = ParseWithStdImports("rule delete-end a => * / bb _");
             ApplyRules(phono, "bba", "bb");
+
+            // two
+            phono = ParseWithStdImports("rule delete-double aa => **");
+            ApplyRules(phono, "baab", "bb");
+        }
+
+        [Test]
+        public void InsertDeleteInvalid()
+        {
+            try
+            {
+                ParseWithStdImports("rule insert-delete * a => b * ");
+                Assert.Fail("should have thrown exception");
+            }
+            catch (ParseException) {}
+            try
+            {
+                ParseWithStdImports("rule delete-insert a * => * b ");
+                Assert.Fail("should have thrown exception");
+            }
+            catch (ParseException) {}
+            try
+            {
+                ParseWithStdImports("rule delete-insert a * => b * ");
+                Assert.Fail("should have thrown exception");
+            }
+            catch (ParseException) {}
         }
 
         [Test]

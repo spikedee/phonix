@@ -4,7 +4,7 @@ namespace Phonix
 {
     public sealed class MutableSegmentEnumerator : SegmentEnumerator, IEnumerator<MutableSegment>
     {
-        internal MutableSegmentEnumerator(LinkedListNode<MutableSegment> node, IMatrixMatcher filter)
+        internal MutableSegmentEnumerator(Word.Node node, IMatrixMatcher filter)
             : base(node, filter)
         {
         }
@@ -28,21 +28,21 @@ namespace Phonix
                 // can't insert before you've started iterating
                 throw new InvalidOperationException();
             }
-            else if (_node == _lastNode && _afterLast)
+            else if (_node == _node.Word.Last && _afterLast)
             {
                 // we've gone past the end, but we can still add "before",
                 // which means after the last node.
-                _lastNode.List.AddAfter(_lastNode, seg);
+                _node.Word.Last.InsertAfter(seg);
             }
             else
             {
-                _node.List.AddBefore(_node, seg);
+                _node.InsertBefore(seg);
             }
         }
 
         public void InsertAfter(MutableSegment seg)
         {
-            if (_node == _lastNode &&  _afterLast)
+            if (_node == _lastNode && _afterLast)
             {
                 throw new InvalidOperationException();
             }
@@ -50,22 +50,19 @@ namespace Phonix
             {
                 // we haven't started yet, so "after" actually means before
                 // our start node. we also move the start node back
-                _node.List.AddBefore(_node, seg);
-                _node = _startNode = _node.Previous;
+                _node.InsertBefore(seg);
+                _node = _startNode = _node.Prev;
             }
             else
             {
-                _node.List.AddAfter(_node, seg);
+                _node.InsertAfter(seg);
             }
         }
 
         public void Delete()
         {
             CheckValid();
-            var deleted = _node;
-            _node = _node.Next;
-            deleted.List.Remove(deleted);
-            _beforeFirst = true;
+            _node.Delete();
         }
     }
 }

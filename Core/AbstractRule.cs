@@ -21,7 +21,7 @@ namespace Phonix
         }
 
         public event Action<AbstractRule, Word> Entered;
-        public event Action<AbstractRule, Word, IWordSlice> Applied;
+        public event Action<AbstractRule, Word, WordSlice> Applied;
         public event Action<AbstractRule, Word> Exited;
 
         protected internal void OnEntered(Word word)
@@ -33,7 +33,7 @@ namespace Phonix
             }
         }
 
-        protected internal void OnApplied(Word word, IWordSlice slice)
+        protected internal void OnApplied(Word word, WordSlice slice)
         {
             var applied = Applied;
             if (applied != null)
@@ -53,7 +53,7 @@ namespace Phonix
 
         public abstract void Apply(Word word);
 
-        public abstract string ShowApplication(Word word, IWordSlice slice, SymbolSet symbolSet);
+        public abstract string ShowApplication(Word word, WordSlice slice, SymbolSet symbolSet);
 
         public override string ToString()
         {

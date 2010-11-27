@@ -30,7 +30,7 @@ namespace Phonix
         // executing a nop delegate). They all have an OnX() method that safely
         // wraps the invocation.
         public event Action<AbstractRule, Word> RuleEntered;
-        public event Action<AbstractRule, Word, IWordSlice> RuleApplied;
+        public event Action<AbstractRule, Word, WordSlice> RuleApplied;
         public event Action<AbstractRule, Word> RuleExited;
 
         public void Add(AbstractRule rule)
@@ -89,7 +89,7 @@ namespace Phonix
             }
         }
 
-        private void OnRuleApplied(AbstractRule rule, Word word, IWordSlice slice)
+        private void OnRuleApplied(AbstractRule rule, Word word, WordSlice slice)
         {
             var applied = RuleApplied;
             if (applied != null)
@@ -105,7 +105,7 @@ namespace Phonix
 
             foreach (var rule in OrderedRules)
             {
-                Action<AbstractRule, Word, IWordSlice> applyPersistentRules = (innerRule, innerWord, slice) => 
+                Action<AbstractRule, Word, WordSlice> applyPersistentRules = (innerRule, innerWord, slice) => 
                 {
                     ApplyPersistentRules(innerWord);
                 };

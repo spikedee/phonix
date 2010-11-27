@@ -391,6 +391,8 @@ namespace Phonix.Parse
             var result = new List<IRuleSegment>();
             var leftObj = left.GetEnumerator();
             var rightObj = right.GetEnumerator();
+            bool inserting = false;
+            bool deleting = false;
 
             while (leftObj.MoveNext() && rightObj.MoveNext())
             {
@@ -401,15 +403,22 @@ namespace Phonix.Parse
                 else if (leftObj.Current == null)
                 {
                     result.Add(new InsertingSegment(rightObj.Current));
+                    inserting = true;
                 }
                 else if (rightObj.Current == null)
                 {
                     result.Add(new DeletingSegment(leftObj.Current));
+                    deleting = true;
                 }
                 else
                 {
                     result.Add(new ActionSegment(leftObj.Current, rightObj.Current));
                 }
+            }
+
+            if (inserting && deleting)
+            {
+                throw new RuleFormatException("can't insert and delete as part of the same rule");
             }
 
             return result;

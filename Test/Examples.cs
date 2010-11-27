@@ -7,7 +7,7 @@ namespace Phonix.Test
     using NUnit.Framework;
 
     [TestFixture]
-    public class ExamplesTest
+    public class zzExamplesTest /* the starting zz makes this test run last */
     {
         private void CompareFiles(string savedFile, string testFile)
         {

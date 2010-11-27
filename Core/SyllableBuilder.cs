@@ -63,7 +63,7 @@ namespace Phonix
             public override void Apply(Word word)
             {
                 int applied = 0;
-                Action<AbstractRule, Word, IWordSlice> ruleApplied = (r, w, s) => 
+                Action<AbstractRule, Word, WordSlice> ruleApplied = (r, w, s) => 
                 {
                     applied++;
                 };
@@ -93,7 +93,7 @@ namespace Phonix
                 }
             }
 
-            public override string ShowApplication(Word word, IWordSlice slice, SymbolSet symbolSet)
+            public override string ShowApplication(Word word, WordSlice slice, SymbolSet symbolSet)
             {
                 StringBuilder str = new StringBuilder();
                 Segment lastSyll = null;

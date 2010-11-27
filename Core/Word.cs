@@ -5,130 +5,57 @@ using System.Text;
 
 namespace Phonix
 {
-    public class Word : IEnumerable<Segment>
+    public partial class Word : IEnumerable<Segment>
     {
-        private readonly LinkedList<MutableSegment> _list = new LinkedList<MutableSegment>();
-
         public Word(IEnumerable<FeatureMatrix> fms)
         {
-            foreach (var fm in fms)
+            using (var iter = fms.GetEnumerator())
             {
-                _list.AddLast(new MutableSegment(Tier.Segment, fm, new Segment[] {}));
+                if (iter.MoveNext())
+                {
+                    var node = new Word.Node(this, new MutableSegment(Tier.Segment, iter.Current, new Segment[] {}));
+                    Last = First = node;
+                }
+
+                while (iter.MoveNext())
+                {
+                    Last.InsertAfter(new MutableSegment(Tier.Segment, iter.Current, new Segment[] {}));
+                }
             }
         }
 
-        private class WordSlice : IWordSlice
+        internal Node First
         {
-            private LinkedListNode<MutableSegment> _node;
-            private readonly IMatrixMatcher _filter;
-
-            public WordSlice(LinkedListNode<MutableSegment> node, IMatrixMatcher filter)
-            {
-                if (node == null)
-                {
-                    throw new ArgumentNullException();
-                }
-                _node = node;
-                _filter = filter;
-            }
-
-            public MutableSegmentEnumerator GetMutableEnumerator()
-            {
-                return new MutableSegmentEnumerator(_node, _filter);
-            }
-
-            public SegmentEnumerator GetEnumerator()
-            {
-                return GetMutableEnumerator();
-            }
-
-            public override string ToString()
-            {
-                StringBuilder str = new StringBuilder();
-                var currNode = _node;
-                while (currNode != null)
-                {
-                    str.Append(currNode.Value.ToString());
-                    currNode = currNode.Next;
-                }
-                return str.ToString();
-            }
+            get;
+            private set;
         }
 
-        private class BoundarySegment : IRuleSegment
+        internal Node Last
         {
-
-            // note that the boundary segments are tricksy. since there are
-            // only ever two instances, we reference compare against those
-            // instances to determine our behavior.
-
-            public bool Matches(RuleContext ctx, SegmentEnumerator segment)
-            {
-                if (this == Word.LeftBoundary)
-                {
-                    segment.MoveNext();
-                    return !segment.MovePrev();
-                }
-                else if (this == Word.RightBoundary)
-                {
-                    bool match = !segment.MoveNext();
-                    segment.MovePrev();
-                    return match;
-                }
-                return false;
-            }
-
-             public void Combine(RuleContext ctx, MutableSegmentEnumerator segment)
-             {
-                 // nothing to do
-             }
-
-            public bool IsMatchOnlySegment { get { return true; } }
-            public string MatchString { get { return "$"; } }
-            public string CombineString { get { return ""; } }
+            get;
+            private set;
         }
 
-        public static IRuleSegment LeftBoundary = new BoundarySegment();
-
-        public static IRuleSegment RightBoundary = new BoundarySegment();
-
-        public IEnumerable<IWordSlice> Slice(Direction dir)
+        public IEnumerable<WordSlice> Slice(Direction dir)
         {
             return Slice(dir, MatrixMatcher.AlwaysMatches);
         }
 
-        public IEnumerable<IWordSlice> Slice(Direction dir, IMatrixMatcher filter)
+        public IEnumerable<WordSlice> Slice(Direction dir, IMatrixMatcher filter)
         {
-            LinkedListNode<MutableSegment> currNode;
-            if (dir == Direction.Rightward)
+            for (var currNode = (dir == Direction.Rightward ? First : Last);
+                     currNode != null;
+                     currNode = (dir == Direction.Rightward ? currNode.Next : currNode.Prev))
             {
-                currNode = _list.First;
-            }
-            else
-            {
-                currNode = _list.Last;
-            }
+                // skip over deleted segments
+                if (currNode.Deleted)
+                {
+                    continue;
+                }
 
-            while (currNode != null)
-            {
-                var nextNodePre = (dir == Direction.Rightward ? currNode.Next : currNode.Previous);
-
-                if (filter == null || filter.Matches(null, currNode.Value))
+                if (filter == null || filter.Matches(null, currNode.Segment))
                 {
                     yield return new WordSlice(currNode, filter);
-                }
-
-                var nextNodePost = (dir == Direction.Rightward ? currNode.Next : currNode.Previous);
-
-                if (currNode.List == null)
-                {
-                    // if currNode was detached, then we have to use the
-                    // nextNode that was saved before we yielded.
-                    currNode = nextNodePre;
-                }
-                else
-                {
-                    currNode = nextNodePost;
                 }
             }
 
@@ -139,9 +66,9 @@ namespace Phonix
 
         public IEnumerator<Segment> GetEnumerator()
         {
-            foreach (var seg in _list)
+            for (var node = First; node != null; node = node.Next)
             {
-                yield return seg;
+                yield return node.Segment;
             }
             yield break;
         }
@@ -155,10 +82,10 @@ namespace Phonix
 
         public override string ToString()
         {
-            System.Text.StringBuilder str = new System.Text.StringBuilder();
-            foreach (var fm in _list)
+            var str = new StringBuilder();
+            foreach (var seg in this)
             {
-                str.Append(fm.ToString());
+                str.Append(seg.Matrix.ToString());
             }
             return str.ToString();
         }
