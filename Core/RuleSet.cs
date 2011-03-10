@@ -6,13 +6,13 @@ namespace Phonix
 {
     public class RuleSet
     {
-        private List<AbstractRule> _persistent = new List<AbstractRule>();
+        private readonly List<AbstractRule> _persistent = new List<AbstractRule>();
         public IEnumerable<AbstractRule> PersistentRules
         { 
             get { return _persistent; }
         }
 
-        private List<AbstractRule> _ordered = new List<AbstractRule>();
+        private readonly List<AbstractRule> _ordered = new List<AbstractRule>();
         public IEnumerable<AbstractRule> OrderedRules
         { 
             get { return _ordered; }
@@ -41,11 +41,7 @@ namespace Phonix
                 RuleRedefined(dup, rule);
             }
 
-            if (rule is Rule)
-            {
-                AddRuleEventHandlers((Rule) rule);
-            }
-
+            AddRuleEventHandlers(rule);
             _ordered.Add(rule);
         }
 
@@ -56,19 +52,24 @@ namespace Phonix
             {
                 RuleRedefined(dup, rule);
             }
-            if (rule is Rule)
-            {
-                AddRuleEventHandlers((Rule) rule);
-            }
 
+            AddRuleEventHandlers(rule);
             _persistent.Add(rule);
         }
 
-        private void AddRuleEventHandlers(Rule rule)
+        private void AddRuleEventHandlers(AbstractRule abstractRule)
         {
-            rule.UndefinedVariableUsed += (r, v) => UndefinedVariableUsed(r, v);
-            rule.ScalarValueRangeViolation += (r, f, v) => ScalarValueRangeViolation(r, f, v);
-            rule.InvalidScalarValueOp += (r, f, v) => InvalidScalarValueOp(r, f, v);
+            abstractRule.Entered += OnRuleEntered;
+            abstractRule.Applied += OnRuleApplied;
+            abstractRule.Exited += OnRuleExited;
+
+            var rule = abstractRule as Rule;
+            if (rule != null)
+            {
+                rule.UndefinedVariableUsed += (r, v) => UndefinedVariableUsed(r, v);
+                rule.ScalarValueRangeViolation += (r, f, v) => ScalarValueRangeViolation(r, f, v);
+                rule.InvalidScalarValueOp += (r, f, v) => InvalidScalarValueOp(r, f, v);
+            }
         }
 
         private void OnRuleEntered(AbstractRule rule, Word word)
@@ -109,14 +110,14 @@ namespace Phonix
                 {
                     ApplyPersistentRules(innerWord);
                 };
-                if (PersistentRules.Count() > 0)
+                if (_persistent.Count > 0)
                 {
                     rule.Applied += applyPersistentRules;
                 }
 
                 try
                 {
-                    ApplyRule(rule, word);
+                    rule.Apply(word);
                 }
                 finally
                 {
@@ -129,34 +130,7 @@ namespace Phonix
         {
             foreach (var rule in PersistentRules)
             {
-                ApplyRule(rule, word);
-            }
-        }
-
-        private void ApplyRule(AbstractRule rule, Word word)
-        {
-            try
-            {
-                if (RuleEntered != null)
-                {
-                    rule.Entered += OnRuleEntered;
-                }
-                if (RuleApplied != null)
-                {
-                    rule.Applied += OnRuleApplied;
-                }
-                if (RuleExited != null)
-                {
-                    rule.Exited += OnRuleExited;
-                }
-
                 rule.Apply(word);
-            }
-            finally
-            {
-                rule.Entered -= OnRuleEntered;
-                rule.Applied -= OnRuleApplied;
-                rule.Exited -= OnRuleExited;
             }
         }
     }
