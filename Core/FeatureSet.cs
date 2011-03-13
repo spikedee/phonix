@@ -45,22 +45,22 @@ namespace Phonix
             AddImpl(f.Name, f);
         }
 
-        public bool Has<TFeature>(string name) where TFeature: Feature
+        public bool Has<T>(string name) where T: Feature
         {
-            return _dict.ContainsKey(name) && _dict[name] is TFeature;
+            return _dict.ContainsKey(name) && _dict[name] is T;
         }
 
-        public TFeature Get<TFeature>(string name) where TFeature : Feature
+        public T Get<T>(string name) where T: Feature
         {
             if (!_dict.ContainsKey(name))
             {
                 throw new FeatureNotFoundException(name);
             }
 
-            TFeature f = _dict[name] as TFeature;
+            T f = _dict[name] as T;
             if (f == null)
             {
-                throw new FeatureTypeException(name, Feature.FriendlyName<TFeature>());
+                throw new FeatureTypeException(name, typeof(T).Name);
             }
 
             return f;

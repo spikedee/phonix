@@ -44,13 +44,6 @@ tokens
 @parser::namespace { Phonix.Parse }
 @lexer::namespace { Phonix.Parse }
 
-@members
-{
-    private Phonology _phono;
-    private string _currentFile;
-    private bool _parseError = false;
-}
-
 @rulecatch
 {
 catch (RecognitionException re) 
@@ -130,10 +123,8 @@ label returns [string val]:
 
 /* Parser Rules */
 
-parseRoot[string currentFile, Phonology phono]
-    @init { _phono = $phono; _currentFile = $currentFile; }:
+parseRoot:
     phonixDecl* EOF
-    { if (_parseError) throw new ParseException(currentFile); }
     ;
 
 phonixDecl:
@@ -148,7 +139,7 @@ phonixDecl:
 
 importDecl:
     IMPORT str
-    { Util.ParseFile(_phono, _currentFile, $str.val); }
+    { ParseFile(_phono, _currentFile, $str.val); }
     ;
 
 /* Feature declarations */
@@ -191,7 +182,7 @@ symbolDecl:
     ;
 
 symbolStr returns [List<Symbol> val]
-    @init { $val = new List<Symbol>(); }:
+@init { $val = new List<Symbol>(); }:
     str
     { $val = _phono.SymbolSet.SplitSymbols($str.val); }
     ;
@@ -212,7 +203,7 @@ rule returns [List<IRuleSegment> action, RuleContext context, RuleContext exclud
     ;
 
 ruleAction returns [List<IRuleSegment> val]
-    @init { 
+@init { 
         var left = new List<IMatrixMatcher>(); 
         var right = new List<IMatrixCombiner>(); 
     }: 
@@ -233,7 +224,7 @@ nullableMatchTerm returns [IEnumerable<IMatrixMatcher> val]:
     ;
 
 optionalMatchTerm returns [IEnumerable<IMatrixMatcher> val]
-    @init { var list = new List<IMatrixMatcher>(); $val = list; }:
+@init { var list = new List<IMatrixMatcher>(); $val = list; }:
     LPAREN ( matchTerm { list.AddRange($matchTerm.val); })+ RPAREN ;
 
 actionTerm returns [IEnumerable<IMatrixCombiner> val]: 
@@ -243,7 +234,7 @@ actionTerm returns [IEnumerable<IMatrixCombiner> val]:
     ;
 
 ruleContext returns [RuleContext val]
-    @init { $val = new RuleContext(); }:
+@init { $val = new RuleContext(); }:
     (BOUNDARY { $val.Left.Add(WordBoundary.Left); })? 
     (left=contextTerm { $val.Left.AddRange($left.val); })* 
     UNDERSCORE
@@ -252,7 +243,7 @@ ruleContext returns [RuleContext val]
     ;
 
 contextTerm returns [IEnumerable<IRuleSegment> val]
-    @init { $val = new List<IRuleSegment>(); }:
+@init { $val = new List<IRuleSegment>(); }:
         matchableMatrix { $val = new IRuleSegment[] { new ContextSegment(new MatrixMatcher($matchableMatrix.val)) }; }
     |   symbolStr { $val = $symbolStr.val.ConvertAll<IRuleSegment>(s => new ContextSegment(s)); }
     |   multiTerm { $val = new IRuleSegment[] { $multiTerm.val }; }
@@ -272,7 +263,7 @@ multiTerm returns [MultiSegment val]:
 
 /* Syllable declarations */
 syllableDecl
-    @init { var syll = new SyllableBuilder(); }:
+@init { var syll = new SyllableBuilder(); }:
     SYLLABLE paramList?
     (ONSET onsetDecl=syllableTermList { $onsetDecl.val.ForEach(list => syll.Onsets.Add(list)); })*
     (NUCLEUS nucleusDecl=syllableTermList { $nucleusDecl.val.ForEach(list => syll.Nuclei.Add(list)); })+
@@ -281,7 +272,7 @@ syllableDecl
     ;
 
 syllableTermList returns [List<List<IMatrixMatcher>> val]
-    @init { $val = new List<List<IMatrixMatcher>>(); $val.Add(new List<IMatrixMatcher>()); }:
+@init { $val = new List<List<IMatrixMatcher>>(); $val.Add(new List<IMatrixMatcher>()); }:
     (   matchTerm { $val.ForEach(list => list.AddRange($matchTerm.val)); }
     |   optionalMatchTerm { 
             var newval = new List<List<IMatrixMatcher>>();
@@ -301,61 +292,41 @@ syllableTermList returns [List<List<IMatrixMatcher>> val]
 
 /* Feature matrices */
 
-matrix returns [FeatureMatrix val] 
-    @init { var fvList = new List<FeatureValue>(); }:
-    LBRACE (featureVal { fvList.Add($featureVal.val); })* RBRACE
-    { $val = new FeatureMatrix(fvList); }
+matrix returns [FeatureMatrix val]
+@init { var list = new List<object>(); }:
+    LBRACE 
+    ( matrixVal { list.Add($matrixVal.val); } )* 
+    RBRACE
+    { $val = SemanticContext.FeatureMatrix(list); }
     ;
 
 matchableMatrix returns [IEnumerable<IMatchable> val]
-    @init{ var fvList = new List<IMatchable>(); }:
+@init { var list = new List<object>(); }:
     LBRACE 
-    ( matchableVal { fvList.Add($matchableVal.val); } )* 
+    ( matrixVal { list.Add($matrixVal.val); } )* 
     RBRACE
-    { $val = fvList; }
+    { $val = SemanticContext.MatchableMatrix(list); }
     ;
 
 combinableMatrix returns [IEnumerable<ICombinable> val]
-    @init{ var fvList = new List<ICombinable>(); }:
+@init { var list = new List<object>(); }:
     LBRACE 
-    ( combinableVal { fvList.Add($combinableVal.val); } )* 
+    ( matrixVal { list.Add($matrixVal.val); } )* 
     RBRACE
-    { $val = fvList; }
+    { $val = SemanticContext.CombinableMatrix(list); }
     ;
 
 /* Feature values */
 
-featureVal returns [FeatureValue val]: 
-        scalarVal { $val = $scalarVal.val; }
-    |   binaryVal { $val = $binaryVal.val; }
-    |   unaryVal { $val = $unaryVal.val; }
-    |   nullVal
-        { 
-            if (!($nullVal.val is FeatureValue))
-            {
-                throw new FeatureTypeException($nullVal.val.ToString(), "null leaf feature");
-            }
-            $val = $nullVal.val as FeatureValue;
-        }
-    ;
-
-matchableVal returns [IMatchable val]:
-        scalarVal { $val = $scalarVal.val; }
-    |   scalarCmp { $val = $scalarCmp.val; }
-    |   binaryVal { $val = $binaryVal.val; }
-    |   bareVal { $val = $bareVal.val; }
-    |   nullVal { $val = $nullVal.val; }
+matrixVal returns [object val]:
+        scalarVal   { $val = $scalarVal.val; }
+    |   scalarCmp   { $val = $scalarCmp.val; }
+    |   scalarOp    { $val = $scalarOp.val; }
+    |   binaryVal   { $val = $binaryVal.val; }
+    |   bareVal     { $val = $bareVal.val; }
+    |   nullVal     { $val = $nullVal.val; }
     |   variableVal { $val = $variableVal.val; }
-    |   tierVal { $val = $tierVal.val; }
-    ;
-
-combinableVal returns [ICombinable val]:
-        scalarVal { $val = $scalarVal.val; }
-    |   scalarOp { $val = $scalarOp.val; }
-    |   binaryVal { $val = $binaryVal.val; }
-    |   unaryVal { $val = $unaryVal.val; }
-    |   nullVal { $val = $nullVal.val; }
-    |   variableVal { $val = $variableVal.val; }
+    |   tierVal     { $val = $tierVal.val; }
     ;
 
 scalarVal returns [FeatureValue val]: 
@@ -402,7 +373,7 @@ bareVal returns [IMatchable val]:
     ;
 
 tierVal returns [IMatchable val]
-    @init { bool nulled = false; }:
+@init { bool nulled = false; }:
     LANGLE 
     (NULL { nulled = true; })?
     (
@@ -410,6 +381,7 @@ tierVal returns [IMatchable val]
     |   ONSET       { $val = nulled ? Tier.Onset.NoAncestorMatcher : Tier.Onset.AncestorMatcher; }
     |   NUCLEUS     { $val = nulled ? Tier.Nucleus.NoAncestorMatcher : Tier.Nucleus.AncestorMatcher; }
     |   CODA        { $val = nulled ? Tier.Coda.NoAncestorMatcher : Tier.Coda.AncestorMatcher; }
+    |   str         { throw new TierNameException($str.val); }
     )
     RANGLE
     ;
@@ -417,7 +389,7 @@ tierVal returns [IMatchable val]
 /* Parameters */
 
 paramList returns [ParamList val]
-    @init { $val = new ParamList(); }: 
+@init { $val = new ParamList(); }: 
     LPAREN 
     (param { $val.Add($param.str, $param.val); })* 
     RPAREN

@@ -63,7 +63,7 @@ namespace Phonix
                 logger = new Log(config.LogLevel, config.WarningLevel, Console.Error, phono);
                 logger.Start();
 
-                Parse.Util.ParseFile(phono, config.PhonixFile, config.PhonixFile);
+                Parse.PhonixParser.ParseFile(phono, config.PhonixFile, config.PhonixFile);
                 InputLoop(phono, config.Reader, config.Writer, Console.Error);
             }
             catch (ArgumentException ex)
@@ -78,7 +78,7 @@ namespace Phonix
             }
             catch (FileNotFoundException fex)
             {
-                Console.Error.WriteLine("Could not find file '{0}'.", fex.Message);
+                Console.Error.WriteLine("Could not find file '{0}'.", fex.FileName);
                 rv = ExitCode.FileNotFound;
             }
             catch (FatalWarningException)

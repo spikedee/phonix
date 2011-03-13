@@ -91,47 +91,47 @@ namespace Phonix
 
         private void LogFeatureDefined(Feature f)
         {
-            WriteLog(Level.Info, "{0} {1} defined", f.GetType().Name, f.Name);
+            WriteLog(Level.Info, "{0} {1} defined", f.TypeName, f.Name);
         }
 
         private void LogFeatureRedefined(Feature old, Feature newer)
         {
-            WriteLog(Level.Warning, "{0} {1} overwrites {2} {3}", newer.GetType().Name, newer.Name, old.GetType().Name, old.Name);
+            WriteLog(Level.Warning, "{0} {1} overwrites {2} {3}", newer.TypeName, newer.Name, old.TypeName, old.Name);
         }
 
         private void LogSymbolDefined(Symbol s)
         {
-            WriteLog(Level.Info, "symbol {0} defined", s);
+            WriteLog(Level.Info, "Symbol {0} defined", s);
         }
 
         private void LogSymbolRedefined(Symbol old, Symbol newer)
         {
-            WriteLog(Level.Warning, "symbol {0} changed from {1} to {2}", old.Label, old.FeatureMatrix, newer.FeatureMatrix);
+            WriteLog(Level.Warning, "Symbol {0} changed from {1} to {2}", old.Label, old.FeatureMatrix, newer.FeatureMatrix);
         }
 
         private void LogSymbolDuplicate(Symbol old, Symbol newer)
         {
-            WriteLog(Level.Warning, "symbol {0} is identical to symbol {1}", newer, old);
+            WriteLog(Level.Warning, "Symbol {0} is identical to symbol {1}", newer, old);
         }
 
         private void LogRuleDefined(AbstractRule r)
         {
-            WriteLog(Level.Info, "rule {0} defined", r);
+            WriteLog(Level.Info, "Rule {0} defined", r);
         }
 
         private void LogRuleRedefined(AbstractRule old, AbstractRule newer)
         {
-            WriteLog(Level.Warning, "rule {0} redefined", newer, old);
+            WriteLog(Level.Warning, "Rule {0} redefined", newer, old);
         }
 
         private void LogRuleEntered(AbstractRule rule, Word word)
         {
-            WriteLog(Level.Verbose, "rule {0} entered: {1}", rule, rule.Description);
+            WriteLog(Level.Verbose, "Rule {0} entered: {1}", rule, rule.Description);
         }
 
         private void LogRuleExited(AbstractRule rule, Word word)
         {
-            WriteLog(Level.Verbose, "rule {0} exited", rule);
+            WriteLog(Level.Verbose, "Rule {0} exited", rule);
         }
 
         private void LogRuleApplied(AbstractRule rule, Word word, WordSlice slice)
@@ -143,23 +143,23 @@ namespace Phonix
                 return;
             }
 
-            WriteLog(Level.Info, "rule {0} applied", rule.Name);
+            WriteLog(Level.Info, "Rule {0} applied", rule.Name);
             WriteLog(Level.Info, rule.ShowApplication(word, slice, _phono.SymbolSet));
         }
 
         private void LogUndefinedVariableUsed(Rule rule, IFeatureValue var)
         {
-            WriteLog(Level.Warning, "variable {0} used in rule '{1}' without appearing in rule context; some parts of this rule may be skipped", var, rule);
+            WriteLog(Level.Warning, "In rule '{0}': variable {1} used without appearing in rule context; some parts of this rule may be skipped", rule.Name, var);
         }
 
         private void LogScalarValueRangeViolation(Rule rule, ScalarFeature feature, int val)
         {
-            WriteLog(Level.Warning, "in rule '{0}' resulting value {1}={2} is not in the range ({3}, {4}); some parts of this rule may be skipped", rule.Name, feature.Name, val, feature.Min, feature.Max);
+            WriteLog(Level.Warning, "In rule '{0}': resulting value {1}={2} is not in the range ({3}, {4}); some parts of this rule may be skipped", rule.Name, feature.Name, val, feature.Min, feature.Max);
         }
 
         private void LogInvalidScalarValueOp(Rule rule, ScalarFeature feature, string message)
         {
-            WriteLog(Level.Warning, "invalid operation in rule '{0}' on feature '{1}': {2}", rule.Name, feature.Name, message);
+            WriteLog(Level.Warning, "In rule '{0}': invalid operation on feature '{1}': {2}", rule.Name, feature.Name, message);
         }
     }
 }

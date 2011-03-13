@@ -101,11 +101,14 @@ namespace Phonix
 
         public readonly IFeatureValue VariableValue;
 
-        public static string FriendlyName<T>() where T : Feature
+        public string TypeName
         {
-            StringBuilder str = new StringBuilder(typeof(T).Name);
-            str.Replace("Feature", "");
-            return str.ToString().ToLowerInvariant();
+            get
+            {
+                StringBuilder str = new StringBuilder(GetType().Name);
+                str.Replace("Feature", " feature");
+                return str.ToString();
+            }
         }
     }
 }

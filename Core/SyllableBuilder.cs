@@ -228,10 +228,19 @@ namespace Phonix
         private string BuildDescription()
         {
             var str = new StringBuilder();
+            bool firstChar = true;
 
             foreach (var onset in Onsets.Where(o => o.Count() > 0))
             {
-                str.Append(" onset ");
+                if (firstChar)
+                {
+                    str.Append("onset ");
+                }
+                else
+                {
+                    str.Append(" onset ");
+                }
+
                 foreach (var match in onset)
                 {
                     str.Append(match.ToString());

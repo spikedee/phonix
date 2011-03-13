@@ -12,14 +12,22 @@ namespace Phonix
     public class FeatureNotFoundException : PhonixException
     {
         public FeatureNotFoundException(string feature)
-            : base(String.Format("feature '{0}' not found", feature))
+            : base(String.Format("Feature '{0}' not found", feature))
             {}
     }
 
     public class FeatureTypeException : PhonixException
     {
         public FeatureTypeException(string name, string type)
-            : base(String.Format("feature '{0}' is not a {1} feature", name, type))
+            : base(String.Format("Feature '{0}' is not a {1} feature", name, type))
+        {
+        }
+    }
+
+    public class TierNameException : PhonixException
+    {
+        public TierNameException(string name)
+            : base(String.Format("No such tier: '{0}'", name))
         {
         }
     }
@@ -41,7 +49,7 @@ namespace Phonix
         public readonly int Value;
 
         public ScalarValueRangeException(ScalarFeature feature, int actual)
-            : base(String.Format("value {0} for {1} was not in the range ({2}, {3})",
+            : base(String.Format("Value {0} for {1} was not in the range ({2}, {3})",
                         actual, feature.Name, feature.Min, feature.Max))
         {
             Feature = feature;
@@ -84,7 +92,7 @@ namespace Phonix
     public class SegmentDeletedException : PhonixException
     {
         public SegmentDeletedException()
-            : base("An attempt was made to access a segment which was deleted.")
+            : base("An attempt was made to access a deleted segment.")
         {
         }
     }

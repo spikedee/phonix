@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Phonix;
+using Phonix.Parse;
 
 namespace Phonix.Test
 {
@@ -33,7 +34,7 @@ namespace Phonix.Test
             {
                 foreach (var res in resources)
                 {
-                    Phonix.Parse.Util.ParseFile(phono, "test", res);
+                    PhonixParser.ParseFile(phono, "test", res);
                 }
             }
             catch (Exception ex)
@@ -88,8 +89,8 @@ namespace Phonix.Test
                 ipa.FeatureSet.Add(f);
             }
 
-            Phonix.Parse.Util.ParseFile(ascii, "ascii", "std.symbols");
-            Phonix.Parse.Util.ParseFile(ipa, "ipa", "std.symbols.ipa");
+            PhonixParser.ParseFile(ascii, "ascii", "std.symbols");
+            PhonixParser.ParseFile(ipa, "ipa", "std.symbols.ipa");
 
             Assert.IsTrue(ascii.SymbolSet.BaseSymbols.Count > 0);
             Assert.IsTrue(ascii.SymbolSet.Diacritics.Count == 0);
@@ -122,8 +123,8 @@ namespace Phonix.Test
                 ipa.FeatureSet.Add(f);
             }
 
-            Phonix.Parse.Util.ParseFile(ascii, "ascii", "std.symbols.diacritics");
-            Phonix.Parse.Util.ParseFile(ipa, "ipa", "std.symbols.ipa.diacritics");
+            PhonixParser.ParseFile(ascii, "ascii", "std.symbols.diacritics");
+            PhonixParser.ParseFile(ipa, "ipa", "std.symbols.ipa.diacritics");
 
             Assert.IsTrue(ascii.SymbolSet.BaseSymbols.Count == 0);
             Assert.IsTrue(ascii.SymbolSet.Diacritics.Count > 0);

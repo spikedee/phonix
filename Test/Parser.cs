@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Phonix;
+using Phonix.Parse;
 
 namespace Phonix.Test
 {
@@ -18,7 +19,7 @@ namespace Phonix.Test
             str.Append(toParse);
 
             var phono = new Phonology();
-            Parse.Util.ParseString(phono, str.ToString());
+            PhonixParser.ParseString(phono, str.ToString());
 
             return phono;
         }
@@ -99,7 +100,7 @@ namespace Phonix.Test
         [Test]
         public void RuleDirectionLeftward()
         {
-            var phono = ParseWithStdImports("rule rightward (direction=right-to-left) a => b / a _");
+            var phono = ParseWithStdImports("rule leftward (direction=right-to-left) a => b / a _");
             ApplyRules(phono, "aaa", "abb");
         }
 
@@ -419,7 +420,7 @@ namespace Phonix.Test
         public void ScalarNotEq()
         {
             var phono = new Phonology();
-            Parse.Util.ParseString(phono, scalarDefs + "rule neq [sc<>0] => sc2");
+            PhonixParser.ParseString(phono, scalarDefs + "rule neq [sc<>0] => sc2");
             ApplyRules(phono, "sc0", "sc0");
             ApplyRules(phono, "sc1", "sc2");
             ApplyRules(phono, "sc2", "sc2");
@@ -431,7 +432,7 @@ namespace Phonix.Test
         public void ScalarGT()
         {
             var phono = new Phonology();
-            Parse.Util.ParseString(phono, scalarDefs + "rule gt [sc>1] => sc0");
+            PhonixParser.ParseString(phono, scalarDefs + "rule gt [sc>1] => sc0");
             ApplyRules(phono, "sc0", "sc0");
             ApplyRules(phono, "sc1", "sc1");
             ApplyRules(phono, "sc2", "sc0");
@@ -443,7 +444,7 @@ namespace Phonix.Test
         public void ScalarGTOrEq()
         {
             var phono = new Phonology();
-            Parse.Util.ParseString(phono, scalarDefs + "rule gte [sc>=2] => sc0");
+            PhonixParser.ParseString(phono, scalarDefs + "rule gte [sc>=2] => sc0");
             ApplyRules(phono, "sc0", "sc0");
             ApplyRules(phono, "sc1", "sc1");
             ApplyRules(phono, "sc2", "sc0");
@@ -455,7 +456,7 @@ namespace Phonix.Test
         public void ScalarLT()
         {
             var phono = new Phonology();
-            Parse.Util.ParseString(phono, scalarDefs + "rule lt [sc<2] => sc3");
+            PhonixParser.ParseString(phono, scalarDefs + "rule lt [sc<2] => sc3");
             ApplyRules(phono, "sc0", "sc3");
             ApplyRules(phono, "sc1", "sc3");
             ApplyRules(phono, "sc2", "sc2");
@@ -467,7 +468,7 @@ namespace Phonix.Test
         public void ScalarLTOrEq()
         {
             var phono = new Phonology();
-            Parse.Util.ParseString(phono, scalarDefs + "rule lte [sc<=1] => sc3");
+            PhonixParser.ParseString(phono, scalarDefs + "rule lte [sc<=1] => sc3");
             ApplyRules(phono, "sc0", "sc3");
             ApplyRules(phono, "sc1", "sc3");
             ApplyRules(phono, "sc2", "sc2");
@@ -479,7 +480,7 @@ namespace Phonix.Test
         public void ScalarAdd()
         {
             var phono = new Phonology();
-            Parse.Util.ParseString(phono, scalarDefs + "rule add [sc<3] => [sc=+1]");
+            PhonixParser.ParseString(phono, scalarDefs + "rule add [sc<3] => [sc=+1]");
             ApplyRules(phono, "sc0", "sc1");
             ApplyRules(phono, "sc1", "sc2");
             ApplyRules(phono, "sc2", "sc3");
@@ -491,7 +492,7 @@ namespace Phonix.Test
         public void ScalarSubtract()
         {
             var phono = new Phonology();
-            Parse.Util.ParseString(phono, scalarDefs + "rule subtract [sc>0] => [sc=-1]");
+            PhonixParser.ParseString(phono, scalarDefs + "rule subtract [sc>0] => [sc=-1]");
             ApplyRules(phono, "sc0", "sc0");
             ApplyRules(phono, "sc1", "sc0");
             ApplyRules(phono, "sc2", "sc1");
@@ -516,7 +517,7 @@ namespace Phonix.Test
                 traceValue = i;
             };
 
-            Parse.Util.ParseString(phono, scalarDefs + "rule subtract [] => [sc=-1]");
+            PhonixParser.ParseString(phono, scalarDefs + "rule subtract [] => [sc=-1]");
             phono.RuleSet.ScalarValueRangeViolation += tracer;
 
             ApplyRules(phono, "sc0", "sc0"); // assert that this doesn't blow up
@@ -542,7 +543,7 @@ namespace Phonix.Test
                 feature = f;
             };
 
-            Parse.Util.ParseString(phono, scalarDefs + "rule subtract [] => [sc=-1]");
+            PhonixParser.ParseString(phono, scalarDefs + "rule subtract [] => [sc=-1]");
             phono.RuleSet.InvalidScalarValueOp += tracer;
 
             ApplyRules(phono, "scX", "scX"); // this shouldn't throw an exception
@@ -761,24 +762,23 @@ namespace Phonix.Test
 
         [Test]
         [ExpectedException(typeof(ParseException))]
-        public void MatchInvalidUnmatchedLeftBracket()
+        public void UnmatchedLeftBracket()
         {
             ParseWithStdImports("rule markInvalid [<syllable] => x");
         }
 
         [Test]
         [ExpectedException(typeof(ParseException))]
-        public void MatchInvalidUnmatchedRightBracket()
+        public void UnmatchedRightBracket()
         {
             ParseWithStdImports("rule markInvalid [syllable>] => x");
         }
 
         [Test]
         [ExpectedException(typeof(ParseException))]
-        public void MatchInvalidUnrecognizedName()
+        public void UnrecognizedTierName()
         {
             ParseWithStdImports("rule markInvalid [<wrong>] => x");
         }
-
     }
 }

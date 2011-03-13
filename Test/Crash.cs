@@ -63,7 +63,7 @@ namespace Phonix.Test
         [Test]
         public void MainFileNotFound()
         {
-            Action callback = () => { throw new FileNotFoundException(); };
+            Action callback = () => { throw new FileNotFoundException("fake_filename"); };
             try
             {
                 Shell.TestCallback += callback;

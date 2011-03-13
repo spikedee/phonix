@@ -36,8 +36,7 @@ $(PHONIX): parser $(CS_FILES) $(RESX_FILES) $(ANTLR)
 parser: $(PARSER_FILES)
 
 test: parser $(PHONIX_TEST) $(ANTLR)
-	rm -f *NUnitPrimaryTrace.txt
-	mono --debug /usr/lib/nunit/nunit-console.exe $(PHONIX_TEST) -labels
+	mono --debug /usr/lib/nunit/nunit-console.exe $(PHONIX_TEST) -labels 1>TestLog.txt 2>&1
 
 prof: $(PHONIX)
 	if [ -e prof.txt ]; then mv prof.txt base_prof.txt; fi
@@ -103,7 +102,7 @@ uninstall:
 	install-info --remove phonix
 
 clean:
-	rm -f TestResult.xml
+	rm -f Test*.*
 	rm -f *NUnitPrimaryTrace.txt
 	rm -f $(PARSER_FILES)
 	rm -rf $(BIN_DIR)/*
