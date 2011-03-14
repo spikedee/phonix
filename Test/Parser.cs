@@ -780,5 +780,54 @@ namespace Phonix.Test
         {
             ParseWithStdImports("rule markInvalid [<wrong>] => x");
         }
+
+        [Test]
+        [ExpectedException(typeof(ParseException))]
+        public void SymbolContainsVariable()
+        {
+            ParseWithStdImports("symbol ! [+hi -lo $vc]");
+        }
+
+        [Test]
+        [ExpectedException(typeof(ParseException))]
+        public void SymbolContainsScalarOp()
+        {
+            ParseWithStdImports("feature sc (type=scalar)   symbol ! [+hi -lo sc=+1]");
+        }
+
+        [Test]
+        [ExpectedException(typeof(ParseException))]
+        public void SymbolContainsBareNode()
+        {
+            ParseWithStdImports("symbol ! [+hi -lo Labial]");
+        }
+
+        [Test]
+        [ExpectedException(typeof(ParseException))]
+        public void SymbolContainsNullNode()
+        {
+            ParseWithStdImports("symbol ! [+hi -lo *Labial]");
+        }
+
+        [Test]
+        [ExpectedException(typeof(ParseException))]
+        public void SymbolContainsSyllableFeature()
+        {
+            ParseWithStdImports("symbol ! [+vc <coda>]");
+        }
+
+        [Test]
+        [ExpectedException(typeof(ParseException))]
+        public void RuleMatchContainsScalarOp()
+        {
+            ParseWithStdImports("feature sc (type=scalar)   rule ! [sc=+1] => []");
+        }
+
+        [Test]
+        [ExpectedException(typeof(ParseException))]
+        public void RuleActionContainsBareNode()
+        {
+            ParseWithStdImports("rule ! [] => [Labial]");
+        }
     }
 }

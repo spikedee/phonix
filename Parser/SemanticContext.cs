@@ -10,7 +10,7 @@ namespace Phonix.Parse
         private class SemanticException : PhonixException
         {
             public SemanticException(object obj, string expected)
-                : base(String.Format("{0} cannot be used here; should be {1}", obj, expected))
+                : base(String.Format("'{0}' cannot be used here; should be {1}", obj, expected))
             {
             }
         }
@@ -39,17 +39,17 @@ namespace Phonix.Parse
         public static FeatureMatrix FeatureMatrix(IEnumerable<object> objs)
         {
             return new FeatureMatrix(CheckTypes<FeatureValue>(objs, 
-                        "concrete feature value (not a variable, node, or syllable feature)"));
+                        "concrete feature value (not a variable value, node value, or syllable feature)"));
         }
 
         public static IEnumerable<IMatchable> MatchableMatrix(IEnumerable<object> objs)
         {
-            return CheckTypes<IMatchable>(objs, "match value (concrete feature value, variable, node, or syllable feature)");
+            return CheckTypes<IMatchable>(objs, "match value (concrete feature value, variable value, node value, or syllable feature)");
         }
 
         public static IEnumerable<ICombinable> CombinableMatrix(IEnumerable<object> objs)
         {
-            return CheckTypes<ICombinable>(objs, "combining value (concrete feature value or variable)");
+            return CheckTypes<ICombinable>(objs, "combining value (concrete feature value or variable value)");
         }
     }
 }
