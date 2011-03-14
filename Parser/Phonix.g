@@ -130,6 +130,7 @@ parseRoot:
 phonixDecl:
         importDecl
     |   featureDecl { _phono.FeatureSet.Add($featureDecl.val); }
+    |   featureValueGroupDecl
     |   symbolDecl /* Adding to the SymbolSet is handled by symbolDecl itself */
     |   ruleDecl /* Adding to the RuleSet is handled by ruleDecl itself */
     |   syllableDecl
@@ -172,6 +173,19 @@ scalarFeature returns [ScalarFeature val]:
 nodeFeature returns [NodeFeature val]:
     str
     { $val = _phono.FeatureSet.Get<NodeFeature>($str.val); }
+    ;
+
+/* Feature value groups */
+
+featureValueGroupDecl:
+    FEATURE LBRACE str RBRACE matrix
+    { _featureValueGroups[$str.val] = $matrix.val; }
+    ;
+
+featureValueGroup returns [IEnumerable<FeatureValue> val]
+@init { var list = new List<object>(); }:
+    LBRACE str RBRACE
+    { return _featureValueGroups[$str.val]; }
     ;
 
 /* Symbol declarations and usage */
@@ -295,7 +309,7 @@ syllableTermList returns [List<List<IMatrixMatcher>> val]
 matrix returns [FeatureMatrix val]
 @init { var list = new List<object>(); }:
     LBRACE 
-    ( matrixVal { list.Add($matrixVal.val); } )* 
+    ( matrixElement { list.AddRange($matrixElement.val); } )* 
     RBRACE
     { $val = SemanticContext.FeatureMatrix(list); }
     ;
@@ -303,7 +317,7 @@ matrix returns [FeatureMatrix val]
 matchableMatrix returns [IEnumerable<IMatchable> val]
 @init { var list = new List<object>(); }:
     LBRACE 
-    ( matrixVal { list.Add($matrixVal.val); } )* 
+    ( matrixElement { list.AddRange($matrixElement.val); } )* 
     RBRACE
     { $val = SemanticContext.MatchableMatrix(list); }
     ;
@@ -311,12 +325,17 @@ matchableMatrix returns [IEnumerable<IMatchable> val]
 combinableMatrix returns [IEnumerable<ICombinable> val]
 @init { var list = new List<object>(); }:
     LBRACE 
-    ( matrixVal { list.Add($matrixVal.val); } )* 
+    ( matrixElement { list.AddRange($matrixElement.val); } )* 
     RBRACE
     { $val = SemanticContext.CombinableMatrix(list); }
     ;
 
 /* Feature values */
+
+matrixElement returns [IEnumerable<object> val]:
+        matrixVal           { $val = new object[] { $matrixVal.val }; }
+    |   featureValueGroup   { $val = $featureValueGroup.val.OfType<object>(); }
+    ;
 
 matrixVal returns [object val]:
         scalarVal   { $val = $scalarVal.val; }

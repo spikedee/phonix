@@ -829,5 +829,33 @@ namespace Phonix.Test
         {
             ParseWithStdImports("rule ! [] => [Labial]");
         }
+
+        [Test]
+        public void FeatureGroupDeclaration()
+        {
+            ParseWithStdImports("feature [V] [+syll +son +vc]");
+        }
+
+        [Test]
+        public void SymbolContainsFeatureGroup()
+        {
+            ParseWithStdImports("feature [V] [+syll +son +vc]   symbol ! [[V] -hi]");
+        }
+
+        [Test]
+        public void RuleMatchContainsFeatureGroup()
+        {
+            var phono = ParseWithStdImports("feature [V] [+syll +son]\n" +
+                                            "rule match-group [[V]] => i");
+            ApplyRules(phono, "bomo", "bimi");
+        }
+
+        [Test]
+        public void RuleActionContainsFeatureGroup()
+        {
+            var phono = ParseWithStdImports("feature [V] [+syll +son]\n" +
+                                            "rule match-group [+syll -hi] => [[V] +hi -lo +fr -bk]");
+            ApplyRules(phono, "bomo", "bymy");
+        }
     }
 }

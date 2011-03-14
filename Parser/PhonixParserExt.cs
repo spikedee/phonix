@@ -1,5 +1,6 @@
 using Antlr.Runtime;
 using System;
+using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Reflection;
@@ -16,6 +17,8 @@ namespace Phonix.Parse
         private Phonology _phono;
         private string _currentFile;
         private bool _parseError;
+        private readonly Dictionary<string, IEnumerable<FeatureValue>> _featureValueGroups = 
+            new Dictionary<string, IEnumerable<FeatureValue>>();
 
         private void Parse(string currentFile, Phonology phono)
         {
