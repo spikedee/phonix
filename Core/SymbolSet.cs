@@ -80,9 +80,10 @@ namespace Phonix
         {
             if (_symbolCache.Count > 0)
             {
-                if (_symbolCache.ContainsKey(matrix))
+                Symbol sym = null;
+                if (_symbolCache.TryGetValue(matrix, out sym))
                 {
-                    return _symbolCache[matrix];
+                    return sym;
                 }
                 else if (_diacriticSymbolCache != null)
                 {

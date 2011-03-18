@@ -857,5 +857,25 @@ namespace Phonix.Test
                                             "rule match-group [+syll -hi] => [[V] +hi -lo +fr -bk]");
             ApplyRules(phono, "bomo", "bymy");
         }
+
+        [Test]
+        public void SymbolContainsSymbolRef()
+        {
+            ParseWithStdImports("symbol s! [(s) -cons]");
+        }
+
+        [Test]
+        public void RuleMatchContainsSymbolRef()
+        {
+            var phono = ParseWithStdImports("import std.symbols.diacritics\nrule match-sym [(a)] => i");
+            ApplyRules(phono, "ba~ma_0", "bimi");
+        }
+
+        [Test]
+        public void RuleMatchAndActionContainSymbolRef()
+        {
+            var phono = ParseWithStdImports("import std.symbols.diacritics\nrule match-sym [(a)] => [(i)]");
+            ApplyRules(phono, "ba~ma_0", "bi~mi_0");
+        }
     }
 }

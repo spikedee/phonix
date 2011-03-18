@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 
 namespace Phonix.Parse
@@ -93,6 +94,16 @@ namespace Phonix.Parse
 #else
             return new PhonixParser(tokenStream);
 #endif
+        }
+
+        private FeatureMatrix GetSingleSymbol(List<Symbol> symbols)
+        {
+            if (symbols.Count != 1)
+            {
+                string symbolStr = String.Join("", symbols.ConvertAll(s => s.ToString()).ToArray());
+                throw new InvalidMultipleSymbolException(symbolStr);
+            }
+            return symbols[0].FeatureMatrix;
         }
 
         private class PhonixDebugTracer : Antlr.Runtime.Debug.Tracer

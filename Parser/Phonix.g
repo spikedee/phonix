@@ -335,6 +335,12 @@ combinableMatrix returns [IEnumerable<ICombinable> val]
 matrixElement returns [IEnumerable<object> val]:
         matrixVal           { $val = new object[] { $matrixVal.val }; }
     |   featureValueGroup   { $val = $featureValueGroup.val.OfType<object>(); }
+    |   symbolMatrix        { $val = $symbolMatrix.val.OfType<object>(); }
+    ;
+
+symbolMatrix returns [FeatureMatrix val]:
+    LPAREN symbolStr RPAREN
+    { $val = GetSingleSymbol($symbolStr.val); }
     ;
 
 matrixVal returns [object val]:

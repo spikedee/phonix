@@ -32,6 +32,15 @@ namespace Phonix
         }
     }
 
+    public class InvalidMultipleSymbolException : PhonixException
+    {
+        public InvalidMultipleSymbolException(string strSym)
+            : base(String.Format(
+                        "Symbol string ({0}) has multiple segments where only one segment is allowed", strSym))
+            {
+            }
+    }
+
     public class InvalidScalarOpException : PhonixException
     {
         public readonly ScalarFeature Feature;
