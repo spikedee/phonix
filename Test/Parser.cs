@@ -877,5 +877,20 @@ namespace Phonix.Test
             var phono = ParseWithStdImports("import std.symbols.diacritics\nrule match-sym [(a)] => [(i)]");
             ApplyRules(phono, "ba~ma_0", "bi~mi_0");
         }
+
+        [Test]
+        public void StringQuoting()
+        {
+            var phono = ParseWithStdImports(
+                                "symbol \"quote\" [+cons -ro]" +
+                                "symbol \"quote with space\" [+cons -ro]" +
+                                "symbol \"quote +(with) -<bad> $[chars]\" [+cons -ro]" +
+                                "symbol \"quote isn't awesome\" [+cons -ro]" +
+                                "symbol 'quote' [+cons -ro]" +
+                                "symbol 'quote with space' [+cons -ro]" +
+                                "symbol 'quote +(with) -<bad> $[chars]' [+cons -ro]" +
+                                "symbol 'quote has \" in it' [+cons -ro]"
+                                );
+        }
     }
 }
