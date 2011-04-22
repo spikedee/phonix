@@ -881,16 +881,16 @@ namespace Phonix.Test
         [Test]
         public void StringQuoting()
         {
-            var phono = ParseWithStdImports(
-                                "symbol \"quote\" [+cons -ro]" +
-                                "symbol \"quote with space\" [+cons -ro]" +
-                                "symbol \"quote +(with) -<bad> $[chars]\" [+cons -ro]" +
-                                "symbol \"quote isn't awesome\" [+cons -ro]" +
-                                "symbol 'quote' [+cons -ro]" +
-                                "symbol 'quote with space' [+cons -ro]" +
-                                "symbol 'quote +(with) -<bad> $[chars]' [+cons -ro]" +
-                                "symbol 'quote has \" in it' [+cons -ro]"
-                                );
+            ParseWithStdImports(
+			"symbol \"quote\" [+cons -ro]" +
+			"symbol \"quote with space\" [+cons -ro]" +
+			"symbol \"quote +(with) -<bad> $[chars]\" [+cons -ro]" +
+			"symbol \"quote isn't awesome\" [+cons -ro]" +
+			"symbol 'quote' [+cons -ro]" +
+			"symbol 'quote with space' [+cons -ro]" +
+			"symbol 'quote +(with) -<bad> $[chars]' [+cons -ro]" +
+			"symbol 'quote has \" in it' [+cons -ro]"
+			);
         }
     }
 }
