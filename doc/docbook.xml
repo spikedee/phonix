@@ -1,0 +1,2571 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN" "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [
+  <!ENTITY tex "TeX">
+  <!ENTITY latex "LaTeX">
+]>
+<book id="phonix.xml" lang="en">
+  <title>Phonix Phonological Transformation Language</title>
+  <bookinfo>
+    <legalnotice>
+      <para>Copyright &copy; 2009-2010 Jesse Bangs.</para>
+      <para>This manual and Phonix itself are licensed under the BSD license.</para>
+    </legalnotice>
+</bookinfo>
+  <chapter label="" xreflabel="Phonix Phonological Transformation Language" id="Top">
+    <title>Phonix Phonological Transformation Language</title>
+    <para>This file documents a language for modeling phonological change.</para>
+    <para>This is the manual for Phonix, a language for expressing diachronic and
+synchronic phonological processes.</para>
+    <para>$LastChangedDate: 2010-10-17 12:59:35 -0500 (Sun, 17 Oct 2010) $</para>
+  </chapter>
+
+  <chapter label="1" id="Quick-Start">
+    <title>Quick Start Guide</title>
+    <para>You are a busy person. You have sound changes to apply and phonologies to
+crunch and you do not have time to read a whole manual.</para>
+    <para>This section is for you.</para>
+    <para>Writing your first phonology in Phonix is very easy: all that you need to do is
+open up a text file and type the following:</para>
+    <screen>
+import std.features
+import std.symbols
+</screen>
+    <para>The first line above automatically adds the standard feature set to your
+phonology. The second line adds the standard symbol set. Together, these
+provide you with a set of contrastive features and phonetic symbols to allow
+you express whatever phonological processes you desire. You can find out
+exactly what these imports contain by reading <xref linkend="@code{std.features}"></xref> and
+<xref linkend="@code{std.symbols}"></xref>.</para>
+    <para>But you've only started. Your phonology contains rules and processes that
+convert underlying forms to surface forms, and the first and most important
+rule in your phonology is <emphasis>I-Nasal</emphasis>. This rule is expressed in English as:
+"every front vowel must be /i/ if the next segment is /n/". (This is, perhaps,
+not a very realistic rule, but we're doing this for the sake of simplicity.) In
+Phonix, you will write this as such:</para>
+    <screen>rule i-nasal
+    [-cons +fr] =&gt; i / _ n
+</screen>
+    <para>A well educated phonologist such as yourself will immediately recognize the
+notation being used here. The string <literal>[-cons +fr]</literal> is a <firstterm>feature
+matrix</firstterm> that specifies non-consonantal front segments a.k.a. front vowels, and
+the notation <literal>=&gt; i</literal> may be read as "becomes /i/". The portion following
+the <literal>/</literal> is the <firstterm>context</firstterm>, and the context for this rule is <literal>_ n</literal>,
+which we read as "when followed by /n/".</para>
+    <para>If you didn't understand that, you should read <xref linkend="Rules"></xref>, which has a much
+fuller explanation. You may also look at the <xref linkend="Romanian"></xref> for examples of
+other Phonix rules.</para>
+    <para>Save your phonology in a file called <filename>my.phonix</filename>. Let's assume that you
+already have a file <filename>lexicon.txt</filename> with a list of underlying forms for your
+transformations, with one word on each line. Conveniently, this is exactly the
+format that Phonix uses. You can then apply your rules to your lexicon by
+typing the following on the command line:</para>
+    <para><command>phonix my.phonix -i lexicon.txt</command></para>
+    <para>This will print the output of your sound changes to the screen, one word on
+each line. Should you wish to have Phonix save them to a file, simply provide
+the filename with <option>-o</option>:</para>
+    <para><command>phonix my.phonix -i lexicon.txt -o output.txt</command></para>
+    <para>This barely scratches the surface of what Phonix can do, but it should give you
+an idea of how Phonix works and what you can do with it. There are many, many
+more features in Phonix which the rest of this manual will describe.</para>
+  </chapter>
+
+  <chapter label="2" id="How-To-Use-Phonix">
+    <title>How To Use Phonix</title>
+    <para><firstterm>Phonix</firstterm> refers to the Phonix programming language for modeling
+phonological processes, and informally to the program <filename>phonix</filename> that
+interprets Phonix language files and applies the rules contained therein to
+a lexicon.</para>
+    <para>In order to use Phonix, you need two things:</para>
+    <orderedlist numeration="arabic">
+      <listitem>
+        <para>A <firstterm>Phonix file</firstterm> that contains the feature, symbol, and rule
+declarations of the phonology you wish to model. Phonix files conventionally
+have the extension <filename>.phonix</filename> or <filename>.phx</filename>.</para>
+      </listitem>
+      <listitem>
+        <para>The lexicon for your phonology&mdash;the underlying or ancestral forms before
+any rules or sound-changes are applied to them&mdash;written with the symbols
+defined in your Phonix file. Phonix can read your lexicon from standard input
+or from a file.</para>
+      </listitem>
+    </orderedlist>
+    <para>The Phonix language is described in detail in <xref linkend="The-Phonix-Language"></xref>. This
+section describes how to invoke <filename>phonix</filename> to run your phonology files.</para>
+    <para>A basic invocation of Phonix looks like this:</para>
+    <screen>
+phonix <replaceable>phonix-file</replaceable> <replaceable>arguments</replaceable>
+</screen>
+    <para>The only required argument is the <replaceable>phonix-file</replaceable>, which is a file containing
+a phonology definition. The following arguments are optional.</para>
+    <variablelist>
+      <varlistentry>
+        <term><option>-i <replaceable>filename</replaceable></option></term>
+        <term><option>--in <replaceable>filename</replaceable></option></term>
+        <listitem>
+          <para>The lexicon file from which underlying/ancestral forms are read to have the
+Phonix rules applied to them. If this argument is not given, Phonix reads from
+standard input.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>-o <replaceable>filename</replaceable></option></term>
+        <term><option>--out <replaceable>filename</replaceable></option></term>
+        <listitem>
+          <para>The filename to which to write output forms that the rules have applied to. If
+this argument is not given, Phonix writes to standard output.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>-q</option></term>
+        <term><option>--quiet</option></term>
+        <listitem>
+          <para>When this option is present, Phonix doesn't print any errors except for fatal
+error messages.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>-d</option></term>
+        <term><option>--debug</option></term>
+        <listitem>
+          <para>When this option is given, Phonix writes a variety of diagnostic messages to
+the standard error stream to aid in debugging your phonology.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>-v</option></term>
+        <term><option>--verbose</option></term>
+        <listitem>
+          <para>When this option is given, Phonix logs verbosely to the standard error stream.
+This creates all of the output generated by <option>-d</option>, plus more.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>-w</option></term>
+        <term><option>--warn-fatal</option></term>
+        <listitem>
+          <para>When this option is given, certain conditions that normally produce a warning
+will cause Phonix to immediately exit.</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+    <para>Phonix requires some version of the Common Language Runtime, commonly known on
+Windows as .NET. Through the Mono project, this runtime is widely available on
+almost all operating systems. However, the specific way that you invoke
+<filename>phonix</filename> will depend slightly on your setup.</para>
+    <orderedlist numeration="arabic">
+      <listitem>
+        <para>If you are using any version of Windows and <filename>phonix.exe</filename> is in the
+current directory or any directory in <literal>%PATH%</literal>, then you can simply call
+<filename>phonix</filename> or <filename>phonix.exe</filename>. Phonix requires .NET Framework 2.0 or
+later, which is standard on all recent versions of Windows.</para>
+      </listitem>
+      <listitem>
+        <para>If you are using Linux, you can invoke Phonix with <literal>./phonix.exe</literal>,
+provided that you have the Mono runtime installed. If you are building from
+source, there is a <literal>make install</literal> target that will install a <filename>phonix</filename>
+script without the <literal>.exe</literal> extension in <literal>/usr/local/bin</literal>.</para>
+      </listitem>
+      <listitem>
+        <para>If you are using Mac OSX or a POSIX system other than Linux, you can
+invoke Phonix with <literal>mono phonix.exe</literal>. You must have the Mono runtime
+installed, and you need to explicitly call <literal>mono</literal> in order to run Phonix.</para>
+      </listitem>
+    </orderedlist>
+  </chapter>
+
+  <chapter label="3" id="The-Phonix-Language">
+    <title>The Phonix Language</title>
+    <para>This section covers the syntax and meaning of all aspects of a Phonix file in
+detail. The Phonix language is simple but powerful, and it should be very easy
+for people who are familiar with basic phonological concepts and rule notation.
+If you are not familiar with the basics of generative phonology, you may find
+this section tough going.</para>
+    <para>The Phonix language is <firstterm>declarative</firstterm>: you use Phonix to create a
+description of your phonology, and <literal>phonix</literal> reads your description and
+applies the rules contained therein to the lexicon. There are three fundamental
+elements to a Phonix file: <firstterm>features</firstterm>, <firstterm>symbols</firstterm>, and <firstterm>rules</firstterm>. Each
+of these is built up from the previous parts: features are the most basic
+element, symbols are composed of features, and rules are composed from symbols
+and feature matrices.</para>
+
+    <sect1 label="3.1" id="Features">
+      <title>Features</title>
+      <para>Phonological features are the contrastive elements that compose the phonemes in
+a phonology. Features must be declared before they can be used in symbols or
+rules.</para>
+
+      <sect2 label="3.1.1" id="Basic-Features">
+        <title>Basic Features</title>
+        <para>The simplest feature declaration looks like this:</para>
+        <screen>
+feature <replaceable>feature-name</replaceable>
+</screen>
+        <para>The name of a feature can generally be anything, so long as it doesn't contain
+spaces or characters with a special meaning in Phonix. For detailed rules, see
+<xref linkend="Strings"></xref>. For example:</para>
+        <screen>
+feature voice
+</screen>
+        <para>The preceding example creates <literal>voice</literal> as a <firstterm>binary feature</firstterm>, meaning
+that it may have the values <literal>+voice</literal> and <literal>-voice</literal>. (There is also a
+third value <literal>*voice</literal> which will be talked about shortly.) Phonix supports
+three types of features: <firstterm>unary</firstterm>, <firstterm>binary</firstterm>, and <firstterm>scalar</firstterm>. By
+default all features are binary. To declare a feature of a different type, you
+must use the extended syntax:</para>
+        <screen>
+feature <replaceable>feature-name</replaceable> (<replaceable>parameter-name</replaceable>=<replaceable>parameter-value</replaceable>)
+</screen>
+        <para>Note that the parentheses around the parameter list are part of the syntax and
+cannot be omitted. Currently the only parameters allowed on feature
+declarations are <literal>type</literal>, which may have the values <literal>unary</literal>,
+<literal>binary</literal>, <literal>scalar</literal>, or <literal>node</literal>, and <literal>children</literal>, which is
+discussed under <xref linkend="Node-Features"></xref>.</para>
+        <para>These feature types are discussed in detail in the following sections.</para>
+      </sect2>
+
+      <sect2 label="3.1.2" id="Unary-Features">
+        <title>Unary Features</title>
+        <para>The following example declares a unary feature &lsquo;<literal>un</literal>&rsquo;:</para>
+        <screen>
+feature un (type=unary)
+</screen>
+        <para>Unary features are either <firstterm>present</firstterm> or <firstterm>absent</firstterm>. A unary feature which
+is present is written with the feature name and no other decoration: <literal>un</literal>.
+A unary feature which is absent is preceded by &lsquo;<literal>*</literal>&rsquo;: <literal>*un</literal>.</para>
+        <para>Unary features are also called "privative features" in linguistic literature.</para>
+      </sect2>
+
+      <sect2 label="3.1.3" id="Binary-Features">
+        <title>Binary Features</title>
+        <para>The following example declares a binary feature &lsquo;<literal>bn</literal>&rsquo;:</para>
+        <screen>
+feature bn (type=binary)
+</screen>
+        <para>Binary features have both <firstterm>positive</firstterm> and <firstterm>negative</firstterm> values, written as
+<literal>+bn</literal> and <literal>-bn</literal> respectively. Additionally, a binary feature may be
+<firstterm>absent</firstterm>, which is written the same way as for unary features: <literal>*bn</literal>.
+For example, the features &lsquo;<literal>anterior</literal>&rsquo; and &lsquo;<literal>distributed</literal>&rsquo; are not
+meaningful for labials, so a labial segment would have the value
+<literal>*anterior</literal>.</para>
+      </sect2>
+
+      <sect2 label="3.1.4" id="Scalar-Features">
+        <title>Scalar Features</title>
+        <para>The following example declares a scalar feature:</para>
+        <screen>
+feature sc (type=scalar)
+</screen>
+        <para>Scalar features may have any non-negative integer value, and are written as
+<literal>sc=<replaceable>value</replaceable></literal>. For example, <literal>sc=0</literal>, <literal>sc=1</literal>, and
+<literal>sc=123456789</literal> are all valid scalar feature values. However, negative
+values such as <literal>sc=-1</literal> and strings such as <literal>sc=foo</literal> are not valid.
+Scalar features may also be absent, in which case they are written <literal>*sc</literal>.</para>
+        <para>Scalar features may take two additional parameters <literal>min</literal> and <literal>max</literal> to
+specify the minimum and maximum value for the feature, as in the following
+example:</para>
+        <screen>
+feature sc (type=scalar min=1 max=5)
+</screen>
+        <para>Note that if you specify either <literal>min</literal> or <literal>max</literal>, you must specify
+both.</para>
+      </sect2>
+
+      <sect2 label="3.1.5" id="Node-Features">
+        <title>Node Features</title>
+        <para>Node features are used to represent <emphasis>feature trees</emphasis>, which are used  in
+many phonological models. A node feature represents a collection of child
+features, and the value of a node feature is the set of values of all of its
+children.</para>
+        <para>A node feature is declared with the parameter <literal>type=node</literal> and the
+<literal>children</literal> parameter. For example:</para>
+        <screen>
+feature nd (type=node children=a,b,c)
+</screen>
+        <para>The <literal>children</literal> parameter is required for node features, and forbidden on
+all other feature types. Its value is a list of the child features, separated
+by commas. You cannot put spaces after the commas unless you put the whole list
+in quotes, i.e. either <literal>children=a,b,c</literal> or <literal>children="a, b, c"</literal>. The
+features that are named as children must be declared before you declare the
+node feature.</para>
+        <para>Feature nodes can have any kind of feature as a child, including other nodes.
+This allows you to create a multi-level hierarchies. For an example of such a
+feature tree, see <xref linkend="@code{std.features}"></xref>.</para>
+        <para>Feature nodes are <firstterm>present</firstterm> if any of their child features are present
+(i.e. if any child feature has a value other than <literal>*feature</literal>), otherwise
+they are <firstterm>absent</firstterm>. Feature nodes are written the same way as unary
+features, so that <literal>nd</literal> indicates that a node is present and <literal>*nd</literal>
+that it is absent. Note that there are some restrictions on where you can use
+node feature values:</para>
+        <itemizedlist>
+          <listitem>
+            <para>Node feature values can't be used at all in symbol declarations. Symbols
+can only contain non-node features.</para>
+          </listitem>
+          <listitem>
+            <para>Node feature values that test for the presence of a node (such as
+<literal>nd</literal>) can only be used in the <firstterm>match</firstterm> and <firstterm>context</firstterm> portions of a
+rule. This is because it isn't meaningful to assign a "present" value directly
+to a node.</para>
+          </listitem>
+          <listitem>
+            <para>Node feature values that test for the absence of a node (such as
+<literal>*nd</literal>) can be used anywhere within a rule. Assigning a null value to a
+node within a rule implies assigning a null value to all children of that node.</para>
+          </listitem>
+        </itemizedlist>
+      </sect2>
+    </sect1>
+
+    <sect1 label="3.2" id="Feature-Matrices">
+      <title>Feature Matrices</title>
+      <para>A <firstterm>feature matrix</firstterm> is a set of features and their values, enclosed in
+&lsquo;<literal>[]</literal>&rsquo;. The following line represents a feature matrix.</para>
+      <screen>
+[+cons -son -cont -str -vc -ro]
+</screen>
+      <para>Features that are present in your phonology but which are not listed in a
+feature matrix are assumed to have the <firstterm>absent</firstterm> value. In the feature
+matrix above, the vocalic feature <literal>fr</literal> (front) is unspecified, so it has
+the default value of <literal>[*fr]</literal>.</para>
+      <para>Feature matrices are used to define symbols and rules. However, only unary,
+binary, and scalar feature values can appear in symbols. Node feature values
+and variable feature values cannot be used in symbol declarations.</para>
+    </sect1>
+
+    <sect1 label="3.3" id="Symbols">
+      <title>Symbols</title>
+      <para>A <firstterm>symbol</firstterm> in Phonix is a string of text that corresponds to a given
+feature matrix.</para>
+      <para>Symbols in Phonix are used for three things:</para>
+      <orderedlist numeration="arabic">
+        <listitem>
+          <para>To define the phonetic symbols represented by the strings in your lexicon
+files.</para>
+        </listitem>
+        <listitem>
+          <para>To provide a convenient shortcut for writing rules that refer to specific
+phonemes.</para>
+        </listitem>
+        <listitem>
+          <para>To define the strings used to represent feature matrices in output.</para>
+        </listitem>
+      </orderedlist>
+      <sect2 label="3.3.1" id="Basic-Symbols">
+        <title>Basic symbols</title>
+        <para>A basic symbol declaration looks like this:</para>
+        <screen>
+symbol <replaceable>symbol-string</replaceable> <replaceable>feature-matrix</replaceable>
+</screen>
+        <para>For example, this is the declaration of the symbol &lsquo;<literal>s</literal>&rsquo; in the standard
+symbol set:</para>
+        <screen>
+symbol s [+cons -son +cont +str -vc +ant -dist]
+</screen>
+        <para>Having this symbol declaration does three things:</para>
+        <orderedlist numeration="arabic">
+          <listitem>
+            <para>Allows you to use the string <literal>s</literal> in your input to Phonix.</para>
+          </listitem>
+          <listitem>
+            <para>Allows you to use <literal>s</literal> as a shorthand for <literal>[+cons -son +cont
++str -vc +ant -dist]</literal> in your rules.</para>
+          </listitem>
+          <listitem>
+            <para>Causes the feature matrix <literal>[+cons -son +cont +str -vc +ant -dist]</literal>
+to be translated to <literal>s</literal> in phonix output.</para>
+          </listitem>
+        </orderedlist>
+        <para>Every character you use in in your lexicon file must be defined as a symbol, or
+else Phonix will quit with an error message. If your rules result in an output
+feature matrix for which there is no symbol, Phonix will print a warning and
+insert the dummy symbol <literal>[?]</literal> as a placeholder in your output.</para>
+        <para>Any Unicode character that doesn't have a special meaning in Phonix can be used
+as a symbol. So if you want to define ☃ (Unicode snowman) as a symbol in your
+phonology, you're welcome to do so.</para>
+        <para>Symbols can have any number of characters in them. Phonix always maps input
+strings to the longest matching symbol, however. For example, say you define
+the following symbols:</para>
+        <screen>
+symbol s  [...]
+symbol k  [...]
+symbol sk [...]
+</screen>
+        <para>If your input or rules contain the characters &lsquo;<literal>sk</literal>&rsquo;, these will be mapped
+to the symbol /sk/, and not to the sequence /s/+/k/.</para>
+        <para>For many examples of symbol definitions, see <xref linkend="@code{std.symbols}"></xref>.</para>
+      </sect2>
+
+      <sect2 label="3.3.2" id="Diacritic-Symbols">
+        <title>Diacritic Symbols</title>
+        <para>Phonix allows you to define certain symbols as <firstterm>diacritics</firstterm>, which are
+modifiers applied to other symbols. Diacritics are defined like this:</para>
+        <screen>
+symbol <replaceable>diacritic-string</replaceable> (diacritic) <replaceable>feature-matrix</replaceable>
+</screen>
+        <para>For example, the following is the declaration of the nasality diacritic in the
+standard diacritic set:</para>
+        <screen>
+symbol ~ (diacritic) [+nas]
+</screen>
+        <para>Diacritics differ from basic symbols in several ways:</para>
+        <orderedlist numeration="arabic">
+          <listitem>
+            <para>A diacritic is not a segment of its own, but rather adds its features to
+the symbol that it modifies. Take the symbol /s/ defined above, together with
+the nasality diacritic /~/. The combination of these symbols /s~/ results in a
+single feature matrix with the features <literal>[+cons -son +cont +str -vc +ant
+-dist +nas]</literal>. These are the feature values for /s/, with the <literal>+nas</literal> value
+of /~/ added to them.</para>
+          </listitem>
+          <listitem>
+            <para>Diacritics must follow a base symbol in your input. If /s/ is a base
+symbol and /~/ is a diacritic, then <literal>s</literal> is a valid input string, as is
+<literal>s~</literal>.  However, <literal>~</literal> and <literal>~s</literal> are not valid input. Phonix will
+quit with an error if it encounters such a string.</para>
+          </listitem>
+          <listitem>
+            <para>When representing the output of your rules with symbols, Phonix will
+first look for a base symbol that matches the output feature matrix. It then
+adds diacritics as necessary. Phonix will try to find the fewest number of
+diacritics necessary to represent your output.</para>
+          </listitem>
+        </orderedlist>
+        <para>For many examples of diacritic definitions, see
+<xref linkend="@code{std.symbols.diacritics}"></xref>.</para>
+      </sect2>
+    </sect1>
+
+    <sect1 label="3.4" id="Rules">
+      <title>Rules</title>
+      <para>The <firstterm>rule</firstterm> is the most complex and the most variable object in Phonix. A
+rule describes the conditions under which one phonological unit is transformed
+into another.</para>
+
+      <sect2 label="3.4.1" id="Parts-of-a-rule">
+        <title>Parts of a rule</title>
+        <para>A complete rule has the following syntax:</para>
+        <screen>
+rule <replaceable>name</replaceable> (<replaceable>parameters</replaceable>) <replaceable>match</replaceable> =&gt; <replaceable>action</replaceable> / <replaceable>context</replaceable> // <replaceable>excluded-context</replaceable>
+</screen>
+        <itemizedlist>
+          <listitem>
+            <para>The <firstterm>name</firstterm> of the rule can be any Phonix string. See <xref linkend="Strings"></xref>.</para>
+          </listitem>
+          <listitem>
+            <para>The <firstterm>parameters</firstterm> are optional and define characteristics of how the
+rule is applied. If you don't apply any parameters, you can omit the
+parentheses.</para>
+          </listitem>
+          <listitem>
+            <para>The <firstterm>match</firstterm> is a sequence of feature matrices or symbols that matches
+the segments that the transformation works on.</para>
+          </listitem>
+          <listitem>
+            <para>The <firstterm>action</firstterm> is sequence of feature matrices or symbols that defines
+the transformations applied to the match.</para>
+          </listitem>
+          <listitem>
+            <para>The <firstterm>context</firstterm> defines the conditions under which the transformation
+occurs. These are the adjacent segments which aren't themselves altered, but
+which are required to trigger the rule. If the rule is <firstterm>unconditional</firstterm> and
+does not depend on the surrounding segments, you can omit the context and the
+excluded context.</para>
+          </listitem>
+          <listitem>
+            <para>The <firstterm>excluded-context</firstterm> defines conditions under which the rule should
+not apply. These are exceptions to the conditions in the context.</para>
+          </listitem>
+        </itemizedlist>
+        <para>These are described in more detail in the following sections.</para>
+      </sect2>
+
+      <sect2 label="3.4.2" id="Basic-transformations">
+        <title>Basic transformations</title>
+        <para>The simplest transformation is one that has no context or parameters and acts
+only on a single phoneme, as in the following example.</para>
+        <screen>
+rule s-to-z
+    s =&gt; z
+</screen>
+        <para>The <firstterm>match</firstterm> here is the segment /s/, and the <firstterm>action</firstterm> is to turn all
+such segments into /z/. Since /s/ and /z/ differ only by voice, we can also
+write this rule like this (using the appreviation <literal>vc</literal> for voice, as in
+the standard feature set):</para>
+        <screen>
+rule s-voicing
+    s =&gt; [+vc]
+</screen>
+        <para>Here the action is a feature matrix rather than a segment. The effect of this
+is to take whichever value for <literal>voice</literal> the input previously had and
+replace it with <literal>+voice</literal>. You can also use a feature matrix in the match
+portion of the rule to match against a class of segments:</para>
+        <screen>
+rule continuant-voicing
+    [+cont] =&gt; [+vc]
+</screen>
+        <para>The matrix <literal>[+cont]</literal> causes this rule to match all segments that have the
+feature <literal>+cont</literal>, and applies the feature <literal>+vc</literal> to them.</para>
+        <para>Most rules do not apply everywhere, however, but have some <firstterm>context</firstterm>. The
+context in Phonix consists of, at minimum, the character <literal>_</literal> with any
+number of feature matrices or symbols before or after it. The <literal>_</literal>
+character stands for the segment(s) of the match/action. Regardless of how many
+segments are matched or transformed, you must write only one underscore. For
+example, let's modify our previous rule to only apply after a nasal:</para>
+        <screen>
+rule postnasal-voicing
+    [+cont] =&gt; [+vc] / [+nas] _
+</screen>
+        <para>In this case, the context <literal>/ [+nas] _</literal> indicates that the segments matched
+must be preceded by a segment with the feature <literal>+nas</literal>.</para>
+        <para>To indicate word boundaries we use <literal>$</literal>. The <literal>$</literal> character can stand
+for either the beginning or the end of a word. It can only appear as the first
+or the last character of the rule context (or both), but it cannot appear
+internal to a rule. Suppose that we wish to further restrict our rule to only
+apply at the end of a word. In this case, we write this:</para>
+        <screen>
+rule final-postnasal-voicing
+    [+cont] =&gt; [+vc] / [+nas] _ $
+</screen>
+        <para>If we wish to add an exception to this rule, we use the <emphasis>excluded
+context</emphasis>. This is indicated by a double-slash <literal>//</literal> after the context. If
+the rule includes an excluded context, then phonix will check both that the
+context matches the input and that the excluded context does <emphasis>not</emphasis> match.
+For example:</para>
+        <screen>
+rule postnasal-voicing-with-exception
+    [+cont] =&gt; [+vc] / [+nas] _ // N _
+</screen>
+        <para>Here we voice continuants after nasals, <emphasis>except</emphasis> after /N/ (the velar
+nasal).</para>
+        <para>If you wish, you can also indicate the excluded context without the context:</para>
+        <screen>
+rule voicing-with-exception
+    [+cont] =&gt; [+vc] // $ _
+</screen>
+        <para>This voices all continuants unless they are the first segment in the word. Note
+that we could accomplish the exact same thing with:</para>
+        <screen>
+rule voicing-with-exception
+    [+cont] =&gt; [+vc] / [] _
+</screen>
+        <para>Here, we specify that voicing occurs when the continuant is preceded by any
+segment. (A feature matrix with no values, indicated by <literal>[]</literal>, acts as a
+match for any segment.) This illustrates that an excluded context can usually
+be indicated by a properly constructed matching context and vice-versa.  The
+excluded context construct is provided only to make rules clearer and easier to
+understand.</para>
+      </sect2>
+
+      <sect2 label="3.4.3" id="Inserting-and-deleting">
+        <title>Inserting and deleting</title>
+        <para>Insertion and deletion rules are written with the help of the special character
+<literal>*</literal>, which you should think of as "nothing". To write an insertion rule,
+specify that "nothing" becomes something:</para>
+        <screen>
+rule e-epenthesis
+    * =&gt; e / $ _ s[-cont]
+</screen>
+        <para>This is a familiar rule found in many Romance languages, which adds an
+epenthetic /e/ following an initial cluster with /s/.</para>
+        <para>The opposite of insertion is deletion, in which something becomes nothing.
+E.g.:</para>
+        <screen>
+rule final-cons-deletion
+    [-son] =&gt; * / _ $
+</screen>
+        <para>Here, the "something" is any non-sonorant (<literal>-son</literal>), which becomes
+"nothing" when followed by the word boundary.</para>
+        <para>Our nothing character is important when writing rules in which multiple
+segments become one. For example, to express that /s/+/k/ becomes /S/, you
+<emphasis>cannot</emphasis> write the following:</para>
+        <screen>
+# DOES NOT WORK - Phonix will not compile this rule
+rule sk-coalescence
+    sk =&gt; S
+</screen>
+        <para>The problem with this is that you must have the same number of segments both
+before and after the <literal>=&gt;</literal> symbol. To accomplish what you want, just
+specify that one of the input segments is deleted:</para>
+        <screen>
+rule sk-coalescence
+    sk =&gt; S*
+</screen>
+        <para>This rule will compile and function as expected.</para>
+      </sect2>
+
+      <sect2 label="3.4.4" id="Rule-variables">
+        <title>Rule variables</title>
+        <para>It is common for linguistic rules to operate when two segments share the same
+value for some feature, regardless of what the particular value of that feature
+is. The linguistic literature traditionally indicates such values with Greek
+letters to represent the variables. Phonix allows you to indicate such rules
+without the Greek using <firstterm>variable feature values</firstterm>, which are indicated by
+<literal>$</literal> preceding a feature name.</para>
+        <para>Consider the following rule:</para>
+        <screen>
+rule cluster-spirantization
+    [$vc -son] =&gt; [+cont] / _ [$vc -son]
+</screen>
+        <para>This rule in English reads as "spirantize any non-sonorant when followed by
+another non-sonorant of the same voicing". The feature values <literal>-son</literal> and
+<literal>+cont</literal> are ordinary feature values. The feature value <literal>$vc</literal> is
+different: it doesn't stipulate <literal>+vc</literal> or <literal>-vc</literal>, but rather requires
+that the value for <literal>vc</literal> be the same in both the match and context
+segments. This rule will change <literal>apta</literal> into <literal>afta</literal> since both /p/ and
+/t/ have the same voicinge, and it will change <literal>abda</literal> into <literal>avda</literal>
+since /b/ and /d/ have the some voicing. However, it won't change <literal>abta</literal>
+at all, because the segments in that word are of different voicing.</para>
+        <para>Variables may also occur in rule actions. The following illustrates a nasal
+assimilation rule:</para>
+        <screen>
+rule nasal-assimilate
+    [-cont] =&gt; [$nas $son] / _ [-cont $nas $son]
+</screen>
+        <para>This rule reads as "any non-continuant takes the nasality and sonority of a
+following non-contiuant segment". The values <literal>$nas $son</literal> in the rule
+action have the effect of setting <literal>nas</literal> and <literal>son</literal> in the matched
+segment to whatever value they have in the context segment. This will cause,
+for example /d/+/m/ to become /n/+/m/, while /n/+/b/ becomes /d/+/b/.</para>
+        <para>In order for a variable feature value to be meaningful, it has to occur at
+least twice in a rule. Consider the following modified example:</para>
+        <screen>
+rule nasal-assimilate-mod
+    [-cont] =&gt; [$nas] / _ [-cont $nas $son]
+</screen>
+        <para>This rule parses and executes without any warning, but the value <literal>$son</literal> in
+the rule context has no effect, since there is no other instance of <literal>$son</literal>
+to match against.</para>
+        <para>The following example, however, will generate a warning message:</para>
+        <screen>
+rule nasal-assimilate-mod2
+    [-cont] =&gt; [$nas $son] / _ [-cont $nas]
+</screen>
+        <para>In this case we are trying to set the value of <literal>son</literal> in the rule action,
+but the value for <literal>son</literal> is not defined anywhere else in the rule. Since
+this usually indicates a mistake, Phonix issues a warning and leaves the value
+of <literal>son</literal> unchanged.</para>
+      </sect2>
+
+      <sect2 label="3.4.5" id="Node-feature-values">
+        <title>Node feature values</title>
+        <para>Node features are features with one or more child features (see <xref linkend="Node-Features"></xref>), and they have some special properties.</para>
+        <para>A node feature is <firstterm>present</firstterm> if one or more of its children is present. Node
+features don't have any value of their own. Within a rule you can use the same
+syntax that is used for unary values to test for the presence of a node:</para>
+        <screen>
+rule postlabial-centralization
+    [+fr -bk] =&gt; [-fr] / [Labial] _
+</screen>
+        <para>In this case we are testing for the presence of the <literal>Labial</literal> node. This is
+especially convenient because it allows us to capture both <literal>+ro</literal> segments
+(rounded vowels) and <literal>-ro</literal> segments (labial consonants), which otherwise
+can't be represented in a natural class.</para>
+        <para>Conversely, you can test for the absence of a particular node by preceding the
+node name with <literal>*</literal>, as with other features. For example, the following
+rule centralizes vowels after non-<literal>Coronal</literal> segments.</para>
+        <screen>
+rule nonlabial-centralization
+    [+fr -bk] =&gt; [-fr] / [*Coronal] _
+</screen>
+        <para>This rule will apply whenever the action segment is preceded by something that
+has no non-null values for features that occur under the <literal>Coronal</literal> node.
+You could also write <literal>[*Coronal]</literal> as <literal>[*ant *dist]</literal>, since <literal>ant</literal>
+and <literal>dist</literal> are the only two features under <literal>Coronal</literal>. These two forms
+have exactly the same meaning, though the former is clearer and easier to
+understand.</para>
+        <para>Within the action portion of a rule, you can use this syntax to set an entire
+group of segments to their absent values. For example, the following rule
+reduces all stops in final position to /?/ by removing every feature under the
+<literal>Place</literal> node.</para>
+        <screen>
+rule final-glottalization
+    [-cont] =&gt; [*Place] / _ $
+</screen>
+        <para>As this rule illustrates, you may use the <literal>*Node</literal> syntax in a rule action,
+but you cannot use the <literal>Node</literal> syntax in an action, because it makes no
+sense to assign a value directly to a node.</para>
+      </sect2>
+
+      <sect2 label="3.4.6" id="Assimilation-and-gemination">
+        <title>Assimilation and gemination</title>
+        <para>Node features (see <xref linkend="Node-Features"></xref>) are especially useful for assimilation
+and gemination rules, as we'll see.</para>
+        <para>A common phonological process is <emphasis>nasal place assimilation</emphasis>, by which
+nasals in coda positions take on the place of the following segments. These
+rules can be written with a flat feature set by writing a complex rule that
+assigns every feature value correspending to the notion of "place". However,
+this can get very cumbersome&ndash;consider that to write a <emphasis>total</emphasis>
+assimilation rule, you would need include every single feature as a variable!</para>
+        <para>However, these processes are considerably simplified by using node features.
+For example, using <xref linkend="@code{std.features}"></xref>, we can write a nasal place
+assimilation rule as follows:</para>
+        <screen>
+rule nasal-place-assimilation
+    [+nas] =&gt; [$Place] / _ [+cons $Place]
+</screen>
+        <para>This rule is greatly simplified by using the <literal>Place</literal> node, which has as
+its children all of the features that contribute to place of articulation. The
+effect of the <literal>$Place</literal> variable is the same as any other rule variable: it
+copies the value of <literal>Place</literal> from the context to the action segment.
+However, because <literal>Place</literal> is a node, every single feature value under
+<literal>Place</literal> in the feature hierarchy is copied as well.</para>
+        <para>You can extend this even further for a gemination rule that duplicates
+<emphasis>all</emphasis> of the features for a given segment:</para>
+        <screen>
+rule intervocalic-gemination
+    * =&gt; [$ROOT] / [-cons][+cons $ROOT] _ [-cons]
+</screen>
+        <para>Here a consonantal segment is doubled when surrounded on either side by
+non-consonantal segments. The feature <literal>ROOT</literal> has as its children every
+feature in <literal><literal>std.features</literal></literal>, and so the inserted segment copies every
+value from the preceding segment.</para>
+      </sect2>
+
+      <sect2 label="3.4.7" id="Scalar-feature-value-operators">
+        <title>Scalar feature value operators</title>
+        <para>There a few special operators that can be used with scalar feature values to
+perform integer operations and comparisons. Scalar feature values are unlike
+other feature value types in that they represent a range of integer values, and
+so it's often useful to perform simple numeric operations on them.</para>
+
+        <sect3 label="3.4.7.1">
+          <title>Comparison operators</title>
+          <para>Scalar comparison operators can be used anywhere within a feature matrix that
+does matching, i.e. in the match portion of the rule, or to the left of the
+arrow in the action. The most basic scalar comparison is for equality, which
+has the same format as a regular scalar value:</para>
+          <screen>
+[sc=2]
+</screen>
+          <para>This feature matrix will match any segment for which the scalar feature
+<literal>sc</literal> has the value <literal>2</literal>.</para>
+          <para>You can also check for <firstterm>inequality</firstterm> with <literal>&lt;&gt;</literal>:</para>
+          <screen>
+[sc&lt;&gt;2]
+</screen>
+          <para>This matrix will match any segment which has a value for <literal>sc</literal> other than
+<literal>2</literal>. This includes values like <literal>sc=3</literal>, <literal>sc=1</literal>, and even null
+values like <literal>*sc</literal>.</para>
+          <para>There are also operators for <firstterm>greater than</firstterm>, <firstterm>greater than or equal</firstterm>,
+<firstterm>less than</firstterm>, and <firstterm>less than or equal</firstterm>, which have the familiar numeric
+notation:</para>
+          <screen>
+sc&gt;2    # matches sc=3, sc=4, etc.
+sc&gt;=2   # matches sc=2, sc=3, etc.
+sc&lt;2    # matches sc=1, sc=0
+sc&lt;=2   # matches sc=2, sc=1, sc=0
+</screen>
+          <para>These numeric comparison operators will only match if the segment they're
+matching against has a defined value for <literal>sc</literal>. They will always return
+false when comparing against <literal>*sc</literal>.</para>
+        </sect3>
+
+        <sect3 label="3.4.7.2">
+          <title>Addition and subtraction operators</title>
+          <para>You can use addition and subtraction operators to add to or subtract from a
+scalar feature value. These operators can only be used in a rule action, on the
+right-hand side of the arrow.</para>
+          <para>The <literal>=+</literal> operator is used to add to a scalar feature value. (Note that the
+equal sign comes first, unlike most programming languages.)</para>
+          <screen>
+rule add-two
+    [sc&gt;0] =&gt; [sc=+2]
+</screen>
+          <para>This rule matches any segment that has a value for <literal>sc</literal> greater than zero,
+and adds two to that value. An input segment with <literal>sc=1</literal> would have
+<literal>sc=3</literal> after this rule applied.</para>
+          <para>The subtraction operator <literal>=-</literal> works much the same way:</para>
+          <screen>
+rule subtract-one
+    [sc&gt;2] =&gt; [sc=-1]
+</screen>
+          <para>This rule matches any segment that has a value for <literal>sc</literal> greater than two,
+and subtracts one from that value. An input segment with <literal>sc=3</literal> would have
+<literal>sc=2</literal> after this rule applied.</para>
+          <para>These operators may generate non-fatal warnings under a few conditions:</para>
+          <itemizedlist>
+            <listitem>
+              <para>If the scalar feature value is null (e.g. <literal>*sc</literal>) and you attempt to
+apply the addition or subtraction operator, Phonix will issue a warning and
+leave the value unchanged.</para>
+            </listitem>
+            <listitem>
+              <para>If the scalar feature has a minimum and a maximum (see <xref linkend="Scalar-Features"></xref>) and applying the addition or subtraction operator causes the scalar
+to go out of range, Phonix will also issue a warning and leave the value
+unchanged.</para>
+            </listitem>
+          </itemizedlist>
+        </sect3>
+      </sect2>
+
+      <sect2 label="3.4.8" id="Optional-and-repeated-segments">
+        <title>Optional and repeated segments</title>
+        <para>You often need to make some segments in your rule <emphasis>optional</emphasis>. In
+traditional linguistic notation, this is indicated by enclosing the optional
+segment(s) in parenthesis, and the same convention is followed by Phonix.</para>
+        <screen>
+rule optional-r
+    a =&gt; i / k(r) _
+</screen>
+        <para>This rule will take the sequences /ka/ and /kra/ and convert them to /ki/ and
+/kri/ respectively. The <literal>(r)</literal> in the rule context indicates that the /r/
+optionally follows the /k/.</para>
+        <para>This syntax can be extended to indicate that a segment is repeated <emphasis>zero
+or more times</emphasis> or <emphasis>one or more times</emphasis>. These are indicated by using the
+operators <literal>*</literal> or <literal>+</literal> respectively, together with the parentheses.</para>
+        <para>The operator <literal>*</literal> following a parenthesized segment indicates that the
+segment may appear zero or more times.</para>
+        <screen>
+rule multiple-r
+    a =&gt; i / k(r)* _
+</screen>
+        <para>This rule will match against /ka/ and /kra/, as the one above, but it also
+matches /krra/ or /krrrrrrrrrra/ or any number of other repetitions of /r/.</para>
+        <para>The operator <literal>+</literal> following a parenthesized segment indicates that the
+segment may appear one or more times.</para>
+        <screen>
+rule at-least-one-r
+    a =&gt; i / k(r)+ _
+</screen>
+        <para>This rule, unlike the ones above, does <emphasis>not</emphasis> match /ka/. It does, however,
+match /kra/, /krra/, and any other input with at least one /r/.</para>
+
+        <sect3 label="3.4.8.1">
+          <title>Differences from regular expressions</title>
+          <para>The <literal>*</literal> and <literal>+</literal> operators are similar to the equivalent regular
+expression operators. However, Phonix is <emphasis>not</emphasis> a regular expression
+engine, and there are important differences between regular expressions and the
+Phonix engine.</para>
+          <itemizedlist>
+            <listitem>
+              <para>The parentheses around segment(s) preceding the <literal>*</literal> or <literal>+</literal> are
+not optional.</para>
+            </listitem>
+            <listitem>
+              <para>Phonix does not do <firstterm>backtracking</firstterm>, so a rule context involving
+multiple <literal>*</literal> or <literal>+</literal> expressions may not work as expected.</para>
+            </listitem>
+            <listitem>
+              <para>Phonix matches are always greedy (taking in as many segments as they
+can). There are no non-greedy match operators in Phonix.</para>
+            </listitem>
+          </itemizedlist>
+          <para>Many rules using multiple match segments can be expressed more succinctly by
+using a filter instead. See <xref linkend="@code{filter}"></xref>.</para>
+        </sect3>
+      </sect2>
+
+      <sect2 label="3.4.9" id="Rule-parameters">
+        <title>Rule parameters</title>
+        <para>Rule parameters alter the execution of your rule in some way that can't be
+indicated in the rule itself. Parameters take the form
+<literal><replaceable>param-name</replaceable>=<replaceable>param-value</replaceable></literal>, and are enclosed in parentheses
+after the rule name, with spaces between them if there are more than one. The
+following rule example specifies the <literal>direction</literal> and <literal>filter</literal>
+parameters:</para>
+        <screen>
+rule leftward-example (direction=right-to-left filter=[+cons]) s =&gt; z
+</screen>
+        <para>There are two different parameters given in this example:
+<literal>direction=left-to-right</literal> and <literal>filter=[+cons]</literal>. Note that the
+parameters are separated by a space, not by a comma.</para>
+        <para>Supported rule parameters are discussed below.</para>
+
+        <sect3 label="3.4.9.1" id="@code{direction}">
+          <title><literal>direction</literal></title>
+          <para>The <literal>direction</literal> parameter defines the direction in which the rule scans
+for matching contexts. This can be important if one application of a rule may
+create the context for further applications. To specify the direction for a
+rule, specify the parameter <literal>direction=<replaceable>direction-value</replaceable></literal>. Valid
+direction values are <literal>left-to-right</literal> and <literal>right-to-left</literal>, with
+<literal>left-to-right</literal> as the default.</para>
+          <para>A good example for a direction-sensitive rule is voice agreement. Suppose we
+have a rule that all consonants in a cluster must agree with the voice of the
+last consonant. The following rule does not accomplish that:</para>
+          <screen>
+# This doesn't work as expected
+rule voicing-agreement
+    [+cons] =&gt; [+vc] / _ [+cons +vc]
+</screen>
+          <para>Given an input word like <literal>astga</literal>, the output of this rule will be
+<literal>asdga</literal>&mdash;only the middle consonant in the cluster is affected! This is
+because the default rule direction is to the right. First the /s/ is evaluated,
+but this /s/ is followed by /t/, so the rule does not apply. Then /t/ followed
+by /g/ is evaluated. This does match the required context, so /t/ becomes /d/.
+However, the /s/ is never reevaluated, leaving <literal>asdga</literal> as the result. To
+fix this, specify that the rule applies from the right to the left:</para>
+          <screen>
+rule voicing-agreement (direction=right-to-left)
+    [+cons] =&gt; [+vc] / _ [+cons +vc]
+</screen>
+          <para>This rule will transform <literal>astga</literal> into <literal>azdga</literal> as expected. First /t/
+followed by /g/ is evaluated, transforming the /t/ into /d/. Then /s/ followed
+by /d/ is evaluated, and the /s/ becomes /z/.</para>
+        </sect3>
+
+        <sect3 label="3.4.9.2" id="@code{filter}">
+          <title><literal>filter</literal></title>
+          <para>Rule filters are a powerful way to express rules that only apply to certain
+classes of segments and ignore intervening segments. A familiar real-world
+example of this kind of rule is <emphasis>vowel harmony</emphasis>, which typically works on
+vowels regardless of intervening consonants. To add a filter to a rule, specify
+the parameter <literal>filter=<replaceable>filter-value</replaceable></literal>, where the <firstterm>filter-value</firstterm>
+may be a feature matrix or a symbol.</para>
+          <para>When you apply a filter, the rule acts as if those segments not matching the
+filter were not present at all in the input. Take the following vowel harmony
+rule:</para>
+          <screen>
+rule vowel-harmony (filter=[+syll])
+    [-fr] =&gt; [+fr -bk] / _ [+fr]
+</screen>
+          <para>This rule turns back vowels into front vowels when followed by other front
+vowels, and will work correctly regardless of how many non-vowel segments
+intervene between the vowels. The filter <literal>[+syll]</literal> effectively removes all
+non-syllabic constants from the input for the duration of the rule. Therefore,
+the context of the rule is written as if the front vowel that triggers vowel
+harmony immediately follows the matching vowel.</para>
+        </sect3>
+
+        <sect3 label="3.4.9.3" id="@code{persist}">
+          <title><literal>persist</literal></title>
+          <para>A <firstterm>persistent rule</firstterm> is a rule that applies at all stages of the phonology,
+rather than at a specific point in the derivation of the output form.
+Persistent rules in Phonix are indicated with the rule parameter
+<literal>persist</literal>, which does not take any value. The usual purpose of a
+persistent rule is to ensure that redundant features values are maintained. For
+example, in most languages all segments that are <literal>+syll</literal> are also
+<literal>+vc</literal>. If we wanted to enforce this redundancy, we could do so with the
+following persistent rule:</para>
+          <screen>
+rule voiced-syllabics (persist)
+    [+syll] =&gt; [+vc]
+</screen>
+          <para>Of course, this rule only serves some purpose if there are other processes
+which might make a voiceless segment syllabic.</para>
+          <para>Persistent rules are applied once at the start of rule application, and
+thereafter every time that some other rule changes the input. This is true
+regardless of where in your Phonix file the persistent rule is
+defined&ndash;persistent rules ignore normal rule ordering. However, the ordering of
+persistent rules relative to each other is maintained.</para>
+        </sect3>
+
+        <sect3 label="3.4.9.4" id="@code{applicationRate}">
+          <title><literal>applicationRate</literal></title>
+          <para>A <firstterm>sporadic rule</firstterm> is a rule which does not apply to every word in the input
+lexicon, but rather applies randomly to some words and not others. Phonix
+allows you to create this kind of rule with the rule parameter
+<literal>applicationRate=<replaceable>ratio</replaceable></literal>. The <replaceable>ratio</replaceable> parameter to
+<literal>applicationRate</literal> must be a decimal between 0 and 1. Examples:</para>
+          <screen>
+# This rule deletes /b/ 25% of the time
+rule sometimes-delete (applicationRate=0.25) b =&gt; *
+
+# With applicationRate=1, the rule applies 100% of the time. This is
+# equivalent to omitting the applicationRate parameter entirely.
+rule always-delete (applicationRate=1) a =&gt; *
+
+# With applictionRate=0, the rule applies 0% of the time. This is
+# equivalent to leaving the rule out.
+rule never-delete (applicationRate=0) c =&gt; *
+</screen>
+          <para>Setting the value for <literal>applicationRate</literal> to less than 0 or more than 1 will
+cause Phonix to print an error message and quit.</para>
+          <para>Note that if you create sporadic rules in this fashion, Phonix's output will no
+longer be predictable or consistent from run to run. There is no way to ensure
+that a sporadic rule will always apply to given word, nor can you predict which
+words will be affected by which rules in any given invocation.</para>
+        </sect3>
+      </sect2>
+    </sect1>
+
+    <sect1 label="3.5" id="Syllables">
+      <title>Syllables</title>
+      <para>Many languages use syllables as an important phonological unit. For this reason
+Phonix provides special syntax both for dividing input words into syllables
+with syllable templates and for creating phonological rules that depend on
+syllable structure.</para>
+
+      <sect2 label="3.5.1" id="Syllable-templates">
+        <title>Syllable templates</title>
+        <para>The <literal>syllable</literal> declaration is used to describe the valid templates that
+are used for syllabification. The form of the syllable template is:</para>
+        <screen>
+syllable
+    onset <replaceable>onset-segments</replaceable>
+    nucleus <replaceable>nucleus-segments</replaceable>
+    coda <replaceable>coda-segments</replaceable>
+</screen>
+        <para>The entries <replaceable>onset-segments</replaceable>, <replaceable>nucleus-segments</replaceable>, <replaceable>coda-segments</replaceable>
+are sequences of segments (feature matrices or symbols) as used in the match
+portion of a rule. These define the segments that are allowed at every position
+in the syllable. As a full example, consider the following:</para>
+        <screen>
+syllable onset [+cons] nucleus [-cons +son] coda [+son]
+</screen>
+        <para>This allows any <literal>[+cons]</literal> segment in syllable onsets, any <literal>[-cons
++son]</literal> segment as a nucleus, and only <literal>[+son]</literal> segments as the coda.  This
+creates (C)V(C) syllables, since onsets and codas are optional by default. Onset
+clusters and coda clusters are not allowed by this template, since only one
+segment is allowed in the onset.</para>
+        <para>If we wanted to allow an optional liquid to follow a stop in the onset cluster,
+we could rewrite the syllable template this way:</para>
+        <screen>
+syllable
+    onset [+cons]
+    onset [+cons -cont -son][+son +cont]
+    nucleus [-cons +son]
+    coda [+son]
+</screen>
+        <para>Here <literal>onset</literal> appears twice, giving two alternate templates for syllable
+onsets, one which allows any single <literal>[+cons]</literal> segment, and another which
+allows a stop (<literal>[+cons -cont -son]</literal>) followed by a liquid (<literal>[+son
++cont]</literal>). Phonix will attempt to create syllables matching either of the given
+templates.</para>
+        <para>Any of the syllable parts <literal>onset</literal>, <literal>nucleus</literal>, and <literal>coda</literal> can be
+repeated as many times as desired. You can also abbreviate optional segments in
+a syllable template with <literal>()</literal>, as in the following example that allows an
+optional sonorant to precede a non-sonorant in a syllable coda:</para>
+        <screen>
+syllable
+    onset [+cons]
+    nucleus [-cons +son]
+    coda ([+son])[+cons -son]
+</screen>
+        <para>However, <literal>()</literal> is the only regex-like operator that can be used in a
+syllable template. The extended operators <literal>()+</literal> and <literal>()*</literal> are not
+allowed, and will result in parsing errors.</para>
+        <para>To specify that a syllable template should not allow codas (or, more rarely,
+allow no onsets), the <literal>coda</literal> or <literal>onset</literal> element should be omitted:</para>
+        <screen>
+syllable
+    onset [+cons]
+    nucleus [-cons +son]
+</screen>
+        <para>This creates (C)V syllables and does not allow codas. The <literal>nucleus</literal>
+element may not be omitted.</para>
+      </sect2>
+
+      <sect2 label="3.5.2" id="Syllable-rules">
+        <title>Syllable rules</title>
+        <para>A <literal>syllable</literal> template is actually a special kind of rule. All rules,
+including syllable rules, apply only once, and apply in the order that they are
+declared. This means that:</para>
+        <itemizedlist>
+          <listitem>
+            <para>Not every segment will necessarily be assigned to a syllable if there is
+no syllable template that can cover every segment. Phonix does not do anything
+with unsyllabified segments by default. If you want to avoid this, you need to
+write your own rule to delete, add an epenthetic segment, or otherwise modify
+the unsyllabified segments.</para>
+          </listitem>
+          <listitem>
+            <para>The syllabification built by a <literal>syllable</literal> rule persists after the
+syllable rule occurs, even if segments are inserted or deleted.</para>
+          </listitem>
+          <listitem>
+            <para>Insertions, deletions, and other phonological modifications do not
+automatically trigger resyllabification. This means that an inserted segment is
+not automatically added to a syllable, and deleted segments may leave behind
+incomplete syllables.</para>
+          </listitem>
+          <listitem>
+            <para>If you want to force a word to be resyllabified after every change, you
+may use the <literal>persist</literal> syllable parameter (see <xref linkend="Syllable-parameters"></xref>).
+However, since insertions and deletions often accompany changes in the syllable
+template, you may want to follow an insertion or deletion rule with a new
+<literal>syllable</literal> rule.</para>
+          </listitem>
+        </itemizedlist>
+        <para>If you use the <literal>-d</literal> or <literal>--debug</literal> flags to <filename>phonix</filename>, then when a
+syllable rule applies, the new syllabification of the word is printed. Every
+syllable is written inside angle brackets (<literal>&lt;&gt;</literal>), with a double colon (<literal>::</literal>)
+between the onset and the nucleus, and a single colon (<literal>:</literal>) between the nucleus
+and the coda. For example, the syllabification of hypothetical word like
+<literal>abarno</literal> with a (C)V(C) template is presented as:</para>
+        <screen>
+&lt;a&gt; &lt;b :: a : r&gt; &lt;n : o&gt;
+</screen>
+        <para>The spacing is used to avoid confusing the syllable separators with the colon
+symbol.</para>
+      </sect2>
+
+      <sect2 label="3.5.3" id="Syllable-parameters">
+        <title>Syllable parameters</title>
+        <para>Syllable parameters affect the way that the syllable template is evaluated and
+the syllable rule is applied. Syllable parameters appear in parenthesis
+directly immediately after <literal>syllable</literal>, e.g.:</para>
+        <screen>
+syllable (<replaceable>parameter-list</replaceable>)
+    onset <replaceable>onset-segments</replaceable>
+    nucleus <replaceable>nucleus-segments</replaceable>
+    coda <replaceable>coda-segments</replaceable>
+</screen>
+        <sect3 label="3.5.3.1">
+          <title><literal>onsetRequired</literal> and <literal>codaRequired</literal></title>
+          <para>The parameters <literal>onsetRequired</literal> and <literal>codaRequired</literal> cause the
+<literal>onset</literal> and <literal>coda</literal> portions of the syllable template respectively to
+be required in all complete syllables. By default the onset and the coda are
+optional. Because of this, the following syllable declaration with no
+parameters creates (C)V(C) syllables:</para>
+          <screen>
+syllable
+    onset [+cons]
+    nucleus [-cons +son]
+    coda [+cons]
+</screen>
+          <para>Given an input string such as <literal>alona</literal>, this rule will present the
+syllabification <literal>&lt;a&gt; &lt;l :: o&gt; &lt;n :: a&gt;</literal>, in which the first syllable has
+neither onset nor coda, and the remaining syllables have no coda.</para>
+          <para>However, we can make onsets obligatory by adding <literal>onsetRequired</literal>:</para>
+          <screen>
+syllable (onsetRequired)
+    onset [+cons]
+    nucleus [-cons +son]
+    coda [+cons]
+</screen>
+          <para>Given the input <literal>alona</literal>, this syllabifies <literal>a &lt;l :: o&gt; &lt;n :: a&gt;</literal>,
+leaving the initial <literal>a</literal> unsyllabified, since no onset can be found for
+that nucleus. Only the latter two syllables are constructed, since only those
+syllables can onsets as required.</para>
+          <para>Likewise, we can require both onsets and codas:</para>
+          <screen>
+syllable (onsetRequired codaRequired)
+    onset [+cons]
+    nucleus [-cons +son]
+    coda [+cons]
+</screen>
+          <para>This will syllabify <literal>alona</literal> as <literal>a &lt;l :: o : n&gt; a</literal>, leaving both the
+initial and the final <literal>a</literal> unsyllabified, since the medial <literal>lon</literal> is
+the only syllable that can be constructed with both an onset and a coda.</para>
+          <para>Finally, in the unusual case that we wish to require codas but not onsets, we
+can create the following:</para>
+          <screen>
+syllable (codaRequired)
+    onset [+cons]
+    nucleus [-cons +son]
+    coda [+cons]
+</screen>
+          <para>This syllabifies <literal>alona</literal> as <literal>&lt;a : l&gt; &lt;o : n&gt; a</literal>, with the first two
+syllables having no onsets, and the final <literal>a</literal> unsyllabified since no coda
+can be found for it.</para>
+        </sect3>
+
+        <sect3 label="3.5.3.2">
+          <title><literal>nucleusPreference</literal></title>
+          <para>The <literal>nucleusPreference</literal> parameter controls whether syllable nuclei prefer
+to fall to the right or to the left in situations where there is ambiguity as
+to where the nucleus should fall. It takes two values, <literal>right</literal> and
+<literal>left</literal>. The value <literal>right</literal> is the default.</para>
+          <para>This in turn controls whether rising diphthongs or falling diphthongs are
+preferred in situations where either one is allowed by the syllable template.
+Consider an underlying vowel sequence /ui/ with allophonic rules that allow /u/
+to be both [u] and [w], and /i/ to be [i] and [j]. We'll represent this by the
+following extremely simplified syllable template:</para>
+          <screen>
+syllable
+    onset []([+son])
+    nucleus [-cons +son]
+    coda []
+</screen>
+          <para>This template requires vowels in the nuclear position, but allows anything into
+onsets and codas. Onsets may also form clusters with sonorants as the second
+element. Given this template, the input string <literal>bui</literal> could be syllabified
+as <literal>&lt;bu :: i&gt;</literal> (i.e. [bwi]) or <literal>&lt;b :: u : i&gt;</literal> (i.e. [buj]).</para>
+          <para>The default case is to produce <literal>&lt;bu :: i&gt;</literal>, which is equivalent to
+<literal>nucleusPreference=right</literal>. To force the nucleus to the left, use
+<literal>nucleusPreference=left</literal>:</para>
+          <screen>
+syllable (nucleusPreference=left)
+    onset []([+son])
+    nucleus [-cons +son]
+    coda []
+</screen>
+          <para>This template will produce syllables with the nuclei aligned to the left
+whenever possible, creating <literal>&lt;b :: u : i&gt;</literal> ([buj]) as the syllabification
+of <literal>bui</literal>.</para>
+        </sect3>
+
+        <sect3 label="3.5.3.3">
+          <title><literal>persist</literal></title>
+          <para>The <literal>persist</literal> parameter has the same affect as the <literal>persist</literal>
+parameter on rule declarations: it causes the syllabification rule to apply
+after every other rule, ensuring that words are automatically resyllabified
+after every change.</para>
+        </sect3>
+      </sect2>
+
+      <sect2 label="3.5.4" id="Using-syllable-elements-in-rules">
+        <title>Using syllable elements in rules</title>
+        <para>To write a rule that is triggered by a particular syllable position, you can
+include the syllable position inside angle brackets (<literal>&lt;&gt;</literal>) inside a
+feature matrix, as if it were a special feature value. The recognized syllable
+features are <literal>&lt;syllable&gt;</literal>, <literal>&lt;onset&gt;</literal>, <literal>&lt;nucleus&gt;</literal>, and
+<literal>&lt;coda&gt;</literal>. For example, the following rule devoices non-sonorant obstruents
+in coda positions:</para>
+        <screen>
+rule coda-devoice
+    [-son +cons &lt;coda&gt;] =&gt; [-vc]
+</screen>
+        <para>In the same vein, the following rule ensures that all nuclear segments are
+marked as <literal>+syll</literal>:</para>
+        <screen>
+rule nucleus-syllabic
+    [&lt;nucleus&gt;] =&gt; [+syll]
+</screen>
+        <para>The syllable features <literal>&lt;onset&gt;</literal>, <literal>&lt;nucleus&gt;</literal>, and <literal>&lt;coda&gt;</literal> work
+exactly as expected, matching any segment which is assigned to the onset,
+nucleus, and coda portions of the syllable, respectively. The <literal>&lt;syllable&gt;</literal>
+feature matches any segment that has been assigned to any syllable, and fails
+to match only when the segment in question is unsyllabified.</para>
+        <para>There are also features that match segments <emphasis>not</emphasis> in a particular syllable
+portion, marked with an asterisk (<literal>*</literal>) inside the angle brackets, as with
+null feature values: <literal>&lt;*onset&gt;</literal>, <literal>&lt;*nucleus&gt;</literal>, <literal>&lt;*coda&gt;</literal>, and
+<literal>&lt;*syllable&gt;</literal>. The following rule deletes segments which could not be
+assigned to any syllable:</para>
+        <screen>
+rule delete-unsyllabified
+    [&lt;*syllable&gt;] =&gt; *
+</screen>
+        <para>Likewise, the following inserts an epenthetic /i/ before unsyllabified
+consonants:</para>
+        <screen>
+rule epenthetic-i
+    * =&gt; i / _ [+cons &lt;*syllable&gt;]
+</screen>
+      </sect2>
+    </sect1>
+
+    <sect1 label="3.6" id="Imports">
+      <title>Imports</title>
+      <para>You can include Phonix files from other Phonix files using the <literal>import</literal>
+command. There are also several built-in resources that you can use, which are
+covered in this section.</para>
+
+      <sect2 label="3.6.1" id="Importing-files">
+        <title>Importing files</title>
+        <para>You may import one Phonix file into another with the following declaration:</para>
+        <screen>
+import <replaceable>filename</replaceable>
+</screen>
+        <para>The <firstterm>filename</firstterm> given to the import command follows the same rules as other
+Phonix strings, which means that you need to quote it if it contains certain
+characters that have special meaning for Phonix. For details, See <xref linkend="Strings"></xref>.
+Examples:</para>
+        <screen>
+import other-phonology.phonix
+import "/home/linguist/latin.phonix"
+import "C:\greek.phonix"
+</screen>
+        <para>If the file name that you give after <literal>import</literal> is not an absolute path,
+Phonix looks for the file you imported in the following places:</para>
+        <orderedlist numeration="arabic">
+          <listitem>
+            <para>In the current directory.</para>
+          </listitem>
+          <listitem>
+            <para>In the same directory as the Phonix file currently being parsed (if that
+directory is different from the current directory).</para>
+          </listitem>
+          <listitem>
+            <para>In a named resource.</para>
+          </listitem>
+        </orderedlist>
+        <para>The <firstterm>named resources</firstterm> that Phonix looks for are special "filenames" that
+represent built-in feature or symbol sets meant to simplify common linguistic
+tasks. The following sections describe these resources.</para>
+      </sect2>
+
+      <sect2 label="3.6.2" id="@code{std.features}">
+        <title><literal>std.features</literal></title>
+        <para>The standard feature set contains the commonly used features that you probably
+learned about in your introductory Phonology class. You include the standard
+feature set by writing <literal>import std.features</literal>. All of the features in the
+standard set are binary features given in their abbreviated forms. The features
+are gathered into a feature tree following this naming convention: leaf
+features are written in lower case, node features are written in initial caps,
+and the <literal>ROOT</literal> feature is written in all caps. The tree has the following
+structure:</para>
+        <screen>
++ROOT
+    +Place
+        +Labial
+            -ro
+        +Coronal
+            -ant
+            -dist
+        +Dorsal
+            -hi
+            -lo
+            -bk
+            -fr
+    +Glottal
+        -vc
+        -sg
+        -cg
+    +Manner
+        -cont
+        -nas
+        -str
+        -lat
+        -dr
+        +Class
+            -cons
+            -syll
+            -son
+</screen>
+        <para>The <literal>std.features</literal> file itself looks like this:</para>
+        <screen>
+<screen># Segment classes
+feature cons    # consonantal
+feature son     # sonorant
+feature syll    # syllabic
+feature Class (type=node children=cons,son,syll)
+
+# Glottal features
+feature vc      # voice
+feature sg      # spread glottis
+feature cg      # constricted glottis
+feature Glottal (type=node children=vc,sg,cg)
+
+# Manner of articulation
+feature cont    # continuant
+feature nas     # nasal
+feature str     # strident
+feature lat     # lateral
+feature dr      # delayed-release
+feature Manner (type=node children=cont,nas,str,lat,dr,Class)
+
+# Labial features
+feature ro      # round
+feature Labial (type=node children=ro)
+
+# Coronal features
+feature ant     # anterior
+feature dist    # distributed
+feature Coronal (type=node children=ant,dist)
+
+# Dorsal features
+feature hi      # high
+feature lo      # low
+feature bk      # back
+feature fr      # front
+feature Dorsal (type=node children=hi,lo,bk,fr)
+
+# The Place node governs all place-of-articulation features
+feature Place (type=node children=Labial,Coronal,Dorsal)
+
+# The ROOT node governs all features
+feature ROOT (type=node children=Place,Glottal,Manner,Class)
+</screen></screen>
+      </sect2>
+
+      <sect2 label="3.6.3" id="@code{std.symbols}">
+        <title><literal>std.symbols</literal></title>
+        <para>The standard symbol set contains over 100 phonetic symbols that you can use for
+input and output. In order to use the standard symbol set, you have to first
+import the standard feature set <literal>std.features</literal>, since the standard symbols
+depend on the features defined in that set. You include the standard symbols by
+writing <literal>import std.symbols</literal>. The standard symbol set uses only 7-bit ASCII
+characters and is based on the X-SAMPA IPA encoding.</para>
+        <screen>
+<screen>### CONSONANTS ###
+
+## Obstruents ##
+
+# Labial #
+
+symbol p   [+cons -son -cont -vc -ro]
+symbol p\  [+cons -son +cont -str -vc -ro]
+symbol f   [+cons -son +cont +str -vc -ro]
+symbol b   [+cons -son -cont +vc -ro]
+symbol B   [+cons -son +cont -str +vc -ro]
+symbol v   [+cons -son +cont +str +vc -ro]
+
+# Dental #
+
+symbol T   [+cons -son +cont -str -vc +ant +dist]
+symbol D   [+cons -son +cont -str +vc +ant +dist]
+
+# Alveolar #
+
+symbol t   [+cons -son -cont -vc +ant -dist]
+symbol s   [+cons -son +cont +str -vc +ant -dist]
+symbol d   [+cons -son -cont +vc +ant -dist]
+symbol z   [+cons -son +cont +str +vc +ant -dist]
+
+# Palatal #
+
+symbol c   [+cons -son -cont -vc -ant +dist]
+symbol C   [+cons -son +cont -str -vc -ant +dist]
+symbol S   [+cons -son +cont +str -vc -ant +dist]
+symbol J\  [+cons -son -cont +vc -ant +dist]
+symbol j\  [+cons -son +cont -str +vc -ant +dist]
+symbol Z   [+cons -son +cont +str +vc -ant +dist]
+
+# Retroflex #
+
+symbol t`  [+cons -son -cont -vc -ant -dist]
+symbol s`  [+cons -son +cont +str -vc -ant -dist]
+symbol d`  [+cons -son -cont +vc -ant -dist]
+symbol z`  [+cons -son +cont +str +vc -ant -dist]
+
+# Velar #
+
+symbol k   [+cons -son -cont -vc +bk -lo +hi]
+symbol x   [+cons -son +cont -str -vc +bk -lo +hi]
+symbol g   [+cons -son -cont +vc +bk -lo +hi]
+symbol G   [+cons -son +cont -str +vc +bk -lo +hi]
+
+# Uvular #
+
+symbol q   [+cons -son -cont -vc +bk -lo -hi]
+symbol X   [+cons -son +cont -str -vc +bk -lo -hi]
+symbol G\  [+cons -son -cont +vc +bk -lo -hi]
+symbol R   [+cons -son +cont -str +vc +bk -lo -hi]
+
+# Pharyngeal #
+
+symbol X\  [+cons -son +cont -str -vc +bk +lo -hi]
+symbol ?\  [+cons -son +cont -str +vc +bk +lo -hi]
+
+# Glottal #
+
+symbol ?   [+cons -son -cont -vc]
+symbol h   [+cons -son +cont -str -vc]
+symbol h\  [+cons -son +cont -str +vc]
+
+## Sonorants ##
+
+# Labial #
+
+symbol m   [+cons +son -cont +nas -lat -ro]
+symbol B\  [+cons +son +cont -nas -lat -ro]
+
+# Alveolar #
+
+symbol n   [+cons +son -cont +nas -lat +ant -dist]
+symbol l   [+cons +son -cont -nas +lat +ant -dist]
+symbol 4   [+cons +son -cont -nas -lat +ant -dist]
+symbol r   [+cons +son +cont -nas -lat +ant -dist]
+symbol r\  [-cons +son +cont -nas -lat +ant -dist]
+
+# Retroflex #
+
+symbol n`  [+cons +son -cont +nas -lat -ant -dist]
+symbol l`  [+cons +son -cont -nas +lat -ant -dist]
+
+# Postalveolar #
+
+symbol J   [+cons +son -cont +nas -lat -ant +dist]
+symbol L   [+cons +son -cont -nas +lat -ant +dist]
+
+# Velar #
+
+symbol N   [+cons +son -cont +nas -lat +bk -lo +hi]
+symbol L\  [+cons +son -cont -nas +lat +bk -lo +hi]
+
+# Uvular #
+
+symbol N\  [+cons +son -cont +nas -lat +bk -lo -hi]
+symbol R\  [+cons +son +cont -nas -lat +bk -lo -hi]
+
+### Vocoids ###
+
+## Vowels ##
+
+# High tense #
+
+symbol i   [-cons +son +syll +fr -bk +hi -lo +str]
+symbol y   [-cons +son +syll +fr -bk +hi -lo +ro +str]
+symbol 1   [-cons +son +syll -fr -bk +hi -lo +str]
+symbol }   [-cons +son +syll -fr -bk +hi -lo +ro +str]
+symbol M   [-cons +son +syll -fr +bk +hi -lo +str]
+symbol u   [-cons +son +syll -fr +bk +hi -lo +ro +str]
+
+# High lax #
+
+symbol I   [-cons +son +syll +fr -bk +hi -lo -str]
+symbol Y   [-cons +son +syll +fr -bk +hi -lo +ro -str]
+symbol I\  [-cons +son +syll -fr -bk +hi -lo -str]
+symbol U\  [-cons +son +syll -fr -bk +hi -lo +ro -str]
+symbol U   [-cons +son +syll -fr +bk +hi -lo +ro -str]
+
+# High mid #
+
+symbol e   [-cons +son +syll +fr -bk -hi -lo +str]
+symbol 2   [-cons +son +syll +fr -bk -hi -lo +ro +str]
+symbol @\  [-cons +son +syll -fr -bk -hi -lo +str]
+symbol 8   [-cons +son +syll -fr -bk -hi -lo +ro +str]
+symbol 7   [-cons +son +syll -fr +bk -hi -lo +str]
+symbol o   [-cons +son +syll -fr +bk -hi -lo +ro +str]
+
+# Schwa #
+
+symbol @   [-cons +son +syll -fr -bk -hi -lo -str]
+
+# Open mid #
+
+symbol E   [-cons +son +syll +fr -bk -hi -lo -str]
+symbol 9   [-cons +son +syll +fr -bk -hi -lo +ro -str]
+# Omitted: /3/, which is identical, feature-wise to /@/
+symbol 3\  [-cons +son +syll -fr -bk -hi -lo +ro -str]
+symbol V   [-cons +son +syll -fr +bk -hi -lo -str]
+symbol O   [-cons +son +syll -fr +bk -hi -lo +ro -str]
+
+# Open lax #
+
+symbol {   [-cons +son +syll -fr -bk -hi +lo -str]
+symbol 6   [-cons +son +syll -fr +bk -hi +lo -str]
+
+# Open #
+
+symbol a   [-cons +son +syll -fr -bk -hi +lo +str]
+symbol &amp;   [-cons +son +syll -fr -bk -hi +lo -ro +str]
+symbol A   [-cons +son +syll -fr +bk -hi +lo +str]
+symbol Q   [-cons +son +syll -fr +bk -hi +lo -ro +str]
+
+## Semivowels ##
+
+symbol j   [-cons +son -syll +fr -bk +hi -lo +str]
+symbol H   [-cons +son -syll +fr -bk +hi -lo +ro +str]
+symbol w   [-cons +son -syll -fr +bk +hi -lo +ro +str]
+</screen></screen>
+      </sect2>
+
+      <sect2 label="3.6.4" id="@code{std.symbols.diacritics}">
+        <title><literal>std.symbols.diacritics</literal></title>
+        <para>The standard diacritic set includes diacritics intended for use with
+<literal>std.symbols</literal>. These diacritics are 7-bit ASCII characters based on the
+X-SAMPA IPA encoding.</para>
+        <screen>
+<screen>## Consonant place modifiers ##
+
+# Labialized
+symbol '_w'    (diacritic) [-ro]
+
+# Linguolabial
+symbol '_N'    (diacritic) [-ro +ant]
+
+# Dental
+symbol '_d'    (diacritic) [+ant +dist]
+
+# Palatalized
+symbol '_j'    (diacritic) [-ant +dist]
+
+# Velarized
+symbol '_G'    (diacritic) [+bk +hi]
+
+# Pharyngealized
+symbol '_?\'   (diacritic) [+bk +lo]
+
+## Vocoid modifiers ##
+
+# Advanced
+symbol '_+'    (diacritic) [+fr]
+
+# Retracted
+symbol '_-'    (diacritic) [+bk]
+
+# Lowered
+symbol '_o'    (diacritic) [+lo]
+
+# Raised
+symbol '_r'    (diacritic) [+hi]
+
+# Centralized
+symbol '_"'    (diacritic) [-hi -lo -fr -bk]
+
+## Manner modifiers ##
+
+# Voiceless
+symbol '_0'    (diacritic) [-vc]
+
+# Voiced
+symbol '_v'    (diacritic) [+vc]
+
+# Syllabic
+symbol '='     (diacritic) [+syll]
+
+# Non-syllabic
+symbol '_^'    (diacritic) [-syll]
+
+# Nasalized
+symbol ~       (diacritic) [+nas]
+</screen></screen>
+      </sect2>
+
+      <sect2 label="3.6.5" id="@code{std.symbols.ipa}">
+        <title><literal>std.symbols.ipa</literal></title>
+        <para>The IPA symbol set contains the same notional symbols as <literal>std.symbols</literal>,
+but it uses IPA Unicode characters instead of ASCII X-SAMPA. To use the IPA
+symbol set, write <literal>import std.features</literal> and <literal>import std.symbols.ipa</literal>
+at the top of your file.</para>
+        <screen>
+<screen>### CONSONANTS ###
+
+## Obstruents ##
+
+# Labial #
+
+symbol p   [+cons -son -cont -vc -ro]
+symbol ɸ   [+cons -son +cont -str -vc -ro]
+symbol f   [+cons -son +cont +str -vc -ro]
+symbol b   [+cons -son -cont +vc -ro]
+symbol β   [+cons -son +cont -str +vc -ro]
+symbol v   [+cons -son +cont +str +vc -ro]
+
+# Dental #
+
+symbol θ   [+cons -son +cont -str -vc +ant +dist]
+symbol ð   [+cons -son +cont -str +vc +ant +dist]
+
+# Alveolar #
+
+symbol t   [+cons -son -cont -vc +ant -dist]
+symbol s   [+cons -son +cont +str -vc +ant -dist]
+symbol d   [+cons -son -cont +vc +ant -dist]
+symbol z   [+cons -son +cont +str +vc +ant -dist]
+
+# Palatal #
+
+symbol c   [+cons -son -cont -vc -ant +dist]
+symbol ç   [+cons -son +cont -str -vc -ant +dist]
+symbol ʃ   [+cons -son +cont +str -vc -ant +dist]
+symbol ɟ   [+cons -son -cont +vc -ant +dist]
+symbol ʝ   [+cons -son +cont -str +vc -ant +dist]
+symbol ʒ   [+cons -son +cont +str +vc -ant +dist]
+
+# Retroflex #
+
+symbol ʈ   [+cons -son -cont -vc -ant -dist]
+symbol ʂ   [+cons -son +cont +str -vc -ant -dist]
+symbol ɖ   [+cons -son -cont +vc -ant -dist]
+symbol ʐ   [+cons -son +cont +str +vc -ant -dist]
+
+# Velar #
+
+symbol k   [+cons -son -cont -vc +bk -lo +hi]
+symbol x   [+cons -son +cont -str -vc +bk -lo +hi]
+symbol g   [+cons -son -cont +vc +bk -lo +hi]
+symbol ɣ   [+cons -son +cont -str +vc +bk -lo +hi]
+
+# Uvular #
+
+symbol q   [+cons -son -cont -vc +bk -lo -hi]
+symbol χ   [+cons -son +cont -str -vc +bk -lo -hi]
+symbol ɢ   [+cons -son -cont +vc +bk -lo -hi]
+symbol ʁ   [+cons -son +cont -str +vc +bk -lo -hi]
+
+# Pharyngeal #
+
+symbol ħ   [+cons -son +cont -str -vc +bk +lo -hi]
+symbol ʕ   [+cons -son +cont -str +vc +bk +lo -hi]
+
+# Glottal #
+
+symbol ʔ   [+cons -son -cont -vc]
+symbol h   [+cons -son +cont -str -vc]
+symbol ɦ   [+cons -son +cont -str +vc]
+
+## Sonorants ##
+
+# Labial #
+
+symbol m   [+cons +son -cont +nas -lat -ro]
+symbol ʙ   [+cons +son +cont -nas -lat -ro]
+
+# Alveolar #
+
+symbol n   [+cons +son -cont +nas -lat +ant -dist]
+symbol l   [+cons +son -cont -nas +lat +ant -dist]
+symbol ɾ   [+cons +son -cont -nas -lat +ant -dist]
+symbol r   [+cons +son +cont -nas -lat +ant -dist]
+symbol ɹ   [-cons +son +cont -nas -lat +ant -dist]
+
+# Retroflex #
+
+symbol ɳ   [+cons +son -cont +nas -lat -ant -dist]
+symbol ɭ   [+cons +son -cont -nas +lat -ant -dist]
+
+# Postalveolar #
+
+symbol ɲ   [+cons +son -cont +nas -lat -ant +dist]
+symbol ʎ   [+cons +son -cont -nas +lat -ant +dist]
+
+# Velar #
+
+symbol ŋ   [+cons +son -cont +nas -lat +bk -lo +hi]
+symbol ʟ   [+cons +son -cont -nas +lat +bk -lo +hi]
+
+# Uvular #
+
+symbol ɴ   [+cons +son -cont +nas -lat +bk -lo -hi]
+symbol ʀ   [+cons +son +cont -nas -lat +bk -lo -hi]
+
+### Vocoids ###
+
+## Vowels ##
+
+# High tense #
+
+symbol i   [-cons +son +syll +fr -bk +hi -lo +str]
+symbol y   [-cons +son +syll +fr -bk +hi -lo +ro +str]
+symbol ɨ   [-cons +son +syll -fr -bk +hi -lo +str]
+symbol ʉ   [-cons +son +syll -fr -bk +hi -lo +ro +str]
+symbol ɯ   [-cons +son +syll -fr +bk +hi -lo +str]
+symbol u   [-cons +son +syll -fr +bk +hi -lo +ro +str]
+
+# High lax #
+
+symbol ɪ   [-cons +son +syll +fr -bk +hi -lo -str]
+symbol ʏ   [-cons +son +syll +fr -bk +hi -lo +ro -str]
+symbol ᵻ   [-cons +son +syll -fr -bk +hi -lo -str]
+symbol ᵿ   [-cons +son +syll -fr -bk +hi -lo +ro -str]
+symbol ʊ   [-cons +son +syll -fr +bk +hi -lo +ro -str]
+
+# High mid #
+
+symbol e   [-cons +son +syll +fr -bk -hi -lo +str]
+symbol ø   [-cons +son +syll +fr -bk -hi -lo +ro +str]
+symbol ɘ   [-cons +son +syll -fr -bk -hi -lo +str]
+symbol ɵ   [-cons +son +syll -fr -bk -hi -lo +ro +str]
+symbol ɤ   [-cons +son +syll -fr +bk -hi -lo +str]
+symbol o   [-cons +son +syll -fr +bk -hi -lo +ro +str]
+
+# Schwa #
+
+symbol ə   [-cons +son +syll -fr -bk -hi -lo -str]
+
+# Open mid #
+
+symbol ɛ   [-cons +son +syll +fr -bk -hi -lo -str]
+symbol œ   [-cons +son +syll +fr -bk -hi -lo +ro -str]
+# Omitted: /ɜ/, which is identical, feature-wise to /ə/
+symbol ɞ   [-cons +son +syll -fr -bk -hi -lo +ro -str]
+symbol ʌ   [-cons +son +syll -fr +bk -hi -lo -str]
+symbol ɔ   [-cons +son +syll -fr +bk -hi -lo +ro -str]
+
+# Open lax #
+
+symbol æ   [-cons +son +syll -fr -bk -hi +lo -str]
+symbol ɐ   [-cons +son +syll -fr +bk -hi +lo -str]
+
+# Open #
+
+symbol a   [-cons +son +syll -fr -bk -hi +lo +str]
+symbol ɶ   [-cons +son +syll -fr -bk -hi +lo -ro +str]
+symbol ɑ   [-cons +son +syll -fr +bk -hi +lo +str]
+symbol ɒ   [-cons +son +syll -fr +bk -hi +lo -ro +str]
+
+## Semivowels ##
+
+symbol j   [-cons +son -syll +fr -bk +hi -lo +str]
+symbol ɥ   [-cons +son -syll +fr -bk +hi -lo +ro +str]
+symbol w   [-cons +son -syll -fr +bk +hi -lo +ro +str]
+</screen></screen>
+      </sect2>
+
+      <sect2 label="3.6.6" id="@code{std.symbols.ipa.diacritics}">
+        <title><literal>std.symbols.ipa.diacritics</literal></title>
+        <para>This set contains IPA diacritics for use with <literal>std.symbols.ipa</literal>. The
+diacritics contained here are the same as those in
+<literal>std.symbols.diacritics</literal>, but rendered in IPA Unicode.</para>
+        <screen>
+<screen>## Consonant place modifiers ##
+
+# Labialized
+symbol ʷ       (diacritic) [-ro]
+
+# Linguolabial
+symbol ̼        (diacritic) [-ro +ant]
+
+# Dental
+symbol ̪        (diacritic) [+ant +dist]
+
+# Palatalized
+symbol ʲ       (diacritic) [-ant +dist]
+
+# Velarized
+symbol ̴        (diacritic) [+bk +hi]
+
+# Pharyngealized
+symbol ˤ       (diacritic) [+bk +lo]
+
+## Vocoid modifiers ##
+
+# Advanced
+symbol ̟        (diacritic) [+fr]
+
+# Retracted
+symbol ̠        (diacritic) [+bk]
+
+# Lowered
+symbol ̞        (diacritic) [+lo]
+
+# Raised
+symbol ̝        (diacritic) [+hi]
+
+# Centralized
+symbol ̈        (diacritic) [-hi -lo -fr -bk]
+
+## Manner modifiers ##
+
+# Voiceless
+symbol ̥        (diacritic) [-vc]
+
+# Voiced
+symbol ̬        (diacritic) [+vc]
+
+# Syllabic
+symbol ̩        (diacritic) [+syll]
+
+# Non-syllabic
+symbol ̯        (diacritic) [-syll]
+
+# Nasalized
+symbol ̃        (diacritic) [+nas]
+</screen></screen>
+      </sect2>
+    </sect1>
+
+    <sect1 label="3.7" id="Comments">
+      <title>Comments</title>
+      <para>In Phonix the comment character is <literal>#</literal>. Everything from <literal>#</literal> to the
+end of a line is a comment and is silently ignored by Phonix (unless the
+<literal>#</literal> character is embedded in a string). For example:</para>
+      <screen>
+# This is a comment
+feature ex # this comment explains what 'ex' means
+</screen>
+    </sect1>
+
+    <sect1 label="3.8" id="Strings">
+      <title>Strings</title>
+      <para>Any time that Phonix expects you to provide a string, as for feature names,
+symbols, or rule names, you can type almost anything you want.  The only
+exception is if the contents of the string somehow confuse the Phonix compiler.
+Don't do that. Everything else is fine.</para>
+      <para>The long, boring, technical version follows.</para>
+      <para>Phonix recognizes two types of strings: <firstterm>bare</firstterm> strings and <firstterm>quoted</firstterm>
+strings. Most of the time you can use bare strings, which keeps your Phonix
+file nice and uncluttered. The rules for bare strings are extremely forgiving,
+to minimize the situation where you have to use a quoted string:</para>
+      <itemizedlist>
+        <listitem>
+          <para>A bare string cannot contain whitespace. More specifically, whitespace is
+always interpreted as a token delimiter outside of a quoted string, which
+implicitly means it cannot be part of a string.</para>
+        </listitem>
+        <listitem>
+          <para>A bare string cannot contain any of the characters <literal>[]()&lt;&gt;$=</literal> <emphasis>at
+all</emphasis>.</para>
+        </listitem>
+        <listitem>
+          <para>A bare string cannot begin with any of the characters <literal>+-*/#_"'</literal>.
+However, these characters can appear in the middle of strings.</para>
+        </listitem>
+      </itemizedlist>
+      <para>This should be enough for almost all cases, but in case it's not, you can also
+create a quoted string by surrounding a string with single quotes (<literal>'</literal>) or
+double quotes (<literal>"</literal>). If you are using a quoted string in a rule or a
+symbol declaration, the opening quote must be preceded by a space. Anything at
+all can appear inside a quoted string, except for another quote, of course.
+There is no mechanism for escaping quotes, so if you need to include a single
+quote then surround your quote with double quotes, and vice versa.</para>
+      <para>The following are valid strings that could be used for feature names, rule
+names, or symbols:</para>
+      <screen>
+foo
+foo-bar
+foo+
+bar?
+!
+b*a*z
+blu"
+"+++"
+'_'
+'"'
+</screen>
+      <para>The following are NOT valid strings and cannot be used for feature names, rule
+names, or symbols:</para>
+      <screen>
+-foo        # looks like a feature value
+_foo        # ambiguous in rule context
+foo()       # cannot use parentheses
+foo$        # cannot use dollar sign
+</screen>
+    </sect1>
+  </chapter>
+
+  <chapter label="4" id="Examples">
+    <title>Examples</title>
+    <para>The following examples illustrate common use cases for Phonix.</para>
+
+    <sect1 label="4.1" id="Romanian">
+      <title>Romanian</title>
+      <para>The following files define a phonology for contemporary Romanian, and
+illustrates how most of the surface alternations in Romanian can be derived.
+Note that the example is somewhat incomplete: the input represents an internal
+reconstruction of Proto-Romanian, not Proto-Romance or Vulgar Latin, and there
+may be a few alternations that slipped by. However, the majority of the active
+phonological processes in Romanian should be represented.</para>
+
+      <sect2 label="4.1.1">
+        <title><filename>romanian.phonix</filename></title>
+        <screen>
+<screen>import std.features
+
+# 
+# We add a feature for stress, which is important for many rules
+#
+feature stress
+
+#
+# We create our own symbol set, defining only Romanian phonemes
+#
+
+# Unstressed vowels
+symbol a  [+syll -cons +son -hi +lo -fr -bk -stress]
+symbol e  [+syll -cons +son -hi -lo +fr -bk -stress]
+symbol o  [+syll -cons +son -hi -lo -fr +bk +ro -stress]
+symbol @  [+syll -cons +son -hi -lo -fr -bk -stress]
+symbol i  [+syll -cons +son +hi -lo +fr -bk -stress]
+symbol u  [+syll -cons +son +hi -lo -fr +bk +ro -stress]
+symbol 1  [+syll -cons +son +hi -lo -fr -bk -stress]
+
+# Stress diacritic
+symbol "'"  (diacritic) [+stress]
+
+# Non-syllabic vocoids
+symbol j  [-syll -cons +son +hi -lo +fr -bk -stress]
+symbol w  [-syll -cons +son +hi -lo -fr +bk +ro -stress]
+
+# Non-syllabic diacritic
+symbol `  (diacritic) [-syll]
+
+# Labials
+symbol p  [+cons +ro -son]
+symbol b  [+cons +ro -son +vc]
+symbol f  [+cons +ro -son +cont]
+symbol v  [+cons +ro -son +cont +vc]
+symbol m  [+cons +ro +son +nas]
+
+# Dentals
+symbol t  [+cons +ant -son]
+symbol ts  [+cons +ant -son +dr]
+symbol d  [+cons +ant -son +vc]
+symbol dz  [+cons +ant -son +dr +vc]
+symbol s  [+cons +cont -son +ant]
+symbol z  [+cons +cont -son +ant +vc]
+symbol n  [+cons +ant +son +nas]
+symbol l  [+cons +ant +son +lat]
+symbol r  [+cons +ant +son +cont]
+
+# Palatals
+symbol tS  [+cons -son -ant +dist +dr]
+symbol dZ  [+cons -son -ant +dist +vc +dr]
+symbol S  [+cons -son -ant +cont +dist]
+symbol Z  [+cons -son -ant +cont +dist +vc]
+
+# Velars
+symbol k  [+cons -son +hi]
+symbol g  [+cons -son +hi +vc]
+symbol h  [+cons -son +hi +cont]
+
+#
+# Here we begin with the rules
+#
+
+# Reduce i/u to semivowels where appropriate
+rule make-semivowels
+[+hi +syll] =&gt; [-syll] / [+syll] _
+
+# Stress all penult syllables. This rule illustrates two interesting
+# techniques. First, it specifies a filter of [+syll], which means that the
+# rule only "sees" [+syll] segments. Second, it uses an empty set of braces []
+# to match "any segment".
+rule stress-penult (filter=[+syll])
+[] =&gt; [+stress] / _ [] $
+
+# When the antepenult syllable is lexically stressed, remove stress on the
+# penult syllable. 
+rule stress-antepenult (filter=[+syll])
+[+stress] =&gt; [-stress] / [+stress] _
+
+# Break word-initial /e/
+rule initial-iotacization
+* =&gt; j / $ _ [+fr -hi -lo]
+
+# Palatalize velars before front vowels
+rule palatalize-velars
+[+cons +hi] =&gt; [-ant +dist +dr *hi] / _ [+fr]
+
+# Palatalize dental fricatives before high front vowels
+rule palatalize-dentals
+[+cons +ant +cont -son] =&gt; [-ant +dist] / _ [+hi +fr]
+
+# Assimilate palatalization
+rule assimilate-palatals
+[+cons -son *ro] =&gt; [-ant +dist] / _ [-ant +dist]
+
+# Affricate dental stops before /i/
+rule affricate-dentals
+[+cons +ant -son] =&gt; [+dr] / _ i
+
+# Simplify /dz/
+rule simplify-dz
+dz =&gt; z
+
+# Simplify /StS/ everywhere
+rule simplify-StS
+StS =&gt; St
+
+# Change velar+/l/ to a palatalized velar
+rule l-palatalize
+l =&gt; j / [+cons +hi] _
+
+# Raise stressed central vowels before /n/
+rule prenasal-raising
+[-hi -lo +stress] =&gt; [+hi] / _ n
+
+# Centralize front non-high vowels after labials
+rule postlabial-centralize
+[-hi +fr] =&gt; [-fr] / [+ro] _
+
+# Front central vowels when the next vowel is a front vowel
+rule front-assimilation (filter=[-cons])
+[-fr -bk -lo] =&gt; [+fr] / _ [+fr]
+
+# Raise unstressed /o/
+rule o-raising (filter=[+syll])
+o =&gt; u / _ [+stress]
+
+# Drop word-final /u/
+rule drop-final-u
+u =&gt; * / _ $
+
+# Desyllabify word-final /i/
+rule desyllabify-final-i
+i =&gt; j / _ $
+
+# Centralize unstressed /a/, except when /a/ is the first segment
+rule centralize-a
+a =&gt; @ / [] _
+
+# Centralize /a/ in the 1pl verbal ending
+rule centralize-1pl-a
+a' =&gt; @' / _m $
+
+# Break stressed mid vowels into semivowel + a when the next syllable contains
+# a non-high vowel
+rule breaking (filter=[+syll])
+[-hi -lo +stress] * =&gt; [-syll -stress] a' / _ [-hi *ro]
+
+# Assimilate /ea/ followed by /e/
+rule assimilate-ea (filter=[-cons])
+e`a' =&gt; e' * / _ e
+
+# Assimilate /oa/ followed by /w/
+rule assimilate-oa
+o`a' =&gt; o' * / _ w
+
+# Assimilate semivowels after a palatal
+rule assimilate-postpalatal-semivowel
+[-syll +fr] =&gt; * / [+dr +dist] _
+
+# Assimilate consecutive semivowels of the same frontness
+rule assimilate-consecutive-semivowel
+[-syll $fr] =&gt; * / [-syll $fr] _
+
+# Assimilate coronal sonorants before /j/
+rule assimilate-sonorants
+[+cons +ant +son *cont] =&gt; * / _ j
+
+# Drop non-syllabic central vowels
+rule drop-central-vocoids
+[-fr -bk -syll] =&gt; *
+</screen></screen>
+      </sect2>
+
+      <sect2 label="4.1.2">
+        <title>Input and output</title>
+        <para>You can generate the output file with the following command line:</para>
+        <screen>
+phonix romanian.phonix -i romanian.input -o romanian.output
+</screen>
+        <para>The following table shows the input and the generated output together with the
+output form in Romanian orthography.</para>
+        <informaltable>
+          <tgroup cols="3">
+            <colspec colwidth="25*"></colspec>
+            <colspec colwidth="25*"></colspec>
+            <colspec colwidth="50*"></colspec>
+            <thead>
+              <row>
+                <entry>Input</entry>
+                <entry>Output</entry>
+                <entry>Orthography</entry>
+              </row>
+            </thead>
+            <tbody>
+              <row>
+                <entry><literal>vedu</literal></entry>
+                <entry><literal>v@'d</literal></entry>
+                <entry>văd</entry>
+              </row>
+              <row>
+                <entry><literal>vedi</literal></entry>
+                <entry><literal>ve'zj</literal></entry>
+                <entry>vezi</entry>
+              </row>
+              <row>
+                <entry><literal>vede</literal></entry>
+                <entry><literal>ve'de</literal></entry>
+                <entry>vede</entry>
+              </row>
+              <row>
+                <entry><literal>vedemu</literal></entry>
+                <entry><literal>vede'm</literal></entry>
+                <entry>vedem</entry>
+              </row>
+              <row>
+                <entry><literal>vedeti</literal></entry>
+                <entry><literal>vede'tsj</literal></entry>
+                <entry>vedeţi</entry>
+              </row>
+              <row>
+                <entry><literal>vedu</literal></entry>
+                <entry><literal>v@'d</literal></entry>
+                <entry>văd</entry>
+              </row>
+              <row>
+                <entry><literal>veda</literal></entry>
+                <entry><literal>va'd@</literal></entry>
+                <entry>vadă</entry>
+              </row>
+              <row>
+                <entry><literal>vezutu</literal></entry>
+                <entry><literal>v@zu't</literal></entry>
+                <entry>văzut</entry>
+              </row>
+              <row>
+                <entry><literal>venu</literal></entry>
+                <entry><literal>vi'n</literal></entry>
+                <entry>vin</entry>
+              </row>
+              <row>
+                <entry><literal>veni</literal></entry>
+                <entry><literal>vi'j</literal></entry>
+                <entry>vii</entry>
+              </row>
+              <row>
+                <entry><literal>vene</literal></entry>
+                <entry><literal>vi'ne</literal></entry>
+                <entry>vine</entry>
+              </row>
+              <row>
+                <entry><literal>venimu</literal></entry>
+                <entry><literal>veni'm</literal></entry>
+                <entry>venim</entry>
+              </row>
+              <row>
+                <entry><literal>veniti</literal></entry>
+                <entry><literal>veni'tsj</literal></entry>
+                <entry>veniţi</entry>
+              </row>
+              <row>
+                <entry><literal>venu</literal></entry>
+                <entry><literal>vi'n</literal></entry>
+                <entry>vin</entry>
+              </row>
+              <row>
+                <entry><literal>vena</literal></entry>
+                <entry><literal>vi'n@</literal></entry>
+                <entry>vină</entry>
+              </row>
+              <row>
+                <entry><literal>venitu</literal></entry>
+                <entry><literal>veni't</literal></entry>
+                <entry>venit</entry>
+              </row>
+              <row>
+                <entry><literal>esu</literal></entry>
+                <entry><literal>je's</literal></entry>
+                <entry>ies</entry>
+              </row>
+              <row>
+                <entry><literal>esi</literal></entry>
+                <entry><literal>je'Sj</literal></entry>
+                <entry>ieşi</entry>
+              </row>
+              <row>
+                <entry><literal>ese</literal></entry>
+                <entry><literal>je'se</literal></entry>
+                <entry>iese</entry>
+              </row>
+              <row>
+                <entry><literal>esimu</literal></entry>
+                <entry><literal>jeSi'm</literal></entry>
+                <entry>ieşim</entry>
+              </row>
+              <row>
+                <entry><literal>esiti</literal></entry>
+                <entry><literal>jeSi'tsj</literal></entry>
+                <entry>ieşiţi</entry>
+              </row>
+              <row>
+                <entry><literal>esu</literal></entry>
+                <entry><literal>je's</literal></entry>
+                <entry>ies</entry>
+              </row>
+              <row>
+                <entry><literal>esa</literal></entry>
+                <entry><literal>ja's@</literal></entry>
+                <entry>iasă</entry>
+              </row>
+              <row>
+                <entry><literal>esitu</literal></entry>
+                <entry><literal>jeSi't</literal></entry>
+                <entry>ieşit</entry>
+              </row>
+              <row>
+                <entry><literal>potu</literal></entry>
+                <entry><literal>po't</literal></entry>
+                <entry>pot</entry>
+              </row>
+              <row>
+                <entry><literal>poti</literal></entry>
+                <entry><literal>po'tsj</literal></entry>
+                <entry>poţi</entry>
+              </row>
+              <row>
+                <entry><literal>pote</literal></entry>
+                <entry><literal>po`a'te</literal></entry>
+                <entry>poate</entry>
+              </row>
+              <row>
+                <entry><literal>potemu</literal></entry>
+                <entry><literal>pute'm</literal></entry>
+                <entry>putem</entry>
+              </row>
+              <row>
+                <entry><literal>poteti</literal></entry>
+                <entry><literal>pute'tsj</literal></entry>
+                <entry>puteţi</entry>
+              </row>
+              <row>
+                <entry><literal>potu</literal></entry>
+                <entry><literal>po't</literal></entry>
+                <entry>pot</entry>
+              </row>
+              <row>
+                <entry><literal>pota</literal></entry>
+                <entry><literal>po`a't@</literal></entry>
+                <entry>poată</entry>
+              </row>
+              <row>
+                <entry><literal>potutu</literal></entry>
+                <entry><literal>putu't</literal></entry>
+                <entry>putut</entry>
+              </row>
+              <row>
+                <entry><literal>keru</literal></entry>
+                <entry><literal>tSe'r</literal></entry>
+                <entry>cer</entry>
+              </row>
+              <row>
+                <entry><literal>keri</literal></entry>
+                <entry><literal>tSe'rj</literal></entry>
+                <entry>ceri</entry>
+              </row>
+              <row>
+                <entry><literal>kere</literal></entry>
+                <entry><literal>tSe're</literal></entry>
+                <entry>cere</entry>
+              </row>
+              <row>
+                <entry><literal>ke'remu</literal></entry>
+                <entry><literal>tSe'rem</literal></entry>
+                <entry>cerem</entry>
+              </row>
+              <row>
+                <entry><literal>ke'reti</literal></entry>
+                <entry><literal>tSe'retsj</literal></entry>
+                <entry>cereţi</entry>
+              </row>
+              <row>
+                <entry><literal>keru</literal></entry>
+                <entry><literal>tSe'r</literal></entry>
+                <entry>cer</entry>
+              </row>
+              <row>
+                <entry><literal>kera</literal></entry>
+                <entry><literal>tSa'r@</literal></entry>
+                <entry>ceară</entry>
+              </row>
+              <row>
+                <entry><literal>kerutu</literal></entry>
+                <entry><literal>tSeru't</literal></entry>
+                <entry>cerut</entry>
+              </row>
+              <row>
+                <entry><literal>portu</literal></entry>
+                <entry><literal>po'rt</literal></entry>
+                <entry>port</entry>
+              </row>
+              <row>
+                <entry><literal>porti</literal></entry>
+                <entry><literal>po'rtsj</literal></entry>
+                <entry>porţi</entry>
+              </row>
+              <row>
+                <entry><literal>porta</literal></entry>
+                <entry><literal>po`a'rt@</literal></entry>
+                <entry>poartă</entry>
+              </row>
+              <row>
+                <entry><literal>portamu</literal></entry>
+                <entry><literal>purt@'m</literal></entry>
+                <entry>purtăm</entry>
+              </row>
+              <row>
+                <entry><literal>portati</literal></entry>
+                <entry><literal>purta'tsj</literal></entry>
+                <entry>purtaţi</entry>
+              </row>
+              <row>
+                <entry><literal>porta</literal></entry>
+                <entry><literal>po`a'rt@</literal></entry>
+                <entry>poartă</entry>
+              </row>
+              <row>
+                <entry><literal>porte</literal></entry>
+                <entry><literal>po`a'rte</literal></entry>
+                <entry>poarte</entry>
+              </row>
+              <row>
+                <entry><literal>portatu</literal></entry>
+                <entry><literal>purta't</literal></entry>
+                <entry>purtat</entry>
+              </row>
+              <row>
+                <entry><literal>freku</literal></entry>
+                <entry><literal>fre'k</literal></entry>
+                <entry>frec</entry>
+              </row>
+              <row>
+                <entry><literal>freki</literal></entry>
+                <entry><literal>fre'tS</literal></entry>
+                <entry>freci</entry>
+              </row>
+              <row>
+                <entry><literal>freka</literal></entry>
+                <entry><literal>fre`a'k@</literal></entry>
+                <entry>freacă</entry>
+              </row>
+              <row>
+                <entry><literal>frekamu</literal></entry>
+                <entry><literal>frek@'m</literal></entry>
+                <entry>frecăm</entry>
+              </row>
+              <row>
+                <entry><literal>frekati</literal></entry>
+                <entry><literal>freka'tsj</literal></entry>
+                <entry>frecaţi</entry>
+              </row>
+              <row>
+                <entry><literal>freka</literal></entry>
+                <entry><literal>fre`a'k@</literal></entry>
+                <entry>freacă</entry>
+              </row>
+              <row>
+                <entry><literal>freke</literal></entry>
+                <entry><literal>fre'tSe</literal></entry>
+                <entry>frece</entry>
+              </row>
+              <row>
+                <entry><literal>klemu</literal></entry>
+                <entry><literal>kje'm</literal></entry>
+                <entry>chem</entry>
+              </row>
+              <row>
+                <entry><literal>klemi</literal></entry>
+                <entry><literal>kje'mj</literal></entry>
+                <entry>chemi</entry>
+              </row>
+              <row>
+                <entry><literal>klema</literal></entry>
+                <entry><literal>kja'm@</literal></entry>
+                <entry>cheamă</entry>
+              </row>
+              <row>
+                <entry><literal>klemamu</literal></entry>
+                <entry><literal>kjem@'m</literal></entry>
+                <entry>chemăm</entry>
+              </row>
+              <row>
+                <entry><literal>klemati</literal></entry>
+                <entry><literal>kjema'tsj</literal></entry>
+                <entry>chemaţi</entry>
+              </row>
+              <row>
+                <entry><literal>klema</literal></entry>
+                <entry><literal>kja'm@</literal></entry>
+                <entry>cheamă</entry>
+              </row>
+              <row>
+                <entry><literal>kleme</literal></entry>
+                <entry><literal>kja'm@</literal></entry>
+                <entry>cheamă *Note that this is the regular outcome of the sound change, but this form (the 3rd person subjunctive) has been analogically restored to 'cheme' in the standard language.</entry>
+              </row>
+              <row>
+                <entry><literal>kalu</literal></entry>
+                <entry><literal>ka'l</literal></entry>
+                <entry>cal</entry>
+              </row>
+              <row>
+                <entry><literal>kali</literal></entry>
+                <entry><literal>ka'j</literal></entry>
+                <entry>cai</entry>
+              </row>
+              <row>
+                <entry><literal>udu</literal></entry>
+                <entry><literal>u'd</literal></entry>
+                <entry>ud</entry>
+              </row>
+              <row>
+                <entry><literal>uda</literal></entry>
+                <entry><literal>u'd@</literal></entry>
+                <entry>udă</entry>
+              </row>
+              <row>
+                <entry><literal>ude</literal></entry>
+                <entry><literal>u'de</literal></entry>
+                <entry>ude</entry>
+              </row>
+              <row>
+                <entry><literal>udi</literal></entry>
+                <entry><literal>u'zj</literal></entry>
+                <entry>uzi</entry>
+              </row>
+              <row>
+                <entry><literal>pro'spetu</literal></entry>
+                <entry><literal>pro`a'sp@t</literal></entry>
+                <entry>proaspăt</entry>
+              </row>
+              <row>
+                <entry><literal>pro'speta</literal></entry>
+                <entry><literal>pro`a'sp@t@</literal></entry>
+                <entry>proaspătă</entry>
+              </row>
+              <row>
+                <entry><literal>pro'speti</literal></entry>
+                <entry><literal>pro`a'spetsj</literal></entry>
+                <entry>proaspeţi</entry>
+              </row>
+              <row>
+                <entry><literal>pro'spete</literal></entry>
+                <entry><literal>pro`a'spete</literal></entry>
+                <entry>proaspete</entry>
+              </row>
+              <row>
+                <entry><literal>osu</literal></entry>
+                <entry><literal>o's</literal></entry>
+                <entry>os</entry>
+              </row>
+              <row>
+                <entry><literal>ose</literal></entry>
+                <entry><literal>o`a'se</literal></entry>
+                <entry>oase</entry>
+              </row>
+              <row>
+                <entry><literal>oie</literal></entry>
+                <entry><literal>o`a'je</literal></entry>
+                <entry>oaie</entry>
+              </row>
+              <row>
+                <entry><literal>oi</literal></entry>
+                <entry><literal>oj</literal></entry>
+                <entry>oi</entry>
+              </row>
+              <row>
+                <entry><literal>ou</literal></entry>
+                <entry><literal>ow</literal></entry>
+                <entry>ou</entry>
+              </row>
+              <row>
+                <entry><literal>oue</literal></entry>
+                <entry><literal>o'w@</literal></entry>
+                <entry>ouă</entry>
+              </row>
+              <row>
+                <entry><literal>peske</literal></entry>
+                <entry><literal>pe'Ste</literal></entry>
+                <entry>peşte</entry>
+              </row>
+              <row>
+                <entry><literal>peski</literal></entry>
+                <entry><literal>pe'Stj</literal></entry>
+                <entry>peşti</entry>
+              </row>
+              <row>
+                <entry><literal>oklu</literal></entry>
+                <entry><literal>o'kj</literal></entry>
+                <entry>ochi</entry>
+              </row>
+              <row>
+                <entry><literal>okli</literal></entry>
+                <entry><literal>o'kj</literal></entry>
+                <entry>ochi</entry>
+              </row>
+              <row>
+                <entry><literal>klaru</literal></entry>
+                <entry><literal>kja'r</literal></entry>
+                <entry>chiar</entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </informaltable>
+      </sect2>
+    </sect1>
+  </chapter>
+
+  <appendix id="License">
+    <title>License</title>
+    <para>This is the license for the Phonix Phonological Transformation
+Language, the program `phonix.exe' in source and binary forms, and for
+the Phonix manual.</para>
+    <para>Copyright (C) 2009 Jesse Bangs All rights reserved.</para>
+    <para>Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:</para>
+    <para>* Redistributions of source code must retain the above copyright
+* notice, this
+list of conditions and the following disclaimer.</para>
+    <para>* Redistributions in binary form must reproduce the above copyright
+* notice, this
+list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.</para>
+    <para>* Neither the name of Jesse Bangs nor the names of its contributors
+* may be
+used to endorse or promote products derived from this software without
+specific prior written permission.</para>
+    <para>THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</para>
+  </appendix>
+</book><!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-indent-step:1
+sgml-indent-data:nil
+End:
+-->

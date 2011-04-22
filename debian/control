@@ -1,0 +1,24 @@
+Source: phonix
+Section: science
+Priority: extra
+Maintainer: Jesse Bangs <jaspax@gmail.com>
+Build-Depends: debhelper (>= 7.0.50~), libmono-dev (>= 2.6.7), openjdk-6-jre, nunit-console (>= 2.4.7), texinfo
+Standards-Version: 3.9.1
+Homepage: http://phonix.googlecode.com
+#Vcs-Git: git://git.debian.org/collab-maint/phonix.git
+#Vcs-Browser: http://git.debian.org/?p=collab-maint/phonix.git;a=summary
+
+Package: phonix
+Architecture: any
+Depends: mono-runtime (>= 2.6.7), ${misc:Depends}
+Description: A domain-specific language for modeling phonological transformations
+ Phonix is a domain-specific language for modeling phonological
+ transformations, be they synchronic linguistic processes or diachronic sound
+ changes. It uses a simple notation to represent phonological rules that is
+ very similar to the standard notation used in linguistic texts, featuring all
+ of the following features:
+  * Rules based on distinctive features, not string matching Built-in
+  * distinctive feature set Built-in symbol sets for both X-SAMPA and Unicode
+  * IPA Easy extensions for adding your own features or symbols Multi-character
+  * symbols Diacritic symbols Persistent rules Debugging mode that shows
+  * step-by-step application of sound change rules

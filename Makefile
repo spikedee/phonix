@@ -13,6 +13,7 @@ ANTLR_DLL=Antlr3.Runtime.dll
 PHONIX=$(BIN_DIR)/phonix.exe
 PHONIX_TEST=$(BIN_DIR)/phonix.test.dll
 ANTLR=$(BIN_DIR)/$(ANTLR_DLL)
+NUNIT=$(shell which nunit-console)
 
 DOC_SRC=$(DOC_DIR)/phonix.texinfo
 DOC_PDF=$(DOC_DIR)/PhonixManual.pdf
@@ -36,7 +37,7 @@ $(PHONIX): parser $(CS_FILES) $(RESX_FILES) $(ANTLR)
 parser: $(PARSER_FILES)
 
 test: parser $(PHONIX_TEST) $(ANTLR)
-	mono --debug /usr/lib/nunit/nunit-console.exe $(PHONIX_TEST) -labels 1>TestLog.txt 2>&1
+	$(NUNIT) $(PHONIX_TEST) -labels 1>TestLog.txt 2>&1
 
 prof: $(PHONIX)
 	if [ -e prof.txt ]; then mv prof.txt base_prof.txt; fi
@@ -71,35 +72,26 @@ $(DOC_HTML): $(DOC_SRC)
 $(DOC_INFO): $(DOC_SRC)
 	makeinfo -o $@ $<
 
+all: clean $(PHONIX) $(ANTLR) doc
+
 $(BIN_DIR)/phonix.zip: clean $(PHONIX) $(ANTLR) $(DOC_PDF) $(EX_FILES)
 	rm -f $@
 	zip $@ $+
 
 zip: $(BIN_DIR)/phonix.zip
 
-install: prefix?=/usr/local
-install: exec_prefix?=$(prefix)
-install: libdir?=$(exec_prefix)/lib
-install: bindir?=$(exec_prefix)/bin
-install: $(PHONIX) $(ANTLR) $(DOC_INFO)
-	mkdir -p $(libdir)/phonix
-	cp $(PHONIX) $(libdir)/phonix
-	cp $(ANTLR) $(libdir)/phonix
-	cp phonix.sh phonix
-	sed -i "s!PREFIX!$(libdir)!" phonix
-	chmod 755 phonix
-	cp phonix $(bindir)
-	cp $(DOC_INFO) /usr/share/info
-	ginstall-info $(DOC_INFO) /usr/share/info/dir
-
-uninstall: prefix?=/usr/local
-uninstall: exec_prefix?=$(prefix)
-uninstall: libdir?=$(exec_prefix)/lib
-uninstall: bindir?=$(exec_prefix)/bin
-uninstall:
-	rm -rf $(libdir)/phonix
-	rm -f $(prefix)/bin/phonix
-	install-info --remove phonix
+install: DESTDIR=/usr/local
+install: EXEC_DESTDIR=$(DESTDIR)
+install: LIBDIR=$(EXEC_DESTDIR)/lib
+install: BINDIR=$(EXEC_DESTDIR)/bin
+install: $(PHONIX) $(ANTLR) doc
+	install -m 0755 -d $(LIBDIR)/phonix
+	install -m 0755 -t $(LIBDIR)/phonix $(PHONIX) $(ANTLER)
+	install -m 0755 -D phonix.sh $(BINDIR)/phonix
+	sed -i "s!PREFIX!$(LIBDIR)!" $(BINDIR)/phonix
+	install -m 644 $(VIMRUNTIME)/syntax 
+	#cp $(DOC_INFO) /usr/share/info
+	#ginstall-info $(DOC_INFO) /usr/share/info/dir
 
 clean:
 	rm -f Test*.*
@@ -111,3 +103,4 @@ clean:
 
 tags:
 	ctags -f .tags -R
+
