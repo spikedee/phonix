@@ -1,5 +1,9 @@
 # Look at how awesome and short my makefile is
 
+VERSION=0.8.0
+TARFILE=phonix.$(VERSION).tar
+DEB_DIR=phonix-$(VERSION)
+
 CORE_DIR=Core
 RESOURCE_DIR=Resx
 PARSER_DIR=Parser
@@ -89,17 +93,18 @@ install: $(PHONIX) $(ANTLR) doc
 	install -m 0755 -t $(LIBDIR)/phonix $(PHONIX) $(ANTLER)
 	install -m 0755 -D phonix.sh $(BINDIR)/phonix
 	sed -i "s!PREFIX!$(LIBDIR)!" $(BINDIR)/phonix
-	install -m 644 $(VIMRUNTIME)/syntax 
 	#cp $(DOC_INFO) /usr/share/info
 	#ginstall-info $(DOC_INFO) /usr/share/info/dir
 
+deb:
+	rm -rf $(TARFILE) $(DEB_DIR)
+	tar -cf $(TARFILE) --exclude-vcs *
+	mkdir $(DEB_DIR)
+	cd $(DEB_DIR); tar -xf ../$(TARFILE); debuild -uc -us
+
 clean:
-	rm -f Test*.*
-	rm -f *NUnitPrimaryTrace.txt
-	rm -f $(PARSER_FILES)
-	rm -rf $(BIN_DIR)/*
-	rm -f $(DOC_FILES)
-	rm -f phonix
+	rm -f phonix Test*.* *NUnitPrimaryTrace.txt $(PARSER_FILES) $(DOC_FILES) $(TARFILE) phonix_$(VERSION)*
+	rm -rf $(BIN_DIR)/* $(DEB_DIR) 
 
 tags:
 	ctags -f .tags -R
