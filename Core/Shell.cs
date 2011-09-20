@@ -3,6 +3,7 @@ using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using System.Reflection;
 
 namespace Phonix
 {
@@ -199,6 +200,15 @@ namespace Phonix
                             rv.LogLevel = Log.Level.Verbose;
                             break;
 
+                        case "-h":
+                        case "--help":
+                            /* Using an exception here is effective, but kind of gross */
+                            throw new ArgumentException(HelpMessage);
+
+                        case "--version":
+                            /* Using an exception here is effective, but kind of gross */
+                            throw new ArgumentException(VersionMessage);
+
                         default:
                             rv.PhonixFile = arg;
                             break;
@@ -216,6 +226,42 @@ namespace Phonix
             }
 
             return rv;
+        }
+
+        private static string HelpMessage
+        {
+            get
+            {
+                return
+                    "phonix [language-file] -i [input-file] -o [output-file]\n" +
+                    "   -i, --input         specify the lexicon input file\n" +
+                    "   -o, --output        specify the lexicon output file\n" +
+                    "   -q, --quiet         print only fatal errors\n" +
+                    "   -d, --debug         print debugging messages\n" +
+                    "   -v, --verbose       print extra verbose imessages (more than -d)\n" +
+                    "   -w, --warn-fatal    treat all warnings as fatal errors\n" +
+                    "   -h, --help          show this help message\n" +
+                    "   --version           show the phonix version\n\n" +
+                    "For additional help, type `man phonix`";
+            }
+        }
+
+        private static string VersionMessage
+        {
+            get
+            {
+                return String.Format("phonix {0}, (c) 2011 by Jesse Bangs", Version);
+            }
+        }
+
+        public static string Version
+        {
+            get
+            {
+                var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("version");
+                var version = new StreamReader(stream).ReadToEnd();
+                return version.Substring(0, version.Length - 1);
+            }
         }
     }
 }

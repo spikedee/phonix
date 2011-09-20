@@ -1,6 +1,6 @@
 # Look at how awesome and short my makefile is
 
-VERSION=0.8.0
+VERSION=$(shell cat Resx/version)
 TARFILE=phonix.$(VERSION).tar
 DEB_DIR=phonix-$(VERSION)
 
@@ -92,9 +92,6 @@ install: $(PHONIX) $(ANTLR) doc
 	install -m 0755 -d $(LIBDIR)/phonix
 	install -m 0755 -t $(LIBDIR)/phonix $(PHONIX) $(ANTLER)
 	install -m 0755 -D phonix.sh $(BINDIR)/phonix
-	sed -i "s!PREFIX!$(LIBDIR)!" $(BINDIR)/phonix
-	#cp $(DOC_INFO) /usr/share/info
-	#ginstall-info $(DOC_INFO) /usr/share/info/dir
 
 deb:
 	rm -rf $(TARFILE) $(DEB_DIR)

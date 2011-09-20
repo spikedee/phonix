@@ -1,20 +1,12 @@
 Document: phonix
 Title: Debian phonix Manual
 Author: Jesse Bangs
-Abstract: This manual describes what phonix is
- and how it can be used to
- manage online manuals on Debian systems.
-Section: science
-
-Format: debiandoc-sgml
-Files: /usr/share/doc/phonix/phonix.sgml.gz
-
-Format: postscript
-Files: /usr/share/doc/phonix/phonix.ps.gz
-
-Format: text
-Files: /usr/share/doc/phonix/phonix.text.gz
+Abstract: Manual for the Phonix phonological modeling language and the command-line interpreter
+Section: Science/Social
 
 Format: HTML
-Index: /usr/share/doc/phonix/html/index.html
-Files: /usr/share/doc/phonix/html/*.html
+Index: /usr/share/doc/phonix/PhonixManual.html
+Files: /usr/share/doc/phonix/PhonixManual.html
+
+Format: PDF
+Files: /usr/share/doc/phonix/PhonixManual.pdf.gz
