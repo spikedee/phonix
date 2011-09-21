@@ -18,6 +18,7 @@ PHONIX=$(BIN_DIR)/phonix.exe
 PHONIX_TEST=$(BIN_DIR)/phonix.test.dll
 ANTLR=$(BIN_DIR)/$(ANTLR_DLL)
 NUNIT=$(shell which nunit-console)
+DEB=phonix_$(VERSION)_i386.deb
 
 DOC_SRC=$(DOC_DIR)/phonix.texinfo
 DOC_PDF=$(DOC_DIR)/PhonixManual.pdf
@@ -31,11 +32,13 @@ PARSER_FILES=$(PARSER_DIR)/PhonixLexer.cs $(PARSER_DIR)/PhonixParser.cs
 DOC_FILES=$(DOC_PDF) $(DOC_HTML) $(DOC_INFO)
 EX_FILES=$(wildcard $(EX_DIR)/*)
 
+PHONIX_DEPENDS=parser $(CS_FILES) $(RESX_FILES) $(ANTLR)
+
 LINK_RESOURCES=$(foreach resource,$(RESX_FILES),-resource:$(resource))
 
 GMCS=gmcs $(CS_DEBUG) -nowarn:2002 -warn:4 -warnaserror -r:Antlr3.Runtime.dll -lib:./lib -out:$@ $(LINK_RESOURCES)
 
-$(PHONIX): parser $(CS_FILES) $(RESX_FILES) $(ANTLR)
+$(PHONIX): $(PHONIX_DEPENDS)
 	$(GMCS) -optimize+ $(CS_FILES) $(PARSER_FILES)
 
 parser: $(PARSER_FILES)
@@ -84,16 +87,18 @@ $(BIN_DIR)/phonix.zip: clean $(PHONIX) $(ANTLR) $(DOC_PDF) $(EX_FILES)
 
 zip: $(BIN_DIR)/phonix.zip
 
-install: DESTDIR=/usr/local
+install: DESTDIR=/usr/
 install: EXEC_DESTDIR=$(DESTDIR)
 install: LIBDIR=$(EXEC_DESTDIR)/lib
 install: BINDIR=$(EXEC_DESTDIR)/bin
-install: $(PHONIX) $(ANTLR) doc
+install: $(PHONIX) doc
 	install -m 0755 -d $(LIBDIR)/phonix
-	install -m 0755 -t $(LIBDIR)/phonix $(PHONIX) $(ANTLER)
+	install -m 0755 -t $(LIBDIR)/phonix $(PHONIX) $(ANTLR)
 	install -m 0755 -D phonix.sh $(BINDIR)/phonix
 
-deb:
+deb: $(DEB)
+
+$(DEB): $(PHONIX_DEPENDS) phonix.sh
 	rm -rf $(TARFILE) $(DEB_DIR)
 	tar -cf $(TARFILE) --exclude-vcs *
 	mkdir $(DEB_DIR)
@@ -103,6 +108,6 @@ clean:
 	rm -f phonix Test*.* *NUnitPrimaryTrace.txt $(PARSER_FILES) $(DOC_FILES) $(TARFILE) phonix_$(VERSION)*
 	rm -rf $(BIN_DIR)/* $(DEB_DIR) 
 
-tags:
+.tags:
 	ctags -f .tags -R
 

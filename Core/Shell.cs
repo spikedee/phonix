@@ -242,7 +242,7 @@ namespace Phonix
                     "   -w, --warn-fatal    treat all warnings as fatal errors\n" +
                     "   -h, --help          show this help message\n" +
                     "   --version           show the phonix version\n\n" +
-                    "For additional help, type `man phonix`";
+                    "For additional help, consult the Phonix manual available online at http://phonix.googlecode.com";
             }
         }
 
