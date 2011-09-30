@@ -5,64 +5,19 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace Phonix.Test
+namespace Phonix.TestE2E
 {
     using NUnit.Framework;
 
     [TestFixture]
     public class ParserTest
     {
-        public string CreateStringWithStdImports(params string[] input)
-        {
-            StringBuilder str = new StringBuilder();
-            str.AppendLine("import std.features");
-            str.AppendLine("import std.symbols");
-
-            foreach (var line in input)
-            {
-                str.AppendLine(line);
-            }
-
-            return str.ToString();
-        }
-
-        public void RunPhonixFile(string phonixFile, string inputWords, string expectedOutput)
-        {
-            File.WriteAllText("test.phonix", phonixFile);
-            File.WriteAllText("test.in", inputWords);
-            File.WriteAllText("test.expected", expectedOutput);
-
-            var proc = Process.Start("phonix", "test.phonix -i test.in -o test.out -v -w");
-            proc.WaitForExit();
-
-            CompareFiles("test.expected", "test.out");
-        }
-
-        internal static void CompareFiles(string expectedFile, string testFile)
-        {
-            var expected = File.OpenText(expectedFile);
-            var test = File.OpenText(testFile);
-
-            while (!test.EndOfStream)
-            {
-                string testLine = test.ReadLine();
-                string expectedLine = expected.ReadLine();
-                Assert.AreEqual(expectedLine, testLine);
-            }
-            Assert.AreEqual(expected.EndOfStream, test.EndOfStream);
-        }
-
-        public void ApplySyllableRule(string file, string input, string syllableOutput)
-        {
-            // TODO
-            throw new NotImplementedException();
-        }
-
         [Test]
         public void RuleWithVariable()
         {
-            var phono = CreateStringWithStdImports("rule voice-assimilate [] => [$vc] / _ [$vc]");
-            RunPhonixFile(phono, "sz", "zz");
+            var phono = new PhonixWrapper().StdImports().Append("rule voice-assimilate [] => [$vc] / _ [$vc]");
+            phono.Start().ValidateInOut("sz", "zz");
+            phono.End();
         }
 
         [Test]
@@ -77,10 +32,11 @@ namespace Phonix.Test
                 undef = fv;
             };
 
-            var phono = CreateStringWithStdImports("rule voice-assimilate [] => [$vc] / _ []");
+            var phono = new PhonixWrapper().StdImports().Append("rule voice-assimilate [] => [$vc] / _ []");
 
             phono.RuleSet.UndefinedVariableUsed += tracer;
-            RunPhonixFile(phono, "sz", "sz");
+            phono.Start().ValidateInOut("sz", "sz");
+            phono.End();
 
             Assert.IsTrue(gotTrace);
             Assert.AreSame(phono.FeatureSet.Get<Feature>("vc").VariableValue, undef);
@@ -91,25 +47,28 @@ namespace Phonix.Test
         public void RuleDirectionRightward()
         {
             // default direction should be rightward
-            var phono = CreateStringWithStdImports("rule rightward a => b / a _");
-            RunPhonixFile(phono, "aaa", "aba");
+            var phono = new PhonixWrapper().StdImports().Append("rule rightward a => b / a _");
+            phono.Start().ValidateInOut("aaa", "aba");
+            phono.End();
 
-            var phono2 = CreateStringWithStdImports("rule rightward (direction=left-to-right) a => b / a _");
-            RunPhonixFile(phono2, "aaa", "aba");
+            var phono2 = new PhonixWrapper().StdImports().Append("rule rightward (direction=left-to-right) a => b / a _");
+            phono2.Start().ValidateInOut("aaa", "aba");
+            phono2.End();
         }
 
         [Test]
         public void RuleDirectionLeftward()
         {
-            var phono = CreateStringWithStdImports("rule leftward (direction=right-to-left) a => b / a _");
-            RunPhonixFile(phono, "aaa", "abb");
+            var phono = new PhonixWrapper().StdImports().Append("rule leftward (direction=right-to-left) a => b / a _");
+            phono.Start().ValidateInOut("aaa", "abb");
+            phono.End();
         }
 
         [Test]
         public void NodeFeature()
         {
             /*
-            var phono = CreateStringWithStdImports("feature Height (type=node children=hi,lo)");
+            var phono = new PhonixWrapper().StdImports().Append("feature Height (type=node children=hi,lo)");
             Assert.IsTrue(phono.FeatureSet.Has<NodeFeature>("Coronal"));
 
             var node = phono.FeatureSet.Get<NodeFeature>("Height");
@@ -122,121 +81,143 @@ namespace Phonix.Test
         [Test]
         public void NodeExistsInRule()
         {
-            var phono = CreateStringWithStdImports(
+            var phono = new PhonixWrapper().StdImports().Append(
                     @"rule coronal-test [Coronal] => [+vc]");
-            RunPhonixFile(phono, "ptk", "pdk");
+            phono.Start().ValidateInOut("ptk", "pdk");
+            phono.End();
         }
 
         [Test]
         public void NodeVariableInRule()
         {
-            var phono = CreateStringWithStdImports(
+            var phono = new PhonixWrapper().StdImports().Append(
                     @"rule coronal-test [] => [$Coronal] / _ [$Coronal -vc]");
-            RunPhonixFile(phono, "TCg", "CCg");
+            phono.Start().ValidateInOut("TCg", "CCg");
+            phono.End();
         }
 
         [Test]
         public void NodeNullInRule()
         {
-            var phono = CreateStringWithStdImports(
+            var phono = new PhonixWrapper().StdImports().Append(
                     @"rule coronal-null [Coronal] => [*Place] / _ ");
-            RunPhonixFile(phono, "fTx", "fhx");
+            phono.Start().ValidateInOut("fTx", "fhx");
+            phono.End();
         }
 
         [Test]
         public void LeftwardInsert()
         {
-            var phono = CreateStringWithStdImports("rule leftward-insert (direction=right-to-left) * => c / b _ b");
-            RunPhonixFile(phono, "abba", "abcba");
+            var phono = new PhonixWrapper().StdImports().Append("rule leftward-insert (direction=right-to-left) * => c / b _ b");
+            phono.Start().ValidateInOut("abba", "abcba");
+            phono.End();
         }
 
         [Test]
         public void RightwardInsert()
         {
-            var phono = CreateStringWithStdImports("rule rightward-insert (direction=left-to-right) * => c / b _ b");
-            RunPhonixFile(phono, "abba", "abcba");
+            var phono = new PhonixWrapper().StdImports().Append("rule rightward-insert (direction=left-to-right) * => c / b _ b");
+            phono.Start().ValidateInOut("abba", "abcba");
+            phono.End();
         }
 
         [Test]
         public void BasicExclude()
         {
-            var phono = CreateStringWithStdImports("rule ex a => b / _ c // _ cc");
-            RunPhonixFile(phono, "ac", "bc");
-            RunPhonixFile(phono, "acc", "acc");
+            var phono = new PhonixWrapper().StdImports().Append("rule ex a => b / _ c // _ cc");
+            phono.Start()
+                .ValidateInOut("ac", "bc")
+                .ValidateInOut("acc", "acc")
+                .End();
         }
 
         [Test]
         public void ExcludeContextLonger()
         {
-            var phono = CreateStringWithStdImports("rule ex a => b / c[-vc] _  // c _");
-            RunPhonixFile(phono, "csa", "csb");
-            RunPhonixFile(phono, "cca", "cca");
+            var phono = new PhonixWrapper().StdImports().Append("rule ex a => b / c[-vc] _  // c _");
+            phono.Start()
+                .ValidateInOut("csa", "csb")
+                .ValidateInOut("cca", "cca")
+                .End();
         }
 
         [Test]
         public void ExcludeContextShorter()
         {
-            var phono = CreateStringWithStdImports("rule ex a => b / k _  // sk _");
-            RunPhonixFile(phono, "ka", "kb");
-            RunPhonixFile(phono, "ska", "ska");
+            var phono = new PhonixWrapper().StdImports().Append("rule ex a => b / k _  // sk _");
+            phono.Start()
+                .ValidateInOut("ka", "kb")
+                .ValidateInOut("ska", "ska")
+                .End();
         }
 
         [Test]
         public void ExcludeNoContext()
         {
-            var phono = CreateStringWithStdImports("rule ex a => b // c _");
-            RunPhonixFile(phono, "ka", "kb");
-            RunPhonixFile(phono, "ca", "ca");
+            var phono = new PhonixWrapper().StdImports().Append("rule ex a => b // c _");
+            phono.Start()
+                .ValidateInOut("ka", "kb")
+                .ValidateInOut("ca", "ca")
+                .End();
         }
 
         [Test]
         public void ContextTrailingSlash()
         {
-            var phono = CreateStringWithStdImports("rule ex a => b / _ c / ");
-            RunPhonixFile(phono, "aac", "abc");
+            var phono = new PhonixWrapper().StdImports().Append("rule ex a => b / _ c / ");
+            phono.Start().ValidateInOut("aac", "abc");
+            phono.End();
         }
 
         [Test]
         public void ExcludeSingleSlash()
         {
-            var phono = CreateStringWithStdImports("rule ex a => b / _ c / a _ ");
-            RunPhonixFile(phono, "aac", "aac");
+            var phono = new PhonixWrapper().StdImports().Append("rule ex a => b / _ c / a _ ");
+            phono.Start().ValidateInOut("aac", "aac");
+            phono.End();
         }
 
         [Test]
         public void Insert()
         {
             // middle
-            var phono = CreateStringWithStdImports("rule insert * => a / b _ b");
-            RunPhonixFile(phono, "bb", "bab");
+            var phono = new PhonixWrapper().StdImports().Append("rule insert * => a / b _ b");
+            phono.Start().ValidateInOut("bb", "bab");
+            phono.End();
 
             // beginning
-            phono = CreateStringWithStdImports("rule insert * => a / _ bb");
-            RunPhonixFile(phono, "bb", "abb");
+            phono = new PhonixWrapper().StdImports().Append("rule insert * => a / _ bb");
+            phono.Start().ValidateInOut("bb", "abb");
+            phono.End();
 
             // end
-            phono = CreateStringWithStdImports("rule insert * => a / bb _");
-            RunPhonixFile(phono, "bb", "bba");
+            phono = new PhonixWrapper().StdImports().Append("rule insert * => a / bb _");
+            phono.Start().ValidateInOut("bb", "bba");
+            phono.End();
         }
 
         [Test]
         public void Delete()
         {
             // middle
-            var phono = CreateStringWithStdImports("rule delete-middle a => * / b _ b");
-            RunPhonixFile(phono, "bab", "bb");
+            var phono = new PhonixWrapper().StdImports().Append("rule delete-middle a => * / b _ b");
+            phono.Start().ValidateInOut("bab", "bb");
+            phono.End();
 
             // beginning
-            phono = CreateStringWithStdImports("rule delete-beginning a => * / _ bb");
-            RunPhonixFile(phono, "abb", "bb");
+            phono = new PhonixWrapper().StdImports().Append("rule delete-beginning a => * / _ bb");
+            phono.Start().ValidateInOut("abb", "bb");
+            phono.End();
 
             // end
-            phono = CreateStringWithStdImports("rule delete-end a => * / bb _");
-            RunPhonixFile(phono, "bba", "bb");
+            phono = new PhonixWrapper().StdImports().Append("rule delete-end a => * / bb _");
+            phono.Start().ValidateInOut("bba", "bb");
+            phono.End();
 
             // two
-            phono = CreateStringWithStdImports("rule delete-double aa => **");
-            RunPhonixFile(phono, "baab", "bb");
+            phono = new PhonixWrapper().StdImports().Append("rule delete-double aa => **");
+            phono.Start().ValidateInOut("baab", "bb");
+            phono.End();
         }
 
         [Test]
@@ -245,19 +226,19 @@ namespace Phonix.Test
             /* TODO
             try
             {
-                CreateStringWithStdImports("rule insert-delete * a => b * ");
+                new PhonixWrapper().StdImports().Append("rule insert-delete * a => b * ");
                 Assert.Fail("should have thrown exception");
             }
             catch (ParseException) {}
             try
             {
-                CreateStringWithStdImports("rule delete-insert a * => * b ");
+                new PhonixWrapper().StdImports().Append("rule delete-insert a * => * b ");
                 Assert.Fail("should have thrown exception");
             }
             catch (ParseException) {}
             try
             {
-                CreateStringWithStdImports("rule delete-insert a * => b * ");
+                new PhonixWrapper().StdImports().Append("rule delete-insert a * => b * ");
                 Assert.Fail("should have thrown exception");
             }
             catch (ParseException) {}
@@ -267,15 +248,16 @@ namespace Phonix.Test
         [Test]
         public void RulePersist()
         {
-            var phono = CreateStringWithStdImports("rule persist-b-a (persist) b => a   rule a-b a => b");
-            RunPhonixFile(phono, "baa", "aaa");
+            var phono = new PhonixWrapper().StdImports().Append("rule persist-b-a (persist) b => a   rule a-b a => b");
+            phono.Start().ValidateInOut("baa", "aaa");
+            phono.End();
         }
 
         [Test]
         public void SymbolDiacritic()
         {
             /* TODO
-            var phono = CreateStringWithStdImports("symbol ~ (diacritic) [+nas]");
+            var phono = new PhonixWrapper().StdImports().Append("symbol ~ (diacritic) [+nas]");
             Assert.AreEqual(1, phono.SymbolSet.Diacritics.Count);
             Assert.IsTrue(phono.SymbolSet.Diacritics.ContainsKey("~"));
             */
@@ -284,99 +266,109 @@ namespace Phonix.Test
         [Test]
         public void SegmentRepeatZeroOrMore()
         {
-            var phono = CreateStringWithStdImports("rule matchany a => c / _ (b)*$ ");
-            RunPhonixFile(phono, "a", "c");
-            RunPhonixFile(phono, "ab", "cb");
-            RunPhonixFile(phono, "abb", "cbb");
-            RunPhonixFile(phono, "ac", "ac");
+            var phono = new PhonixWrapper().StdImports().Append("rule matchany a => c / _ (b)*$ ");
+            phono.Start()
+                .ValidateInOut("a", "c")
+                .ValidateInOut("ab", "cb")
+                .ValidateInOut("abb", "cbb")
+                .ValidateInOut("ac", "ac")
+                .End();
         }
 
         [Test]
         public void SegmentRepeatOneOrMore()
         {
-            var phono = CreateStringWithStdImports("rule matchany a => c / _ (b)+$ ");
-            RunPhonixFile(phono, "a", "a");
-            RunPhonixFile(phono, "ab", "cb");
-            RunPhonixFile(phono, "abb", "cbb");
-            RunPhonixFile(phono, "ac", "ac");
+            var phono = new PhonixWrapper().StdImports().Append("rule matchany a => c / _ (b)+$ ");
+            phono.Start().ValidateInOut("a", "a");
+            phono.ValidateInOut("ab", "cb");
+            phono.ValidateInOut("abb", "cbb");
+            phono.ValidateInOut("ac", "ac");
+            phono.End();
         }
 
         [Test]
         public void SegmentRepeatZeroOrOne()
         {
-            var phono = CreateStringWithStdImports("rule matchany a => c / _ (b)$ ");
-            RunPhonixFile(phono, "a", "c");
-            RunPhonixFile(phono, "ab", "cb");
-            RunPhonixFile(phono, "abb", "abb");
-            RunPhonixFile(phono, "ac", "ac");
+            var phono = new PhonixWrapper().StdImports().Append("rule matchany a => c / _ (b)$ ");
+            phono.Start().ValidateInOut("a", "c");
+            phono.ValidateInOut("ab", "cb");
+            phono.ValidateInOut("abb", "abb");
+            phono.ValidateInOut("ac", "ac");
+            phono.End();
         }
 
         [Test]
         public void MultipleSegmentOptional()
         {
-            var phono = CreateStringWithStdImports("rule matchany a => c / _ (bc)c$ ");
-            RunPhonixFile(phono, "a", "a");
-            RunPhonixFile(phono, "ac", "cc");
-            RunPhonixFile(phono, "abc", "abc");
-            RunPhonixFile(phono, "abcc", "cbcc");
+            var phono = new PhonixWrapper().StdImports().Append("rule matchany a => c / _ (bc)c$ ");
+            phono.ValidateInOut("a", "a");
+            phono.ValidateInOut("ac", "cc");
+            phono.ValidateInOut("abc", "abc");
+            phono.ValidateInOut("abcc", "cbcc");
+            phono.End();
         }
 
         [Test]
         public void SegmentOptional()
         {
-            var phono = CreateStringWithStdImports("rule matchany a => c / _ (b)+c$ ");
-            RunPhonixFile(phono, "a", "a");
-            RunPhonixFile(phono, "ac", "ac");
-            RunPhonixFile(phono, "abc", "cbc");
-            RunPhonixFile(phono, "abbc", "cbbc");
+            var phono = new PhonixWrapper().StdImports().Append("rule matchany a => c / _ (b)+c$ ");
+            phono.Start().ValidateInOut("a", "a");
+            phono.ValidateInOut("ac", "ac");
+            phono.ValidateInOut("abc", "cbc");
+            phono.ValidateInOut("abbc", "cbbc");
+            phono.End();
         }
 
         [Test]
         public void MultipleSegmentOptionalBacktrack()
         {
-            var phono = CreateStringWithStdImports("rule matchany a => c / _ (bc)+b$ ");
-            RunPhonixFile(phono, "abc", "abc");
-            RunPhonixFile(phono, "abcb", "cbcb");
-            RunPhonixFile(phono, "abcbc", "abcbc");
-            RunPhonixFile(phono, "abcbcb", "cbcbcb");
+            var phono = new PhonixWrapper().StdImports().Append("rule matchany a => c / _ (bc)+b$ ");
+            phono.Start().ValidateInOut("abc", "abc");
+            phono.ValidateInOut("abcb", "cbcb");
+            phono.ValidateInOut("abcbc", "abcbc");
+            phono.ValidateInOut("abcbcb", "cbcbcb");
+            phono.End();
         }
 
         [Test]
         public void SegmentRepeatZeroOrOnePre()
         {
-            var phono = CreateStringWithStdImports("rule matchany a => x / (c)b _ $ ");
-            RunPhonixFile(phono, "cba", "cbx");
-            RunPhonixFile(phono, "ba", "bx");
-            RunPhonixFile(phono, "ca", "ca");
+            var phono = new PhonixWrapper().StdImports().Append("rule matchany a => x / (c)b _ $ ");
+            phono.Start().ValidateInOut("cba", "cbx");
+            phono.ValidateInOut("ba", "bx");
+            phono.ValidateInOut("ca", "ca");
+            phono.End();
         }
 
         [Test]
         public void SegmentRepeatZeroOnMorePre()
         {
-            var phono = CreateStringWithStdImports("rule matchany a => x / (c)*b _ $ ");
-            RunPhonixFile(phono, "cba", "cbx");
-            RunPhonixFile(phono, "ccba", "ccbx");
-            RunPhonixFile(phono, "cccba", "cccbx");
-            RunPhonixFile(phono, "ba", "bx");
-            RunPhonixFile(phono, "ca", "ca");
+            var phono = new PhonixWrapper().StdImports().Append("rule matchany a => x / (c)*b _ $ ");
+            phono.Start().ValidateInOut("cba", "cbx");
+            phono.ValidateInOut("ccba", "ccbx");
+            phono.ValidateInOut("cccba", "cccbx");
+            phono.ValidateInOut("ba", "bx");
+            phono.ValidateInOut("ca", "ca");
+            phono.End();
         }
 
         [Test]
         public void SegmentRepeatOneOrMorePre()
         {
-            var phono = CreateStringWithStdImports("rule matchany a => x / (c)+b _ $ ");
-            RunPhonixFile(phono, "cba", "cbx");
-            RunPhonixFile(phono, "ccba", "ccbx");
-            RunPhonixFile(phono, "cccba", "cccbx");
-            RunPhonixFile(phono, "ba", "ba");
-            RunPhonixFile(phono, "ca", "ca");
+            var phono = new PhonixWrapper().StdImports().Append("rule matchany a => x / (c)+b _ $ ");
+            phono.Start().ValidateInOut("cba", "cbx");
+            phono.ValidateInOut("ccba", "ccbx");
+            phono.ValidateInOut("cccba", "cccbx");
+            phono.ValidateInOut("ba", "ba");
+            phono.ValidateInOut("ca", "ca");
+            phono.End();
         }
 
         [Test]
         public void RuleApplicationRate()
         {
             /* TODO
-            var phono = CreateStringWithStdImports("rule sporadic (applicationRate=0.25) a => b");
+            var phono = new PhonixWrapper().StdImports().Append("rule sporadic (applicationRate=0.25) a => b");
             var rule = phono.RuleSet.OrderedRules.First();
             Assert.AreEqual(0.25, ((Rule) rule).ApplicationRate);
             */
@@ -386,7 +378,7 @@ namespace Phonix.Test
         //[ExpectedException(typeof(ParseException))]
         public void RuleApplicationRateOutOfRange()
         {
-            CreateStringWithStdImports("rule sporadic (applicationRate=1.25) a => b");
+            new PhonixWrapper().StdImports().Append("rule sporadic (applicationRate=1.25) a => b");
             Assert.Fail("Shouldn't reach this line");
         }
 
@@ -394,7 +386,7 @@ namespace Phonix.Test
         public void ScalarRange()
         {
             /* TODO
-            var phono = CreateStringWithStdImports("feature scRange (type=scalar min=1 max=4)");
+            var phono = new PhonixWrapper().StdImports().Append("feature scRange (type=scalar min=1 max=4)");
             Assert.IsTrue(phono.FeatureSet.Has<ScalarFeature>("scRange"));
 
             var sc = phono.FeatureSet.Get<ScalarFeature>("scRange");
@@ -407,7 +399,7 @@ namespace Phonix.Test
         //[ExpectedException(typeof(ParseException))]
         public void ScalarMissingMin()
         {
-            CreateStringWithStdImports("feature scRange (type=scalar max=4)");
+            new PhonixWrapper().StdImports().Append("feature scRange (type=scalar max=4)");
             Assert.Fail("Shouldn't reach this line");
         }
 
@@ -415,7 +407,7 @@ namespace Phonix.Test
         //[ExpectedException(typeof(ParseException))]
         public void ScalarMissingMax()
         {
-            CreateStringWithStdImports("feature scRange (type=scalar min=1)");
+            new PhonixWrapper().StdImports().Append("feature scRange (type=scalar min=1)");
             Assert.Fail("Shouldn't reach this line");
         }
 
@@ -430,78 +422,85 @@ namespace Phonix.Test
         [Test]
         public void ScalarNotEq()
         {
-            string phono = scalarDefs + "rule neq [sc<>0] => sc2";
-            RunPhonixFile(phono, "sc0", "sc0");
-            RunPhonixFile(phono, "sc1", "sc2");
-            RunPhonixFile(phono, "sc2", "sc2");
-            RunPhonixFile(phono, "sc3", "sc2");
-            RunPhonixFile(phono, "scX", "sc2");
+            var phono = new PhonixWrapper().Append(scalarDefs).Append("rule neq [sc<>0] => sc2");
+            phono.Start().ValidateInOut("sc0", "sc0");
+            phono.ValidateInOut("sc1", "sc2");
+            phono.ValidateInOut("sc2", "sc2");
+            phono.ValidateInOut("sc3", "sc2");
+            phono.ValidateInOut("scX", "sc2");
+            phono.End();
         }
 
         [Test]
         public void ScalarGT()
         {
-            string phono = scalarDefs + "rule gt [sc>1] => sc0";
-            RunPhonixFile(phono, "sc0", "sc0");
-            RunPhonixFile(phono, "sc1", "sc1");
-            RunPhonixFile(phono, "sc2", "sc0");
-            RunPhonixFile(phono, "sc3", "sc0");
-            RunPhonixFile(phono, "scX", "scX");
+            var phono = new PhonixWrapper().Append(scalarDefs).Append("rule gt [sc>1] => sc0");
+            phono.Start().ValidateInOut("sc0", "sc0");
+            phono.ValidateInOut("sc1", "sc1");
+            phono.ValidateInOut("sc2", "sc0");
+            phono.ValidateInOut("sc3", "sc0");
+            phono.ValidateInOut("scX", "scX");
+            phono.End();
         }
 
         [Test]
         public void ScalarGTOrEq()
         {
-            string phono = scalarDefs + "rule gte [sc>=2] => sc0";
-            RunPhonixFile(phono, "sc0", "sc0");
-            RunPhonixFile(phono, "sc1", "sc1");
-            RunPhonixFile(phono, "sc2", "sc0");
-            RunPhonixFile(phono, "sc3", "sc0");
-            RunPhonixFile(phono, "scX", "scX");
+            var phono = new PhonixWrapper().Append(scalarDefs + "rule gte [sc>=2] => sc0");
+            phono.Start().ValidateInOut("sc0", "sc0");
+            phono.ValidateInOut("sc1", "sc1");
+            phono.ValidateInOut("sc2", "sc0");
+            phono.ValidateInOut("sc3", "sc0");
+            phono.ValidateInOut("scX", "scX");
+            phono.End();
         }
 
         [Test]
         public void ScalarLT()
         {
-            string phono = scalarDefs + "rule lt [sc<2] => sc3";
-            RunPhonixFile(phono, "sc0", "sc3");
-            RunPhonixFile(phono, "sc1", "sc3");
-            RunPhonixFile(phono, "sc2", "sc2");
-            RunPhonixFile(phono, "sc3", "sc3");
-            RunPhonixFile(phono, "scX", "scX");
+            var phono = new PhonixWrapper().Append(scalarDefs + "rule lt [sc<2] => sc3");
+            phono.Start().ValidateInOut("sc0", "sc3");
+            phono.ValidateInOut("sc1", "sc3");
+            phono.ValidateInOut("sc2", "sc2");
+            phono.ValidateInOut("sc3", "sc3");
+            phono.ValidateInOut("scX", "scX");
+            phono.End();
         }
 
         [Test]
         public void ScalarLTOrEq()
         {
-            string phono = scalarDefs + "rule lte [sc<=1] => sc3";
-            RunPhonixFile(phono, "sc0", "sc3");
-            RunPhonixFile(phono, "sc1", "sc3");
-            RunPhonixFile(phono, "sc2", "sc2");
-            RunPhonixFile(phono, "sc3", "sc3");
-            RunPhonixFile(phono, "scX", "scX");
+            var phono = new PhonixWrapper().Append(scalarDefs + "rule lte [sc<=1] => sc3");
+            phono.Start().ValidateInOut("sc0", "sc3");
+            phono.ValidateInOut("sc1", "sc3");
+            phono.ValidateInOut("sc2", "sc2");
+            phono.ValidateInOut("sc3", "sc3");
+            phono.ValidateInOut("scX", "scX");
+            phono.End();
         }
 
         [Test]
         public void ScalarAdd()
         {
-            string phono = scalarDefs + "rule add [sc<3] => [sc=+1]";
-            RunPhonixFile(phono, "sc0", "sc1");
-            RunPhonixFile(phono, "sc1", "sc2");
-            RunPhonixFile(phono, "sc2", "sc3");
-            RunPhonixFile(phono, "sc3", "sc3");
-            RunPhonixFile(phono, "scX", "scX");
+            var phono = new PhonixWrapper().Append(scalarDefs + "rule add [sc<3] => [sc=+1]");
+            phono.Start().ValidateInOut("sc0", "sc1");
+            phono.ValidateInOut("sc1", "sc2");
+            phono.ValidateInOut("sc2", "sc3");
+            phono.ValidateInOut("sc3", "sc3");
+            phono.ValidateInOut("scX", "scX");
+            phono.End();
         }
 
         [Test]
         public void ScalarSubtract()
         {
-            string phono = scalarDefs + "rule subtract [sc>0] => [sc=-1]";
-            RunPhonixFile(phono, "sc0", "sc0");
-            RunPhonixFile(phono, "sc1", "sc0");
-            RunPhonixFile(phono, "sc2", "sc1");
-            RunPhonixFile(phono, "sc3", "sc2");
-            RunPhonixFile(phono, "scX", "scX");
+            var phono = new PhonixWrapper().Append(scalarDefs + "rule subtract [sc>0] => [sc=-1]");
+            phono.Start().ValidateInOut("sc0", "sc0");
+            phono.ValidateInOut("sc1", "sc0");
+            phono.ValidateInOut("sc2", "sc1");
+            phono.ValidateInOut("sc3", "sc2");
+            phono.ValidateInOut("scX", "scX");
+            phono.End();
         }
 
         [Test]
@@ -525,7 +524,8 @@ namespace Phonix.Test
             PhonixParser.ParseString(phono, scalarDefs + "rule subtract [] => [sc=-1]");
             phono.RuleSet.ScalarValueRangeViolation += tracer;
 
-            RunPhonixFile(phono, "sc0", "sc0"); // assert that this doesn't blow up
+            phono.Start().ValidateInOut("sc0", "sc0"); // assert that this doesn't blow up
+            phono.End();
 
             Assert.IsTrue(gotTrace);
             Assert.AreSame(rule, phono.RuleSet.OrderedRules.Where(r => r.Name.Equals("subtract")).First());
@@ -553,7 +553,8 @@ namespace Phonix.Test
             PhonixParser.ParseString(phono, scalarDefs + "rule subtract [] => [sc=-1]");
             phono.RuleSet.InvalidScalarValueOp += tracer;
 
-            RunPhonixFile(phono, "scX", "scX"); // this shouldn't throw an exception
+            phono.Start().ValidateInOut("scX", "scX"); // this shouldn't throw an exception
+            phono.End();
 
             Assert.IsTrue(gotTrace);
             Assert.AreSame(rule, phono.RuleSet.OrderedRules.Where(r => r.Name.Equals("subtract")).First());
@@ -564,332 +565,341 @@ namespace Phonix.Test
         [Test]
         public void SyllableCV()
         {
-            var phono = CreateStringWithStdImports("syllable onset [+cons] nucleus [-cons +son]");
-            ApplySyllableRule(phono, "basiho", "<b:a><s:i><h:o>");
-            ApplySyllableRule(phono, "asiho", "<a><s:i><h:o>");
-            ApplySyllableRule(phono, "basih", "<b:a><s:i>h");
+            var phono = new PhonixWrapper().StdImports().Append("syllable onset [+cons] nucleus [-cons +son]");
+            phono.ApplySyllableRule("basiho", "<b:a><s:i><h:o>");
+            phono.ApplySyllableRule("asiho", "<a><s:i><h:o>");
+            phono.ApplySyllableRule("basih", "<b:a><s:i>h");
         }
 
         [Test]
         public void SyllableCVC()
         {
-            var phono = CreateStringWithStdImports("syllable onset [+cons] nucleus [-cons +son] coda [+son]");
-            ApplySyllableRule(phono, "basihon", "<b:a><s:i><h:o.n>");
-            ApplySyllableRule(phono, "asihon", "<a><s:i><h:o.n>");
-            ApplySyllableRule(phono, "basih", "<b:a><s:i>h");
-            ApplySyllableRule(phono, "bai", "<b:a.i>");
+            var phono = new PhonixWrapper().StdImports().Append("syllable onset [+cons] nucleus [-cons +son] coda [+son]");
+            phono.ApplySyllableRule("basihon", "<b:a><s:i><h:o.n>");
+            phono.ApplySyllableRule("asihon", "<a><s:i><h:o.n>");
+            phono.ApplySyllableRule("basih", "<b:a><s:i>h");
+            phono.ApplySyllableRule("bai", "<b:a.i>");
         }
 
         [Test]
         public void SyllableCVCOnsetRequired()
         {
-            var phono = CreateStringWithStdImports("syllable (onsetRequired) onset [+cons] nucleus [-cons +son] coda [+son]");
-            ApplySyllableRule(phono, "basihon", "<b:a><s:i><h:o.n>");
-            ApplySyllableRule(phono, "asihon", "a<s:i><h:o.n>");
-            ApplySyllableRule(phono, "basih", "<b:a><s:i>h");
-            ApplySyllableRule(phono, "bai", "<b:a.i>");
+            var phono = new PhonixWrapper().StdImports().Append("syllable (onsetRequired) onset [+cons] nucleus [-cons +son] coda [+son]");
+            phono.ApplySyllableRule("basihon", "<b:a><s:i><h:o.n>");
+            phono.ApplySyllableRule("asihon", "a<s:i><h:o.n>");
+            phono.ApplySyllableRule("basih", "<b:a><s:i>h");
+            phono.ApplySyllableRule("bai", "<b:a.i>");
         }
 
         [Test]
         public void SyllableCVCCodaRequired()
         {
-            var phono = CreateStringWithStdImports("syllable (codaRequired) onset [+cons] nucleus [-cons +son] coda [+cons]");
-            ApplySyllableRule(phono, "basihon", "<b:a.s><i.h><o.n>");
-            ApplySyllableRule(phono, "asihon", "<a.s><i.h><o.n>");
-            ApplySyllableRule(phono, "basih", "<b:a.s><i.h>");
-            ApplySyllableRule(phono, "bai", "bai");
+            var phono = new PhonixWrapper().StdImports().Append("syllable (codaRequired) onset [+cons] nucleus [-cons +son] coda [+cons]");
+            phono.ApplySyllableRule("basihon", "<b:a.s><i.h><o.n>");
+            phono.ApplySyllableRule("asihon", "<a.s><i.h><o.n>");
+            phono.ApplySyllableRule("basih", "<b:a.s><i.h>");
+            phono.ApplySyllableRule("bai", "bai");
         }
 
         [Test]
         public void SyllableCVCOnsetAndCodaRequired()
         {
-            var phono = CreateStringWithStdImports(
+            var phono = new PhonixWrapper().StdImports().Append(
                     "syllable (onsetRequired codaRequired) " + 
                     "onset [+cons] nucleus [-cons +son] coda [+cons]");
-            ApplySyllableRule(phono, "basihon", "<b:a.s>i<h:o.n>");
-            ApplySyllableRule(phono, "asihon", "a<s:i.h>on");
-            ApplySyllableRule(phono, "basih", "<b:a.s>ih");
-            ApplySyllableRule(phono, "bai", "bai");
+            phono.ApplySyllableRule("basihon", "<b:a.s>i<h:o.n>");
+            phono.ApplySyllableRule("asihon", "a<s:i.h>on");
+            phono.ApplySyllableRule("basih", "<b:a.s>ih");
+            phono.ApplySyllableRule("bai", "bai");
         }
 
         [Test]
         public void SyllableCCV()
         {
-            var phono = CreateStringWithStdImports("syllable onset [+cons]([+cons]) nucleus [-cons +son]");
-            ApplySyllableRule(phono, "basiho", "<b:a><s:i><h:o>");
-            ApplySyllableRule(phono, "brastihno", "<br:a><st:i><hn:o>");
-            ApplySyllableRule(phono, "aszihxon", "<a><sz:i><hx:o>n");
-            ApplySyllableRule(phono, "barsih", "<b:a><rs:i>h");
+            var phono = new PhonixWrapper().StdImports().Append("syllable onset [+cons]([+cons]) nucleus [-cons +son]");
+            phono.ApplySyllableRule("basiho", "<b:a><s:i><h:o>");
+            phono.ApplySyllableRule("brastihno", "<br:a><st:i><hn:o>");
+            phono.ApplySyllableRule("aszihxon", "<a><sz:i><hx:o>n");
+            phono.ApplySyllableRule("barsih", "<b:a><rs:i>h");
         }
 
         [Test]
         public void SyllableCCVC()
         {
-            var phono = CreateStringWithStdImports(
+            var phono = new PhonixWrapper().StdImports().Append(
                     "syllable onset ([-son])([+cons]) nucleus [-cons +son] coda [+son]");
-            ApplySyllableRule(phono, "basihon", "<b:a><s:i><h:o.n>");
-            ApplySyllableRule(phono, "bramstihnorl", "<br:a.m><st:i><hn:o.r>l");
-            ApplySyllableRule(phono, "alszihxon", "<a.l><sz:i><hx:o.n>");
-            ApplySyllableRule(phono, "barsih", "<b:a.r><s:i>h");
-            ApplySyllableRule(phono, "btai", "<bt:a.i>");
+            phono.ApplySyllableRule("basihon", "<b:a><s:i><h:o.n>");
+            phono.ApplySyllableRule("bramstihnorl", "<br:a.m><st:i><hn:o.r>l");
+            phono.ApplySyllableRule("alszihxon", "<a.l><sz:i><hx:o.n>");
+            phono.ApplySyllableRule("barsih", "<b:a.r><s:i>h");
+            phono.ApplySyllableRule("btai", "<bt:a.i>");
         }
 
         [Test]
         public void SyllableCCVCC()
         {
-            var phono = CreateStringWithStdImports(
+            var phono = new PhonixWrapper().StdImports().Append(
                     "syllable onset ([-son])([+cons]) nucleus [-cons +son] coda ([+son])([+cons])");
-            ApplySyllableRule(phono, "basihon", "<b:a><s:i><h:o.n>");
-            ApplySyllableRule(phono, "bramstihnorl", "<br:a.m><st:i><hn:o.rl>");
-            ApplySyllableRule(phono, "alszihxon", "<a.l><sz:i><hx:o.n>");
-            ApplySyllableRule(phono, "barsih", "<b:a.r><s:i.h>");
-            ApplySyllableRule(phono, "btaif", "<bt:a.if>");
+            phono.ApplySyllableRule("basihon", "<b:a><s:i><h:o.n>");
+            phono.ApplySyllableRule("bramstihnorl", "<br:a.m><st:i><hn:o.rl>");
+            phono.ApplySyllableRule("alszihxon", "<a.l><sz:i><hx:o.n>");
+            phono.ApplySyllableRule("barsih", "<b:a.r><s:i.h>");
+            phono.ApplySyllableRule("btaif", "<bt:a.if>");
         }
 
         [Test]
         public void SyllableCVCNucleusRight()
         {
-            var phono = CreateStringWithStdImports(
+            var phono = new PhonixWrapper().StdImports().Append(
                     "syllable (nucleusPreference=right) " + 
                     "onset [+cons]([+son]) nucleus [-cons +son] coda []");
-            ApplySyllableRule(phono, "bui", "<bu:i>");
-            ApplySyllableRule(phono, "biu", "<bi:u>");
+            phono.ApplySyllableRule("bui", "<bu:i>");
+            phono.ApplySyllableRule("biu", "<bi:u>");
         }
 
         [Test]
         public void SyllableCVCNucleusLeft()
         {
-            var phono = CreateStringWithStdImports(
+            var phono = new PhonixWrapper().StdImports().Append(
                     "syllable (nucleusPreference=left) " + 
                     "onset [+cons][+son] onset [+cons] nucleus [-cons +son] coda []");
-            ApplySyllableRule(phono, "bui", "<b:u.i>");
-            ApplySyllableRule(phono, "biu", "<b:i.u>");
+            phono.ApplySyllableRule("bui", "<b:u.i>");
+            phono.ApplySyllableRule("biu", "<b:i.u>");
         }
 
         [Test]
         //[ExpectedException(typeof(ParseException))]
         public void SyllableInvalidNoSegmentInOnset()
         {
-            CreateStringWithStdImports("syllable onset nucleus [] coda []");
+            new PhonixWrapper().StdImports().Append("syllable onset nucleus [] coda []");
         }
 
         [Test]
         //[ExpectedException(typeof(ParseException))]
         public void SyllableInvalidNoSegmentInNucleus()
         {
-            CreateStringWithStdImports("syllable onset [] nucleus coda []");
+            new PhonixWrapper().StdImports().Append("syllable onset [] nucleus coda []");
         }
 
         [Test]
         //[ExpectedException(typeof(ParseException))]
         public void SyllableInvalidNoSegmentInCoda()
         {
-            CreateStringWithStdImports("syllable onset [] nucleus [] coda ");
+            new PhonixWrapper().StdImports().Append("syllable onset [] nucleus [] coda ");
         }
 
         [Test]
         //[ExpectedException(typeof(ParseException))]
         public void SyllableInvalidRegexPlus()
         {
-            CreateStringWithStdImports("syllable onset ([])+ nucleus [] coda []");
+            new PhonixWrapper().StdImports().Append("syllable onset ([])+ nucleus [] coda []");
         }
 
         [Test]
         //[ExpectedException(typeof(ParseException))]
         public void SyllableInvalidRegexStar()
         {
-            CreateStringWithStdImports("syllable onset ([])* nucleus [] coda []");
+            new PhonixWrapper().StdImports().Append("syllable onset ([])* nucleus [] coda []");
         }
 
         [Test]
         //[ExpectedException(typeof(ParseException))]
         public void SyllableInvalidParameter()
         {
-            CreateStringWithStdImports("syllable (invalid) onset [] nucleus [] coda []");
+            new PhonixWrapper().StdImports().Append("syllable (invalid) onset [] nucleus [] coda []");
         }
 
         [Test]
         public void MatchOnset()
         {
-            var phono = CreateStringWithStdImports(
+            var phono = new PhonixWrapper().StdImports().Append(
                     "syllable onset [+cons]([+cons]) nucleus [-cons +son] coda [+cons] " +
                     "rule markOnset [<onset>] => x / _ [<*onset>]");
-            RunPhonixFile(phono, "basiho", "xaxixo");
-            RunPhonixFile(phono, "brastihno", "bxasxihxo");
-            RunPhonixFile(phono, "aszihgon", "asxihxon");
-            RunPhonixFile(phono, "barsih", "xarxih");
+            phono.Start().ValidateInOut("basiho", "xaxixo");
+            phono.ValidateInOut("brastihno", "bxasxihxo");
+            phono.ValidateInOut("aszihgon", "asxihxon");
+            phono.ValidateInOut("barsih", "xarxih");
+            phono.End();
         }
 
         [Test]
         public void MatchCoda()
         {
-            var phono = CreateStringWithStdImports(
+            var phono = new PhonixWrapper().StdImports().Append(
                     "syllable onset [+cons] nucleus [-cons +son] coda [+cons] " +
                     "rule markCoda [<coda>] => x / [<*coda>] _ ");
-            RunPhonixFile(phono, "basiho", "basiho");
-            RunPhonixFile(phono, "brastihno", "braxtixno");
-            RunPhonixFile(phono, "aszihgon", "axzixgox");
-            RunPhonixFile(phono, "barsih", "baxsix");
+            phono.ValidateInOut("basiho", "basiho");
+            phono.ValidateInOut("brastihno", "braxtixno");
+            phono.ValidateInOut("aszihgon", "axzixgox");
+            phono.ValidateInOut("barsih", "baxsix");
+            phono.End();
         }
 
         [Test]
         public void MatchNucleus()
         {
-            var phono = CreateStringWithStdImports(
+            var phono = new PhonixWrapper().StdImports().Append(
                     "syllable onset [+cons] nucleus [-cons +son] coda [+cons] " +
                     "rule markCoda [<nucleus>] => x ");
-            RunPhonixFile(phono, "basiho", "bxsxhx");
-            RunPhonixFile(phono, "brastihno", "brxstxhnx");
-            RunPhonixFile(phono, "aszihgon", "xszxhgxn");
-            RunPhonixFile(phono, "barsih", "bxrsxh");
+            phono.Start().ValidateInOut("basiho", "bxsxhx");
+            phono.ValidateInOut("brastihno", "brxstxhnx");
+            phono.ValidateInOut("aszihgon", "xszxhgxn");
+            phono.ValidateInOut("barsih", "bxrsxh");
+            phono.End();
         }
 
         [Test]
         public void MatchSyllable()
         {
-            var phono = CreateStringWithStdImports(
+            var phono = new PhonixWrapper().StdImports().Append(
                     "syllable (onsetRequired codaRequired) onset [+cons] nucleus [-cons +son] coda [+cons] " +
                     "rule markSyllable [<syllable>] => x ");
-            RunPhonixFile(phono, "basiho", "xxxiho");
-            RunPhonixFile(phono, "brastihno", "bxxxxxxno");
-            RunPhonixFile(phono, "aszihgon", "asxxxxxx");
-            RunPhonixFile(phono, "barsih", "xxxxxx");
+            phono.Start().ValidateInOut("basiho", "xxxiho");
+            phono.ValidateInOut("brastihno", "bxxxxxxno");
+            phono.ValidateInOut("aszihgon", "asxxxxxx");
+            phono.ValidateInOut("barsih", "xxxxxx");
+            phono.End();
         }
 
         [Test]
         public void MatchNoSyllable()
         {
-            var phono = CreateStringWithStdImports(
+            var phono = new PhonixWrapper().StdImports().Append(
                     "syllable (onsetRequired codaRequired) onset [+cons] nucleus [-cons +son] coda [+cons] " +
                     "rule markNoSyllable [<*syllable>] => x ");
-            RunPhonixFile(phono, "basiho", "basxxx");
-            RunPhonixFile(phono, "brastihno", "xrastihxx");
-            RunPhonixFile(phono, "aszihgon", "xxzihgon");
-            RunPhonixFile(phono, "barsih", "barsih");
+            phono.Start().ValidateInOut("basiho", "basxxx");
+            phono.ValidateInOut("brastihno", "xrastihxx");
+            phono.ValidateInOut("aszihgon", "xxzihgon");
+            phono.ValidateInOut("barsih", "barsih");
+            phono.End();
         }
 
         [Test]
         //[ExpectedException(typeof(ParseException))]
         public void UnmatchedLeftBracket()
         {
-            CreateStringWithStdImports("rule markInvalid [<syllable] => x");
+            new PhonixWrapper().StdImports().Append("rule markInvalid [<syllable] => x");
         }
 
         [Test]
         //[ExpectedException(typeof(ParseException))]
         public void UnmatchedRightBracket()
         {
-            CreateStringWithStdImports("rule markInvalid [syllable>] => x");
+            new PhonixWrapper().StdImports().Append("rule markInvalid [syllable>] => x");
         }
 
         [Test]
         //[ExpectedException(typeof(ParseException))]
         public void UnrecognizedTierName()
         {
-            CreateStringWithStdImports("rule markInvalid [<wrong>] => x");
+            new PhonixWrapper().StdImports().Append("rule markInvalid [<wrong>] => x");
         }
 
         [Test]
         //[ExpectedException(typeof(ParseException))]
         public void SymbolContainsVariable()
         {
-            CreateStringWithStdImports("symbol ! [+hi -lo $vc]");
+            new PhonixWrapper().StdImports().Append("symbol ! [+hi -lo $vc]");
         }
 
         [Test]
         //[ExpectedException(typeof(ParseException))]
         public void SymbolContainsScalarOp()
         {
-            CreateStringWithStdImports("feature sc (type=scalar)   symbol ! [+hi -lo sc=+1]");
+            new PhonixWrapper().StdImports().Append("feature sc (type=scalar)   symbol ! [+hi -lo sc=+1]");
         }
 
         [Test]
         //[ExpectedException(typeof(ParseException))]
         public void SymbolContainsBareNode()
         {
-            CreateStringWithStdImports("symbol ! [+hi -lo Labial]");
+            new PhonixWrapper().StdImports().Append("symbol ! [+hi -lo Labial]");
         }
 
         [Test]
         //[ExpectedException(typeof(ParseException))]
         public void SymbolContainsNullNode()
         {
-            CreateStringWithStdImports("symbol ! [+hi -lo *Labial]");
+            new PhonixWrapper().StdImports().Append("symbol ! [+hi -lo *Labial]");
         }
 
         [Test]
         //[ExpectedException(typeof(ParseException))]
         public void SymbolContainsSyllableFeature()
         {
-            CreateStringWithStdImports("symbol ! [+vc <coda>]");
+            new PhonixWrapper().StdImports().Append("symbol ! [+vc <coda>]");
         }
 
         [Test]
         //[ExpectedException(typeof(ParseException))]
         public void RuleMatchContainsScalarOp()
         {
-            CreateStringWithStdImports("feature sc (type=scalar)   rule ! [sc=+1] => []");
+            new PhonixWrapper().StdImports().Append("feature sc (type=scalar)   rule ! [sc=+1] => []");
         }
 
         [Test]
         //[ExpectedException(typeof(ParseException))]
         public void RuleActionContainsBareNode()
         {
-            CreateStringWithStdImports("rule ! [] => [Labial]");
+            new PhonixWrapper().StdImports().Append("rule ! [] => [Labial]");
         }
 
         [Test]
         public void FeatureGroupDeclaration()
         {
-            CreateStringWithStdImports("feature [V] [+syll +son +vc]");
+            new PhonixWrapper().StdImports().Append("feature [V] [+syll +son +vc]");
         }
 
         [Test]
         public void SymbolContainsFeatureGroup()
         {
-            CreateStringWithStdImports("feature [V] [+syll +son +vc]   symbol ! [[V] -hi]");
+            new PhonixWrapper().StdImports().Append("feature [V] [+syll +son +vc]   symbol ! [[V] -hi]");
         }
 
         [Test]
         public void RuleMatchContainsFeatureGroup()
         {
-            var phono = CreateStringWithStdImports("feature [V] [+syll +son]\n" +
+            var phono = new PhonixWrapper().StdImports().Append("feature [V] [+syll +son]\n" +
                                             "rule match-group [[V]] => i");
-            RunPhonixFile(phono, "bomo", "bimi");
+            phono.Start().ValidateInOut("bomo", "bimi");
+            phono.End();
         }
 
         [Test]
         public void RuleActionContainsFeatureGroup()
         {
-            var phono = CreateStringWithStdImports("feature [V] [+syll +son]\n" +
+            var phono = new PhonixWrapper().StdImports().Append("feature [V] [+syll +son]\n" +
                                             "rule match-group [+syll -hi] => [[V] +hi -lo +fr -bk]");
-            RunPhonixFile(phono, "bomo", "bymy");
+            phono.Start().ValidateInOut("bomo", "bymy");
+            phono.End();
         }
 
         [Test]
         public void SymbolContainsSymbolRef()
         {
-            CreateStringWithStdImports("symbol s! [(s) -cons]");
+            new PhonixWrapper().StdImports().Append("symbol s! [(s) -cons]");
         }
 
         [Test]
         public void RuleMatchContainsSymbolRef()
         {
-            var phono = CreateStringWithStdImports("import std.symbols.diacritics\nrule match-sym [(a)] => i");
-            RunPhonixFile(phono, "ba~ma_0", "bimi");
+            var phono = new PhonixWrapper().StdImports().Append("import std.symbols.diacritics\nrule match-sym [(a)] => i");
+            phono.Start().ValidateInOut("ba~ma_0", "bimi");
+            phono.End();
         }
 
         [Test]
         public void RuleMatchAndActionContainSymbolRef()
         {
-            var phono = CreateStringWithStdImports("import std.symbols.diacritics\nrule match-sym [(a)] => [(i)]");
-            RunPhonixFile(phono, "ba~ma_0", "bi~mi_0");
+            var phono = new PhonixWrapper().StdImports().Append("import std.symbols.diacritics\nrule match-sym [(a)] => [(i)]");
+            phono.Start().ValidateInOut("ba~ma_0", "bi~mi_0");
+            phono.End();
         }
 
         [Test]
         public void StringQuoting()
         {
-            CreateStringWithStdImports(
+            new PhonixWrapper().StdImports().Append(
 			"symbol \"quote\" [+cons -ro]" +
 			"symbol \"quote with space\" [+cons -ro]" +
 			"symbol \"quote +(with) -<bad> $[chars]\" [+cons -ro]" +

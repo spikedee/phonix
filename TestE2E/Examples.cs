@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using Phonix;
 
-namespace Phonix.Test
+namespace Phonix.TestE2E
 {
     using NUnit.Framework;
 
@@ -13,11 +13,10 @@ namespace Phonix.Test
         [Test]
         public void Romanian()
         {
-            var proc = Process.Start(
-                    "phonix", 
-                    "../examples/romanian.phonix -i ../examples/romanian.input -o ../examples/romanian.test.output");
-            proc.WaitForExit();
-            ParserTest.CompareFiles("../examples/romanian.output", "../examples/romanian.test.output");
+            var phonix = new PhonixWrapper("../examples/romanian.phonix");
+            phonix.Start("../examples/romanian.input", "../examples/romanian.test.output");
+            phonix.End();
+            phonix.CompareFiles("../examples/romanian.output", "../examples/romanian.test.output");
         }
     }
 }
