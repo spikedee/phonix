@@ -85,7 +85,7 @@ namespace Phonix
     public class UnknownParameterException : PhonixException
     {
         public UnknownParameterException(string param)
-            : base("Unknown parameter: " + param)
+            : base(String.Format("Unknown parameter: '{0}'", param))
         {
         }
     }

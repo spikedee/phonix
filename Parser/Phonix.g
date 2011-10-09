@@ -50,18 +50,17 @@ catch (RecognitionException re)
 {
     _parseError = true;
     Console.Error.WriteLine(String.Format(
-        "Couldn't parse {0} at {1} line {2} char {3}", 
-        GetTokenErrorDisplay(re.Token), 
+        "{0} line {1}: Couldn't parse {2}",
         _currentFile, 
         re.Line,
-        re.CharPositionInLine)
+        GetTokenErrorDisplay(re.Token))
     );
     Recover(input,re);
 }
 catch (PhonixException px)
 {
     IToken token = input.LT(-1);
-    Console.Error.WriteLine(String.Format("{0} at {1} line {2}", px.Message, _currentFile, token.Line));
+    Console.Error.WriteLine(String.Format("{0} line {1}: {2}", _currentFile, token.Line, px.Message));
     _parseError = true;
 }
 catch (ArgumentNullException)

@@ -301,6 +301,7 @@ namespace Phonix.TestE2E
         public void MultipleSegmentOptional()
         {
             var phono = new PhonixWrapper().StdImports().Append("rule matchany a => c / _ (bc)c$ ");
+            phono.Start();
             phono.ValidateInOut("a", "a");
             phono.ValidateInOut("ac", "cc");
             phono.ValidateInOut("abc", "abc");
@@ -375,14 +376,6 @@ namespace Phonix.TestE2E
         }
 
         [Test]
-        //[ExpectedException(typeof(ParseException))]
-        public void RuleApplicationRateOutOfRange()
-        {
-            new PhonixWrapper().StdImports().Append("rule sporadic (applicationRate=1.25) a => b");
-            Assert.Fail("Shouldn't reach this line");
-        }
-
-        [Test]
         public void ScalarRange()
         {
             /* TODO
@@ -393,22 +386,6 @@ namespace Phonix.TestE2E
             Assert.AreEqual(1, sc.Min.Value);
             Assert.AreEqual(4, sc.Max.Value);
             */
-        }
-
-        [Test]
-        //[ExpectedException(typeof(ParseException))]
-        public void ScalarMissingMin()
-        {
-            new PhonixWrapper().StdImports().Append("feature scRange (type=scalar max=4)");
-            Assert.Fail("Shouldn't reach this line");
-        }
-
-        [Test]
-        //[ExpectedException(typeof(ParseException))]
-        public void ScalarMissingMax()
-        {
-            new PhonixWrapper().StdImports().Append("feature scRange (type=scalar min=1)");
-            Assert.Fail("Shouldn't reach this line");
         }
 
         private string scalarDefs = 
@@ -668,48 +645,6 @@ namespace Phonix.TestE2E
         }
 
         [Test]
-        //[ExpectedException(typeof(ParseException))]
-        public void SyllableInvalidNoSegmentInOnset()
-        {
-            new PhonixWrapper().StdImports().Append("syllable onset nucleus [] coda []");
-        }
-
-        [Test]
-        //[ExpectedException(typeof(ParseException))]
-        public void SyllableInvalidNoSegmentInNucleus()
-        {
-            new PhonixWrapper().StdImports().Append("syllable onset [] nucleus coda []");
-        }
-
-        [Test]
-        //[ExpectedException(typeof(ParseException))]
-        public void SyllableInvalidNoSegmentInCoda()
-        {
-            new PhonixWrapper().StdImports().Append("syllable onset [] nucleus [] coda ");
-        }
-
-        [Test]
-        //[ExpectedException(typeof(ParseException))]
-        public void SyllableInvalidRegexPlus()
-        {
-            new PhonixWrapper().StdImports().Append("syllable onset ([])+ nucleus [] coda []");
-        }
-
-        [Test]
-        //[ExpectedException(typeof(ParseException))]
-        public void SyllableInvalidRegexStar()
-        {
-            new PhonixWrapper().StdImports().Append("syllable onset ([])* nucleus [] coda []");
-        }
-
-        [Test]
-        //[ExpectedException(typeof(ParseException))]
-        public void SyllableInvalidParameter()
-        {
-            new PhonixWrapper().StdImports().Append("syllable (invalid) onset [] nucleus [] coda []");
-        }
-
-        [Test]
         public void MatchOnset()
         {
             var phono = new PhonixWrapper().StdImports().Append(
@@ -728,6 +663,7 @@ namespace Phonix.TestE2E
             var phono = new PhonixWrapper().StdImports().Append(
                     "syllable onset [+cons] nucleus [-cons +son] coda [+cons] " +
                     "rule markCoda [<coda>] => x / [<*coda>] _ ");
+            phono.Start();
             phono.ValidateInOut("basiho", "basiho");
             phono.ValidateInOut("brastihno", "braxtixno");
             phono.ValidateInOut("aszihgon", "axzixgox");
@@ -772,76 +708,6 @@ namespace Phonix.TestE2E
             phono.ValidateInOut("aszihgon", "xxzihgon");
             phono.ValidateInOut("barsih", "barsih");
             phono.End();
-        }
-
-        [Test]
-        //[ExpectedException(typeof(ParseException))]
-        public void UnmatchedLeftBracket()
-        {
-            new PhonixWrapper().StdImports().Append("rule markInvalid [<syllable] => x");
-        }
-
-        [Test]
-        //[ExpectedException(typeof(ParseException))]
-        public void UnmatchedRightBracket()
-        {
-            new PhonixWrapper().StdImports().Append("rule markInvalid [syllable>] => x");
-        }
-
-        [Test]
-        //[ExpectedException(typeof(ParseException))]
-        public void UnrecognizedTierName()
-        {
-            new PhonixWrapper().StdImports().Append("rule markInvalid [<wrong>] => x");
-        }
-
-        [Test]
-        //[ExpectedException(typeof(ParseException))]
-        public void SymbolContainsVariable()
-        {
-            new PhonixWrapper().StdImports().Append("symbol ! [+hi -lo $vc]");
-        }
-
-        [Test]
-        //[ExpectedException(typeof(ParseException))]
-        public void SymbolContainsScalarOp()
-        {
-            new PhonixWrapper().StdImports().Append("feature sc (type=scalar)   symbol ! [+hi -lo sc=+1]");
-        }
-
-        [Test]
-        //[ExpectedException(typeof(ParseException))]
-        public void SymbolContainsBareNode()
-        {
-            new PhonixWrapper().StdImports().Append("symbol ! [+hi -lo Labial]");
-        }
-
-        [Test]
-        //[ExpectedException(typeof(ParseException))]
-        public void SymbolContainsNullNode()
-        {
-            new PhonixWrapper().StdImports().Append("symbol ! [+hi -lo *Labial]");
-        }
-
-        [Test]
-        //[ExpectedException(typeof(ParseException))]
-        public void SymbolContainsSyllableFeature()
-        {
-            new PhonixWrapper().StdImports().Append("symbol ! [+vc <coda>]");
-        }
-
-        [Test]
-        //[ExpectedException(typeof(ParseException))]
-        public void RuleMatchContainsScalarOp()
-        {
-            new PhonixWrapper().StdImports().Append("feature sc (type=scalar)   rule ! [sc=+1] => []");
-        }
-
-        [Test]
-        //[ExpectedException(typeof(ParseException))]
-        public void RuleActionContainsBareNode()
-        {
-            new PhonixWrapper().StdImports().Append("rule ! [] => [Labial]");
         }
 
         [Test]
