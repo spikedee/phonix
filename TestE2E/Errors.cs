@@ -55,7 +55,7 @@ namespace Phonix.TestE2E
             phono.StdImports()
                 .AppendExpectError(
                         "syllable onset nucleus [] coda []",
-                        "No segment in onset")
+                        "Unexpected 'nucleus'")
                 .Start()
                 .End();
         }
@@ -67,7 +67,7 @@ namespace Phonix.TestE2E
             phono.StdImports()
                 .AppendExpectError(
                         "syllable onset [] nucleus coda []",
-                        "No segment in nucleus")
+                        "Unexpected 'coda'")
                 .Start()
                 .End();
         }
@@ -78,8 +78,8 @@ namespace Phonix.TestE2E
             var phono = new PhonixWrapper();
             phono.StdImports()
                 .AppendExpectError(
-                        "syllable onset [] nucleus [] coda ",
-                        "No segment in coda")
+                        "syllable onset [] nucleus [] coda    feature foo",
+                        "Unexpected 'feature'")
                 .Start()
                 .End();
         }
@@ -91,7 +91,7 @@ namespace Phonix.TestE2E
             phono.StdImports()
                 .AppendExpectError(
                         "syllable onset ([])+ nucleus [] coda []",
-                        "Regexes cannot be used in syllable templates")
+                        "Unexpected '+'")
                 .Start()
                 .End();
         }
@@ -103,7 +103,7 @@ namespace Phonix.TestE2E
             phono.StdImports()
                 .AppendExpectError(
                         "syllable onset ([])* nucleus [] coda []",
-                        "Regexes cannot be used in syllable templates")
+                        "Unexpected '*'")
                 .Start()
                 .End();
         }
@@ -127,7 +127,7 @@ namespace Phonix.TestE2E
             phono.StdImports()
                 .AppendExpectError(
                         "rule markInvalid [<syllable] => x",
-                        "Unmatched left bracket")
+                        "Unexpected ']'")
                 .Start()
                 .End();
         }
@@ -139,7 +139,8 @@ namespace Phonix.TestE2E
             phono.StdImports()
                 .AppendExpectError(
                         "rule markInvalid [syllable>] => x",
-                        "Unmatched right bracket")
+                        "Unexpected 'syllable'",
+                        "Unexpected '>'")
                 .Start()
                 .End();
         }
@@ -151,7 +152,9 @@ namespace Phonix.TestE2E
             phono.StdImports()
                 .AppendExpectError(
                         "rule markInvalid [<wrong>] => x",
-                        "No such tier: 'wrong'")
+                        "No such tier: 'wrong'",
+                        "Unexpected '>'",
+                        "Unexpected '=>'")
                 .Start()
                 .End();
         }
@@ -223,7 +226,8 @@ namespace Phonix.TestE2E
             phono.StdImports()
                 .AppendExpectError(
                         "feature sc (type=scalar)   rule ! [sc=+1] => []",
-                        "'sc=+1' cannot be used here; should be a concrete feature value, variable value, node value, or syllable feature")
+                        "'sc=+1' cannot be used here; should be a concrete feature value, variable value, node value, or syllable feature",
+                        "Unexpected '=>'")
                 .Start()
                 .End();
         }

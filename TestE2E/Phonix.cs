@@ -52,11 +52,14 @@ namespace Phonix.TestE2E
             return this;
         }
 
-        internal PhonixWrapper AppendExpectError(string line, string errorMsg)
+        internal PhonixWrapper AppendExpectError(string line, params string[] errorMsgs)
         {
             fileContents.AppendLine(line);
             lineno++;
-            expectedErrors.Add(FormatError(errorMsg));
+            foreach (string errorMsg in errorMsgs)
+            {
+                expectedErrors.Add(FormatError(errorMsg));
+            }
             return this;
         }
 

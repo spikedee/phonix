@@ -765,16 +765,17 @@ namespace Phonix.TestE2E
         [Test]
         public void StringQuoting()
         {
-            new PhonixWrapper().StdImports().Append(
-			"symbol \"quote\" [+cons -ro]" +
+            var phono = new PhonixWrapper().StdImports().Append(
+			"symbol \"quote\" [-cons -ro]" +
 			"symbol \"quote with space\" [+cons -ro]" +
-			"symbol \"quote +(with) -<bad> $[chars]\" [+cons -ro]" +
-			"symbol \"quote isn't awesome\" [+cons -ro]" +
-			"symbol 'quote' [+cons -ro]" +
-			"symbol 'quote with space' [+cons -ro]" +
-			"symbol 'quote +(with) -<bad> $[chars]' [+cons -ro]" +
-			"symbol 'quote has \" in it' [+cons -ro]"
+			"symbol \"quote +(with) -<bad> $[chars]\" [+cons +ro]" +
+			"symbol \"quote isn't awesome\" [-cons +ro]" +
+			"symbol 'squote' [-cons -str]" +
+			"symbol 'squote with space' [+cons -str]" +
+			"symbol 'squote +(with) -<bad> $[chars]' [+cons +str]" +
+			"symbol 'squote has \" in it' [-cons +str]"
 			);
+            phono.Start().End();
         }
     }
 }
