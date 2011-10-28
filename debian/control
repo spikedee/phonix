@@ -2,8 +2,8 @@ Source: phonix
 Section: science
 Priority: extra
 Maintainer: Jesse Bangs <jaspax@gmail.com>
-Build-Depends: debhelper (>= 7.0.50~), libmono-dev (>= 2.6.7), openjdk-6-jre, nunit-console (>= 2.4.7), texinfo
-Standards-Version: 3.9.1
+Build-Depends: debhelper (>= 7.0.50~), mono-devel (>= 2.10.0), openjdk-6-jre, nunit-console (>= 2.4.7), texinfo
+Standards-Version: 3.9.2
 Homepage: http://phonix.googlecode.com
 #Vcs-Git: git://git.debian.org/collab-maint/phonix.git
 #Vcs-Browser: http://git.debian.org/?p=collab-maint/phonix.git;a=summary

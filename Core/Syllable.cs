@@ -78,7 +78,7 @@ namespace Phonix
                 ((MutableSegment) seg).Detach(Tier.Syllable);
             }
 
-#pragma warning disable 168 // unused variable
+#pragma warning disable 219 // unused variable
             var onset = new Segment(Tier.Onset, FeatureMatrix.Empty, Onset);
             var nucleus = new Segment(Tier.Nucleus, FeatureMatrix.Empty, Nucleus);
             var coda = new Segment(Tier.Coda, FeatureMatrix.Empty, Coda);

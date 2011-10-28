@@ -74,10 +74,10 @@ debug: CS_DEBUG=-debug -define:debug
 debug: clean $(PHONIX)
 
 $(PHONIX_TEST): $(TEST_FILES) $(RESX_FILES)
-	$(GMCS) -t:library -optimize- -debug -d:test -r:nunit.framework.dll -lib:/usr/lib/cli/nunit.framework-2.4/ $(TEST_FILES) $(PARSER_FILES) $(LINK_RESOURCES)
+	$(GMCS) -t:library -optimize- -debug -d:test -r:nunit.framework.dll -lib:/usr/lib/cli/nunit.framework-2.5/ $(TEST_FILES) $(PARSER_FILES) $(LINK_RESOURCES)
 
 $(PHONIX_TESTE2E): $(TESTE2E_FILES)
-	$(GMCS) -t:library -optimize- -debug -r:nunit.framework.dll -lib:/usr/lib/cli/nunit.framework-2.4/ $(TESTE2E_FILES)
+	$(GMCS) -t:library -optimize- -debug -r:nunit.framework.dll -lib:/usr/lib/cli/nunit.framework-2.5/ $(TESTE2E_FILES)
 
 doc: $(DOC_FILES)
 
@@ -109,7 +109,8 @@ install: $(PHONIX) doc
 
 deb: $(DEB)
 
-$(DEB): $(PHONIX_DEPENDS) phonix.sh
+$(DEB): $(PHONIX_DEPENDS) phonix.sh COPYRIGHT
+	cp -u COPYRIGHT debian/copyright
 	rm -rf $(TARFILE) $(DEB_DIR)
 	tar -cf $(TARFILE) --exclude-vcs *
 	mkdir $(DEB_DIR)
