@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
+using Phonix.Parse;
 
 namespace Phonix
 {
@@ -10,7 +11,7 @@ namespace Phonix
         {
             Error = 0,
             Warning = 1,
-            Info = 2,
+            Debug = 2,
             Verbose = 3
         };
 
@@ -18,13 +19,16 @@ namespace Phonix
         public readonly Level ErrorLevel;
         public readonly TextWriter Writer;
         private readonly Phonology _phono;
+        private readonly PhonixParser _parser;
+        private int _parseLevel = 0;
 
-        public Log(Level logLevel, Level errorLevel, TextWriter writer, Phonology phono)
+        public Log(Level logLevel, Level errorLevel, TextWriter writer, Phonology phono, PhonixParser parser)
         {
             LogLevel = logLevel;
             ErrorLevel = errorLevel;
             Writer = writer;
             _phono = phono;
+            _parser = parser;
         }
 
         public void Start()
@@ -40,8 +44,10 @@ namespace Phonix
                 _phono.RuleSet.InvalidScalarValueOp += this.LogInvalidScalarValueOp;
             }
 
-            if (LogLevel >= Level.Info)
+            if (LogLevel >= Level.Debug)
             {
+                _parser.ParseBegin += this.LogParseBegin;
+                _parser.ParseEnd += this.LogParseEnd;
                 _phono.FeatureSet.FeatureDefined += this.LogFeatureDefined;
                 _phono.SymbolSet.SymbolDefined += this.LogSymbolDefined;
                 _phono.RuleSet.RuleDefined += this.LogRuleDefined;
@@ -57,6 +63,9 @@ namespace Phonix
 
         public void Stop()
         {
+            _parser.ParseBegin -= this.LogParseBegin;
+            _parser.ParseEnd -= this.LogParseEnd;
+
             _phono.FeatureSet.FeatureDefined -= this.LogFeatureDefined;
             _phono.FeatureSet.FeatureRedefined -= this.LogFeatureRedefined;
 
@@ -89,9 +98,23 @@ namespace Phonix
             }
         }
 
+        private void LogParseBegin(string filename)
+        {
+            _parseLevel++;
+            string arrows = new string('>', _parseLevel);
+            WriteLog(Level.Debug, "{0} begin parsing {1}", arrows, filename);
+        }
+
+        private void LogParseEnd(string filename)
+        {
+            string arrows = new string('<', _parseLevel);
+            WriteLog(Level.Debug, "{0} end parsing {1}", arrows, filename);
+            _parseLevel--;
+        }
+
         private void LogFeatureDefined(Feature f)
         {
-            WriteLog(Level.Info, "{0} {1} defined", f.TypeName, f.Name);
+            WriteLog(Level.Debug, "{0} {1} defined", f.TypeName, f.Name);
         }
 
         private void LogFeatureRedefined(Feature old, Feature newer)
@@ -101,7 +124,7 @@ namespace Phonix
 
         private void LogSymbolDefined(Symbol s)
         {
-            WriteLog(Level.Info, "Symbol {0} defined", s);
+            WriteLog(Level.Debug, "Symbol {0} defined", s);
         }
 
         private void LogSymbolRedefined(Symbol old, Symbol newer)
@@ -116,7 +139,7 @@ namespace Phonix
 
         private void LogRuleDefined(AbstractRule r)
         {
-            WriteLog(Level.Info, "Rule {0} defined", r);
+            WriteLog(Level.Debug, "Rule {0} defined", r);
         }
 
         private void LogRuleRedefined(AbstractRule old, AbstractRule newer)
@@ -138,13 +161,13 @@ namespace Phonix
         {
             // since this method is potentially expensive, skip it if we're not
             // going to log anything
-            if (this.LogLevel < Level.Info)
+            if (this.LogLevel < Level.Debug)
             {
                 return;
             }
 
-            WriteLog(Level.Info, "Rule {0} applied", rule.Name);
-            WriteLog(Level.Info, rule.ShowApplication(word, slice, _phono.SymbolSet));
+            WriteLog(Level.Debug, "Rule {0} applied", rule.Name);
+            WriteLog(Level.Debug, rule.ShowApplication(word, slice, _phono.SymbolSet));
         }
 
         private void LogUndefinedVariableUsed(Rule rule, IFeatureValue var)

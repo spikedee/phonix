@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.Reflection;
+using Phonix.Parse;
 
 namespace Phonix
 {
@@ -61,10 +62,11 @@ namespace Phonix
                 config = ParseArgs(args);
 
                 Phonology phono = new Phonology();
-                logger = new Log(config.LogLevel, config.WarningLevel, Console.Error, phono);
+                PhonixParser parser = PhonixParser.FileParser(config.PhonixFile);
+                logger = new Log(config.LogLevel, config.WarningLevel, Console.Error, phono, parser);
                 logger.Start();
 
-                Parse.PhonixParser.ParseFile(phono, config.PhonixFile, config.PhonixFile);
+                parser.Parse(phono);
                 InputLoop(phono, config.Reader, config.Writer, Console.Error);
             }
             catch (ArgumentException ex)
@@ -182,7 +184,7 @@ namespace Phonix
 
                         case "-d":
                         case "--debug":
-                            rv.LogLevel = Log.Level.Info;
+                            rv.LogLevel = Log.Level.Debug;
                             break;
 
                         case "-q":

@@ -139,7 +139,7 @@ phonixDecl:
 
 importDecl:
     IMPORT str
-    { ParseFile(_phono, _currentFile, $str.val); }
+    { ParseImport($str.val); }
     ;
 
 /* Feature declarations */

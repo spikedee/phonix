@@ -30,16 +30,10 @@ namespace Phonix.Test
                 Assert.Fail("Duplicate symbols: {0}, {1}", s1, s2);
             };
 
-            try
+            foreach (var res in resources)
             {
-                foreach (var res in resources)
-                {
-                    PhonixParser.ParseFile(phono, "test", res);
-                }
-            }
-            catch (Exception ex)
-            {
-                Assert.Fail(ex.ToString());
+                var parser = PhonixParser.FileParser(res);
+                parser.Parse(phono);
             }
 
             return phono;
@@ -89,8 +83,10 @@ namespace Phonix.Test
                 ipa.FeatureSet.Add(f);
             }
 
-            PhonixParser.ParseFile(ascii, "ascii", "std.symbols");
-            PhonixParser.ParseFile(ipa, "ipa", "std.symbols.ipa");
+            var asciiParser = PhonixParser.FileParser("std.symbols");
+            asciiParser.Parse(ascii);
+            var ipaParser = PhonixParser.FileParser("std.symbols.ipa");
+            ipaParser.Parse(ipa);
 
             Assert.IsTrue(ascii.SymbolSet.BaseSymbols.Count > 0);
             Assert.IsTrue(ascii.SymbolSet.Diacritics.Count == 0);
@@ -123,8 +119,10 @@ namespace Phonix.Test
                 ipa.FeatureSet.Add(f);
             }
 
-            PhonixParser.ParseFile(ascii, "ascii", "std.symbols.diacritics");
-            PhonixParser.ParseFile(ipa, "ipa", "std.symbols.ipa.diacritics");
+            var asciiParser = PhonixParser.FileParser("std.symbols.diacritics");
+            asciiParser.Parse(ascii);
+            var ipaParser = PhonixParser.FileParser("std.symbols.ipa.diacritics");
+            ipaParser.Parse(ipa);
 
             Assert.IsTrue(ascii.SymbolSet.BaseSymbols.Count == 0);
             Assert.IsTrue(ascii.SymbolSet.Diacritics.Count > 0);
