@@ -243,5 +243,20 @@ namespace Phonix.TestE2E
                 .Start()
                 .End();
         }
+
+        [Test]
+        public void ImportedFileContainsError()
+        {
+            var importedFile = Path.GetTempFileName();
+            File.WriteAllText(importedFile, "rule (noname) [] => []");
+
+            var phono = new PhonixWrapper();
+            phono.
+                StdImports().
+                Append(String.Format("import '{0}'", importedFile)).
+                ExpectError(importedFile, 1, "Unexpected '('").
+                Start().
+                End();
+        }
     }
 }

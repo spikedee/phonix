@@ -21,6 +21,7 @@ namespace Phonix.TestE2E
         private Process phonixProcess;
         private int lineno = 0;
         private List<string> expectedErrors = new List<string>();
+        private string lastErrorFile = null;
 
         internal string PhonixFileName
         {
@@ -54,20 +55,22 @@ namespace Phonix.TestE2E
             return this;
         }
 
+        internal PhonixWrapper ExpectError(string file, int fileLine, string errorMsg)
+        {
+            expectedErrors.Add(String.Format("{0} line {1}: {2}", file, fileLine, errorMsg));
+            lastErrorFile = file;
+            return this;
+        }
+
         internal PhonixWrapper AppendExpectError(string line, params string[] errorMsgs)
         {
             fileContents.AppendLine(line);
             lineno++;
             foreach (string errorMsg in errorMsgs)
             {
-                expectedErrors.Add(FormatError(errorMsg));
+                ExpectError(PhonixFileName, lineno, errorMsg);
             }
             return this;
-        }
-
-        private string FormatError(string errorMsg)
-        {
-            return String.Format("{0} line {1}: {2}", PhonixFileName, lineno, errorMsg);
         }
 
         internal PhonixWrapper Start(string arguments = "")
@@ -151,7 +154,7 @@ namespace Phonix.TestE2E
             return this;
         }
 
-        internal PhonixWrapper ValidateErrors()
+        private PhonixWrapper ValidateErrors()
         {
             if (phonixProcess == null)
             {
@@ -169,7 +172,7 @@ namespace Phonix.TestE2E
             if (hasError)
             {
                 string lastErr = phonixProcess.StandardError.ReadLine();
-                Assert.AreEqual(String.Format("Parsing errors in {0}", PhonixFileName), lastErr);
+                Assert.AreEqual(String.Format("Parsing errors in {0}", lastErrorFile), lastErr);
             }
 
             Assert.AreEqual(null, phonixProcess.StandardError.ReadLine(), "Unexpected errors in stderr");

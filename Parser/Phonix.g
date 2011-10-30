@@ -57,6 +57,11 @@ catch (RecognitionException re)
     );
     Recover(input,re);
 }
+catch (ParseException parseEx)
+{
+    // parse exceptions should propagate from their original source
+    throw;
+}
 catch (PhonixException px)
 {
     IToken token = input.LT(-1);

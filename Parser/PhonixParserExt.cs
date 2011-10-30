@@ -64,44 +64,50 @@ namespace Phonix.Parse
         // this is the public method for parsing a root file
         public static PhonixParser FileParser(string file)
         {
-            return FileParser(file, file);
+            return FileParser(null, file);
         }
 
         // this overload is used internally for parsing imports
-        private static PhonixParser FileParser(string currentFile, string filename)
+        private static PhonixParser FileParser(string currentFile, string importedFile)
         {
-            if (currentFile == null || filename == null)
+            if (importedFile == null)
             {
-                throw new ArgumentNullException();
+                throw new ArgumentNullException("importedFile");
             }
 
             try
             {
                 // first try opening the file directly
-                var file = File.OpenText(filename);
-                return GetParserForStream(filename, file);
+                var file = File.OpenText(importedFile);
+                return GetParserForStream(importedFile, file);
             }
             catch (FileNotFoundException)
             {
                 // look for a file in the same directory as the current file
                 try
                 {
-                    var fullCurrentPath = Path.GetFullPath(currentFile);
-                    var currentDir = Path.GetDirectoryName(fullCurrentPath);
-                    var fullPath = Path.Combine(currentDir, filename);
+                    if (currentFile == null)
+                    {
+                        throw new FileNotFoundException(null, importedFile);
+                    }
 
-                    var file = File.OpenText(fullPath);
-                    return GetParserForStream(fullPath, file);
+                    // only attempt this block if the currentFile is not null
+                    var currentFilePath = Path.GetFullPath(currentFile);
+                    var currentFileDir = Path.GetDirectoryName(currentFilePath);
+                    var importPath = Path.Combine(currentFileDir, importedFile);
+
+                    var file = File.OpenText(importPath);
+                    return GetParserForStream(importPath, file);
                 }
                 catch (FileNotFoundException)
                 {
                     // look for an embedded resource. Exceptions thrown here are allowed to propagate.
-                    var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(filename);
+                    var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(importedFile);
                     if (stream == null)
                     {
-                        throw new FileNotFoundException(filename);
+                        throw new FileNotFoundException(null, importedFile);
                     }
-                    return GetParserForStream(filename, new StreamReader(stream));
+                    return GetParserForStream(importedFile, new StreamReader(stream));
                 }
             }
         }
