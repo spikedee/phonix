@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.IO;
 using System.Text;
+using System.Threading;
 
 // this class contains a wrapper for invocation of the phonix executable. it
 // supports a fluent interface for building up the phonix file and executing
@@ -68,7 +70,7 @@ namespace Phonix.TestE2E
             return String.Format("{0} line {1}: {2}", PhonixFileName, lineno, errorMsg);
         }
 
-        internal PhonixWrapper Start()
+        internal PhonixWrapper Start(string arguments = "")
         {
             if (phonixProcess != null)
             {
@@ -78,12 +80,29 @@ namespace Phonix.TestE2E
 
             var psi = new ProcessStartInfo();
             psi.FileName = "phonix";
-            psi.Arguments = PhonixFileName;
+            psi.Arguments = String.Format("{0} {1}", PhonixFileName, arguments);
             psi.RedirectStandardInput = true;
             psi.RedirectStandardOutput = true;
             psi.RedirectStandardError = true;
             psi.UseShellExecute = false;
-            phonixProcess = Process.Start(psi);
+
+            phonixProcess = new Process();
+            phonixProcess.StartInfo = psi;
+            phonixProcess.Start();
+
+            // swallow startup debug spew
+            if (arguments.Contains("-d"))
+            {
+                while (true)
+                {
+                    string line = phonixProcess.StandardError.ReadLine();
+                    if (line.Contains(String.Format("end parsing {0}", PhonixFileName)))
+                    {
+                        break;
+                    }
+                }
+            }
+
             return this;
         }
 
@@ -172,10 +191,18 @@ namespace Phonix.TestE2E
             Assert.AreEqual(expected.EndOfStream, test.EndOfStream);
         }
 
-        internal void ApplySyllableRule(string input, string syllableOutput)
+        internal void ValidateSyllableRule(string input, string syllableOutput)
         {
-            // TODO
-            throw new NotImplementedException();
+            // note: this won't work unless phonix was started in debug mode
+            phonixProcess.StandardInput.WriteLine(input);
+
+            phonixProcess.StandardError.ReadLine(); // ignore the first line
+            string actualSyllableOutput = phonixProcess.StandardError.ReadLine().Trim();
+
+            Assert.AreEqual(syllableOutput, actualSyllableOutput);
+
+            phonixProcess.StandardError.ReadLine(); // ignore the blank line that follows
+            phonixProcess.StandardOutput.ReadLine(); // read the actual output
         }
 
         public void Dispose()
