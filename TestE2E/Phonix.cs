@@ -154,6 +154,18 @@ namespace Phonix.TestE2E
             return this;
         }
 
+        internal PhonixWrapper ValidateWarning(string expectedWarning)
+        {
+            if (phonixProcess == null)
+            {
+                throw new InvalidOperationException("No instance of phonix is started");
+            }
+            string actualWarning = phonixProcess.StandardError.ReadLine();
+            Assert.AreEqual(expectedWarning, actualWarning);
+
+            return this;
+        }
+
         private PhonixWrapper ValidateErrors()
         {
             if (phonixProcess == null)

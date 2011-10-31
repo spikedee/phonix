@@ -258,5 +258,80 @@ namespace Phonix.TestE2E
                 Start().
                 End();
         }
+
+        [Test]
+        public void RuleWithVariableUndefined()
+        {
+            var phono = new PhonixWrapper();
+            phono.
+                StdImports().
+                Append("rule voice-assimilate [Labial] => [$vc] / _ []").
+                Start().
+                ValidateInOut("bai", "bai").
+                ValidateWarning("In rule 'voice-assimilate': variable $vc used without appearing in rule context; some parts of this rule may be skipped").
+                End();
+        }
+
+        [Test]
+        public void InsertDeleteInvalid()
+        {
+            var phono = new PhonixWrapper();
+            phono.
+                StdImports().
+                AppendExpectError(
+                        "rule insert-delete * a => b * ",
+                        "Can't insert and delete as part of the same rule").
+                AppendExpectError(
+                        "rule delete-insert a * => * b ",
+                        "Can't insert and delete as part of the same rule").
+                AppendExpectError(
+                        "rule delete-insert a * => b * ",
+                        "Can't map zero to zero").
+                Start().
+                End();
+        }
+
+        [Test]
+        public void SymbolDiacritic()
+        {
+            var phono = new PhonixWrapper();
+            phono.
+                StdImports().
+                Append("symbol ~ (diacritic) [+nas]").
+                Append("rule denasalize [+nas] => [*nas]").
+                Start().
+                ValidateInOut("ba~", "ba").
+                End();
+        }
+
+        [Test]
+        public void ScalarValueLessThanZero()
+        {
+            var phono = new PhonixWrapper();
+            phono.
+                StdImports().
+                Append("feature sc (type=scalar)").
+                Append("symbol sc0 [sc=0]").
+                Append("rule subtract [] => [sc=-1]").
+                Start().
+                ValidateInOut("sc0", "sc0").
+                ValidateWarning("In rule 'subtract': resulting value sc=-1 is not in the range (0, ); some parts of this rule may be skipped").
+                End();
+        }
+
+        [Test]
+        public void ScalarValueOutOfRange()
+        {
+            var phono = new PhonixWrapper();
+            phono.
+                StdImports().
+                Append("feature sc (type=scalar min=1 max=3)").
+                Append("symbol sc0 [sc=3]").
+                Append("rule add [] => [sc=+1]").
+                Start().
+                ValidateInOut("sc0", "sc0").
+                ValidateWarning("In rule 'add': resulting value sc=4 is not in the range (1, 3); some parts of this rule may be skipped").
+                End();
+        }
     }
 }

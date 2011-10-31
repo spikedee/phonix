@@ -21,29 +21,6 @@ namespace Phonix.TestE2E
         }
 
         [Test]
-        public void RuleWithVariableUndefined()
-        {
-            /*
-            bool gotTrace = false;
-            IFeatureValue undef = null;
-            Action<Rule, IFeatureValue> tracer = (r, fv) => 
-            {
-                gotTrace = true;
-                undef = fv;
-            };
-
-            var phono = new PhonixWrapper().StdImports().Append("rule voice-assimilate [] => [$vc] / _ []");
-
-            phono.RuleSet.UndefinedVariableUsed += tracer;
-            phono.Start().ValidateInOut("sz", "sz");
-            phono.End();
-
-            Assert.IsTrue(gotTrace);
-            Assert.AreSame(phono.FeatureSet.Get<Feature>("vc").VariableValue, undef);
-            */
-        }
-
-        [Test]
         public void RuleDirectionRightward()
         {
             // default direction should be rightward
@@ -62,20 +39,6 @@ namespace Phonix.TestE2E
             var phono = new PhonixWrapper().StdImports().Append("rule leftward (direction=right-to-left) a => b / a _");
             phono.Start().ValidateInOut("aaa", "abb");
             phono.End();
-        }
-
-        [Test]
-        public void NodeFeature()
-        {
-            /*
-            var phono = new PhonixWrapper().StdImports().Append("feature Height (type=node children=hi,lo)");
-            Assert.IsTrue(phono.FeatureSet.Has<NodeFeature>("Coronal"));
-
-            var node = phono.FeatureSet.Get<NodeFeature>("Height");
-            var children = new List<Feature>(node.Children);
-            Assert.IsTrue(children.Contains(phono.FeatureSet.Get<Feature>("hi")));
-            Assert.IsTrue(children.Contains(phono.FeatureSet.Get<Feature>("lo")));
-            */
         }
 
         [Test]
@@ -221,46 +184,11 @@ namespace Phonix.TestE2E
         }
 
         [Test]
-        public void InsertDeleteInvalid()
-        {
-            /* TODO
-            try
-            {
-                new PhonixWrapper().StdImports().Append("rule insert-delete * a => b * ");
-                Assert.Fail("should have thrown exception");
-            }
-            catch (ParseException) {}
-            try
-            {
-                new PhonixWrapper().StdImports().Append("rule delete-insert a * => * b ");
-                Assert.Fail("should have thrown exception");
-            }
-            catch (ParseException) {}
-            try
-            {
-                new PhonixWrapper().StdImports().Append("rule delete-insert a * => b * ");
-                Assert.Fail("should have thrown exception");
-            }
-            catch (ParseException) {}
-            */
-        }
-
-        [Test]
         public void RulePersist()
         {
             var phono = new PhonixWrapper().StdImports().Append("rule persist-b-a (persist) b => a   rule a-b a => b");
             phono.Start().ValidateInOut("baa", "aaa");
             phono.End();
-        }
-
-        [Test]
-        public void SymbolDiacritic()
-        {
-            /* TODO
-            var phono = new PhonixWrapper().StdImports().Append("symbol ~ (diacritic) [+nas]");
-            Assert.AreEqual(1, phono.SymbolSet.Diacritics.Count);
-            Assert.IsTrue(phono.SymbolSet.Diacritics.ContainsKey("~"));
-            */
         }
 
         [Test]
@@ -365,29 +293,6 @@ namespace Phonix.TestE2E
             phono.End();
         }
 
-        [Test]
-        public void RuleApplicationRate()
-        {
-            /* TODO
-            var phono = new PhonixWrapper().StdImports().Append("rule sporadic (applicationRate=0.25) a => b");
-            var rule = phono.RuleSet.OrderedRules.First();
-            Assert.AreEqual(0.25, ((Rule) rule).ApplicationRate);
-            */
-        }
-
-        [Test]
-        public void ScalarRange()
-        {
-            /* TODO
-            var phono = new PhonixWrapper().StdImports().Append("feature scRange (type=scalar min=1 max=4)");
-            Assert.IsTrue(phono.FeatureSet.Has<ScalarFeature>("scRange"));
-
-            var sc = phono.FeatureSet.Get<ScalarFeature>("scRange");
-            Assert.AreEqual(1, sc.Min.Value);
-            Assert.AreEqual(4, sc.Max.Value);
-            */
-        }
-
         private string scalarDefs = 
             "feature sc (type=scalar min=0 max=3) " +
             "symbol scX [*sc] " +
@@ -478,65 +383,6 @@ namespace Phonix.TestE2E
             phono.ValidateInOut("sc3", "sc2");
             phono.ValidateInOut("scX", "scX");
             phono.End();
-        }
-
-        [Test]
-        public void ScalarValueOutOfRange()
-        {
-            /* TODO
-            var phono = new Phonology();
-
-            bool gotTrace = false;
-            Rule rule = null;
-            ScalarFeature feature = null;
-            int traceValue = 100;
-            Action<Rule, ScalarFeature, int> tracer = (r, f, i) =>
-            { 
-                gotTrace = true;
-                rule = r;
-                feature = f;
-                traceValue = i;
-            };
-
-            PhonixParser.ParseString(phono, scalarDefs + "rule subtract [] => [sc=-1]");
-            phono.RuleSet.ScalarValueRangeViolation += tracer;
-
-            phono.Start().ValidateInOut("sc0", "sc0"); // assert that this doesn't blow up
-            phono.End();
-
-            Assert.IsTrue(gotTrace);
-            Assert.AreSame(rule, phono.RuleSet.OrderedRules.Where(r => r.Name.Equals("subtract")).First());
-            Assert.AreSame(feature, phono.FeatureSet.Get<Feature>("sc"));
-            Assert.AreEqual(-1, traceValue);
-            */
-        }
-
-        [Test]
-        public void ScalarValueInvalidOp()
-        {
-            /* TODO
-            var phono = new Phonology();
-
-            bool gotTrace = false;
-            Rule rule = null;
-            ScalarFeature feature = null;
-            Action<Rule, ScalarFeature, string> tracer = (r, f, s) =>
-            { 
-                gotTrace = true;
-                rule = r;
-                feature = f;
-            };
-
-            PhonixParser.ParseString(phono, scalarDefs + "rule subtract [] => [sc=-1]");
-            phono.RuleSet.InvalidScalarValueOp += tracer;
-
-            phono.Start().ValidateInOut("scX", "scX"); // this shouldn't throw an exception
-            phono.End();
-
-            Assert.IsTrue(gotTrace);
-            Assert.AreSame(rule, phono.RuleSet.OrderedRules.Where(r => r.Name.Equals("subtract")).First());
-            Assert.AreSame(feature, phono.FeatureSet.Get<Feature>("sc"));
-            */
         }
 
         [Test]

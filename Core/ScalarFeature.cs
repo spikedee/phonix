@@ -6,7 +6,7 @@ namespace Phonix
     public class ScalarFeature : Feature
     {
         private readonly List<ScalarFeatureValue> _list = new List<ScalarFeatureValue>();
-        public readonly int? Min;
+        public readonly int Min = 0;
         public readonly int? Max;
 
         public ScalarFeature(string name) 
@@ -38,12 +38,13 @@ namespace Phonix
 
         public FeatureValue Value(int val)
         {
-            if (Min != null && Max != null)
+            if (val < Min)
             {
-                if (val < Min || val > Max)
-                {
-                    throw new ScalarValueRangeException(this, val);
-                }
+                throw new ScalarValueRangeException(this, val);
+            }
+            if (Max != null && val > Max)
+            {
+                throw new ScalarValueRangeException(this, val);
             }
 
             foreach (var fv in _list)
