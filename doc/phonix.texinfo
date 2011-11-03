@@ -392,6 +392,10 @@ node within a rule implies assigning a null value to all children of that node.
 @node Feature Matrices
 @section Feature Matrices
 
+@menu
+* Feature Macros::
+@end menu
+
 A @dfn{feature matrix} is a set of features and their values, enclosed in
 @samp{[]}. The following line represents a feature matrix.
 
@@ -406,7 +410,46 @@ the default value of @code{[*fr]}.
 
 Feature matrices are used to define symbols and rules. However, only unary,
 binary, and scalar feature values can appear in symbols. Node feature values
-and variable feature values cannot be used in symbol declarations.
+and variable feature values cannot be used in symbol declarations, though they
+can be used in rules.
+
+@node Feature Macros
+@subsection Feature Macros
+
+Sometimes when you declare symbols or write rules, you find that certain
+clusters of feature values occur together frequently. To reduce repetition of
+these frequently occurring sets of feature values, you can create a
+@dfn{feature macro}. A feature macro is declared with the @code{feature}
+keyword followed by the macro name in brackets, followed by a feature matrix:
+
+@example
+feature [V] [-cons +son +syll]
+@end example
+
+Once it is declared, a feature macro can be used anywhere inside a feature
+matrix. A feature macro is enclosed in square brackets @code{[]} both when it
+is declared and when it is used.
+
+@example
+# These feature values are common to all vowels
+feature [V] [-cons +son +syll]
+
+# The feature macro [V] can be used inside symbol declarations
+symbol a    [[V] -hi +lo -fr +bk]
+symbol e    [[V] -hi -lo +fr -bk]
+# etc...
+
+# You can also use [V] inside a rule
+rule lower-all-vowels
+    [[V]] => [-hi +lo]
+@end example
+
+Note that you @emph{must} include the second set of brackets around a feature
+macro, as shown in the example above.
+
+Feature macros are expanded when your Phonix file is parsed. If you run your
+file in debug mode, Phonix will show you what your rules look like after macros
+have been expanded.
 
 @node Symbols
 @section Symbols
@@ -431,6 +474,7 @@ phonemes.
 @menu
 * Basic Symbols::
 * Diacritic Symbols::
+* Symbol Macros::
 @end menu
 
 @node Basic Symbols
@@ -483,7 +527,7 @@ symbol sk [...]
 @end example
 
 If your input or rules contain the characters @samp{sk}, these will be mapped
-to the symbol /sk/, and not to the sequence /s/+/k/.
+to the symbol /sk/, and not to the sequence /s/ followed by /k/.
 
 For many examples of symbol definitions, see @ref{@code{std.symbols}}.
 
@@ -517,8 +561,8 @@ of /~/ added to them.
 
 @item Diacritics must follow a base symbol in your input. If /s/ is a base
 symbol and /~/ is a diacritic, then @code{s} is a valid input string, as is
-@code{s~}.  However, @code{~} and @code{~s} are not valid input. Phonix will
-quit with an error if it encounters such a string.
+@code{s~}.  However, @code{~} and @code{~s} are not valid input strings. Phonix
+will quit with an error if it encounters such a string.
 
 @item When representing the output of your rules with symbols, Phonix will
 first look for a base symbol that matches the output feature matrix. It then
@@ -529,6 +573,61 @@ diacritics necessary to represent your output.
 
 For many examples of diacritic definitions, see
 @ref{@code{std.symbols.diacritics}}.
+
+@node Symbol Macros
+@subsection Symbol Macros
+
+When applying phonological rules, Phonix matches symbols @emph{strictly}. If
+you use a symbol in the match portion of a rule (@pxref{Parts of a rule}), an
+input segment must have exactly the same feature values as the symbol, and
+likewise if you use a symbol in the action portion of a rule, the output will
+have exactly the feature values of the symbol you assign it to.
+
+However, sometimes one wants to match a symbol less strictly, allowing a symbol
+to match input segments that consist of the same base symbol but have some
+diacritics. For this case, you can use a @dfn{symbol macro}. A symbol macro may
+occur anywhere inside a feature matrix, and is formed by putting a symbol
+inside parentheses @code{()}: @code{[(@var{symbol})]}.
+
+Consider the following example:
+
+@example
+symbol a    [-cons +son +syll -hi +lo -fr +bk]
+symbol e    [-cons +son +syll -hi -lo +fr -bk]
+
+symbol ' (diacritic) [+stress]
+
+rule match-strictly
+    a => e
+
+rule match-with-macros
+    [(a)] => [(e)]
+@end example
+
+Here, the rule @code{match-strictly} will only match the input @code{a}. It
+will @emph{not} match @code{a'}, where @code{a} carries the stress diacritic.
+Likewise, if the input segment matches the @code{a}, then it will be replaced
+with exactly @code{e}, preserving none of the original values from the input
+segment.
+
+The rule @code{match-with-macros}, on the other hand, will match any input
+segment that has the features which are specified for @code{a}, i.e.
+@code{[-cons +son +syll -hi +lo -fr +bk]}. Since @code{[+stress]} is not
+specified for @code{a}, both @code{a} and @code{a'} can match this rule. In the
+same way, only the features specified by the symbol @code{e} will be replaced
+by this rule action, leaving the value for @code{stress} unchanged.
+
+You can freely combine symbol macros with regular feature values in a feature
+matrix:
+
+@example
+rule match-with-stress
+    [(a) +stress] => [(e)]
+@end example
+
+Symbol macros are expanded when your Phonix file is parsed. If you run your
+file in debug mode, Phonix will show you what your rules look like after macros
+have been expanded.
 
 @node Rules
 @section Rules
@@ -971,11 +1070,9 @@ leave the value unchanged.
 
 @item If the scalar feature has a minimum and a maximum (@pxref{Scalar
 Features}) and applying the addition or subtraction operator causes the scalar
-to go out of range, Phonix will also issue a warning and leave the value
-unchanged.
+to go out of range, Phonix will issue a warning and leave the value unchanged.
 
 @end itemize
-
 
 @node Optional and repeated segments
 @subsection Optional and repeated segments
@@ -1232,7 +1329,7 @@ clusters and coda clusters are not allowed by this template, since only one
 segment is allowed in the onset.
 
 If we wanted to allow an optional liquid to follow a stop in the onset cluster,
-we could rewrite the syllable template this way:
+we can rewrite the syllable template this way:
 
 @example
 syllable
@@ -1315,7 +1412,7 @@ and the coda. For example, the syllabification of hypothetical word like
 @code{abarno} with a (C)V(C) template is presented as:
 
 @example
-<a> <b :: a : r> <n : o>
+<a> <b :: a : r> <n :: o>
 @end example
 
 The spacing is used to avoid confusing the syllable separators with the colon
