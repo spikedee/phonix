@@ -2,6 +2,10 @@
 @setfilename phonix
 @documentencoding UTF-8
 @settitle Phonix Phonological Transformation Language
+@dircategory Linguistics
+@direntry
+* Phonix: (phonix)              A language for modeling phonological transformations
+@end direntry
 
 @copying
 Copyright @copyright{} 2009-2010 Jesse Bangs.
@@ -17,23 +21,18 @@ This manual and Phonix itself are licensed under the BSD license.
 @page
 @insertcopying
 
-$LastChangedDate$
+Phonix version @include Resx/version
+
 @end titlepage
 
 @ifnottex
 @node Top
 @top Phonix Phonological Transformation Language
 
-@ifnothtml
-This file documents a language for modeling phonological change.
-@end ifnothtml
+This is the manual for Phonix, a language for modeling diachronic and
+synchronic phonological transformations.
 
-@ifnotinfo
-This is the manual for Phonix, a language for expressing diachronic and
-synchronic phonological processes.
-@end ifnotinfo
-
-$LastChangedDate$
+Phonix version @include Resx/version
 
 @end ifnottex
 
@@ -194,9 +193,11 @@ current directory or any directory in @code{%PATH%}, then you can simply call
 later, which is standard on all recent versions of Windows.
 
 @item If you are using Linux, you can invoke Phonix with @code{./phonix.exe},
-provided that you have the Mono runtime installed. If you are building from
-source, there is a @code{make install} target that will install a @file{phonix}
-script without the @code{.exe} extension in @code{/usr/local/bin}.
+provided that you have the Mono runtime installed. If you installed using the
+.deb package, then the prerequisites have already been installed for you. If
+you are building from source, there is a @code{make install} target that will
+install a @file{phonix} script without the @code{.exe} extension in
+@code{/usr/local/bin}.
 
 @item If you are using Mac OSX or a POSIX system other than Linux, you can
 invoke Phonix with @code{mono phonix.exe}. You must have the Mono runtime
@@ -1750,7 +1751,7 @@ end of a line is a comment and is silently ignored by Phonix (unless the
 
 @example
 # This is a comment
-feature ex # this comment explains what 'ex' means
+feature ex      # this is also a comment
 @end example
 
 @node Strings
@@ -1766,7 +1767,7 @@ The long, boring, technical version follows.
 Phonix recognizes two types of strings: @dfn{bare} strings and @dfn{quoted}
 strings. Most of the time you can use bare strings, which keeps your Phonix
 file nice and uncluttered. The rules for bare strings are extremely forgiving,
-to minimize the situation where you have to use a quoted string:
+to minimize the situations where you must use a quoted string:
 
 @itemize
 
@@ -1829,11 +1830,11 @@ The following examples illustrate common use cases for Phonix.
 @section Romanian
 
 The following files define a phonology for contemporary Romanian, and
-illustrates how most of the surface alternations in Romanian can be derived.
-Note that the example is somewhat incomplete: the input represents an internal
-reconstruction of Proto-Romanian, not Proto-Romance or Vulgar Latin, and there
-may be a few alternations that slipped by. However, the majority of the active
-phonological processes in Romanian should be represented.
+illustrates how most of the surface alternations in Modern Romanian can be
+derived.  Note that the example is somewhat incomplete: the input represents an
+internal reconstruction of Proto-Romanian, not Proto-Romance or Vulgar Latin,
+and there may be a few alternations that have slipped by. However, the majority
+of the active phonological processes in Romanian should be represented.
 
 @subsection @file{romanian.phonix}
 
@@ -1915,7 +1916,7 @@ output form in Romanian orthography.
 @item @code{klemamu} @tab @code{kjem@@'m} @tab chemăm
 @item @code{klemati} @tab @code{kjema'tsj} @tab chemaţi
 @item @code{klema} @tab @code{kja'm@@} @tab cheamă
-@item @code{kleme} @tab @code{kja'm@@} @tab cheamă *Note that this is the regular outcome of the sound change, but this form (the 3rd person subjunctive) has been analogically restored to 'cheme' in the standard language.
+@item @code{kleme} @tab @code{kja'm@@} @tab cheamă [Note that this is the regular outcome of the sound changes, but this form (the 3rd person subjunctive) has been analogically restored to 'cheme' in the standard language.]
 @item @code{kalu} @tab @code{ka'l} @tab cal
 @item @code{kali} @tab @code{ka'j} @tab cai
 @item @code{udu} @tab @code{u'd} @tab ud

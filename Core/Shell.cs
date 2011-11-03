@@ -234,7 +234,7 @@ namespace Phonix
         {
             get
             {
-                return
+                string msg = 
                     "phonix [language-file] -i [input-file] -o [output-file]\n" +
                     "   -i, --input         specify the lexicon input file\n" +
                     "   -o, --output        specify the lexicon output file\n" +
@@ -245,6 +245,13 @@ namespace Phonix
                     "   -h, --help          show this help message\n" +
                     "   --version           show the phonix version\n\n" +
                     "For additional help, consult the Phonix manual available online at http://phonix.googlecode.com";
+
+                if (Environment.OSVersion.Platform == PlatformID.Unix)
+                {
+                    msg += "\nThe full Phonix manual may also be viewed as an info doc by using the command `info phonix'.";
+                }
+
+                return msg;
             }
         }
 
