@@ -83,7 +83,7 @@ namespace Phonix.Test
             int max = 3;
             ScalarFeature f = new ScalarFeature(TEST, min, max);
 
-            Assert.AreEqual(min, f.Min.Value);
+            Assert.AreEqual(min, f.Min);
             Assert.AreEqual(max, f.Max.Value);
 
             for (int i = min - 1; i < max + 1; i++)

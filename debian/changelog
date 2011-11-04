@@ -1,5 +1,6 @@
-phonix (0.8) unstable; urgency=low
+phonix (0.8.0) unstable; urgency=low
 
-  * Initial Release.
+  * First debian package
+  * Additional documentation formats
 
  -- Jesse Bangs <jaspax@gmail.com>  Thu, 21 Apr 2011 06:48:25 -0500

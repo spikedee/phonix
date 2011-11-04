@@ -3,6 +3,8 @@ using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using System.Reflection;
+using Phonix.Parse;
 
 namespace Phonix
 {
@@ -60,10 +62,11 @@ namespace Phonix
                 config = ParseArgs(args);
 
                 Phonology phono = new Phonology();
-                logger = new Log(config.LogLevel, config.WarningLevel, Console.Error, phono);
+                PhonixParser parser = PhonixParser.FileParser(config.PhonixFile);
+                logger = new Log(config.LogLevel, config.WarningLevel, Console.Error, phono, parser);
                 logger.Start();
 
-                Parse.PhonixParser.ParseFile(phono, config.PhonixFile, config.PhonixFile);
+                parser.Parse(phono);
                 InputLoop(phono, config.Reader, config.Writer, Console.Error);
             }
             catch (ArgumentException ex)
@@ -181,7 +184,7 @@ namespace Phonix
 
                         case "-d":
                         case "--debug":
-                            rv.LogLevel = Log.Level.Info;
+                            rv.LogLevel = Log.Level.Debug;
                             break;
 
                         case "-q":
@@ -198,6 +201,15 @@ namespace Phonix
                         case "--verbose":
                             rv.LogLevel = Log.Level.Verbose;
                             break;
+
+                        case "-h":
+                        case "--help":
+                            /* Using an exception here is effective, but kind of gross */
+                            throw new ArgumentException(HelpMessage);
+
+                        case "--version":
+                            /* Using an exception here is effective, but kind of gross */
+                            throw new ArgumentException(VersionMessage);
 
                         default:
                             rv.PhonixFile = arg;
@@ -216,6 +228,49 @@ namespace Phonix
             }
 
             return rv;
+        }
+
+        private static string HelpMessage
+        {
+            get
+            {
+                string msg = 
+                    "phonix [language-file] -i [input-file] -o [output-file]\n" +
+                    "   -i, --input         specify the lexicon input file\n" +
+                    "   -o, --output        specify the lexicon output file\n" +
+                    "   -q, --quiet         print only fatal errors\n" +
+                    "   -d, --debug         print debugging messages\n" +
+                    "   -v, --verbose       print extra verbose imessages (more than -d)\n" +
+                    "   -w, --warn-fatal    treat all warnings as fatal errors\n" +
+                    "   -h, --help          show this help message\n" +
+                    "   --version           show the phonix version\n\n" +
+                    "For additional help, consult the Phonix manual available online at http://phonix.googlecode.com";
+
+                if (Environment.OSVersion.Platform == PlatformID.Unix)
+                {
+                    msg += "\nThe full Phonix manual may also be viewed as an info doc by using the command `info phonix'.";
+                }
+
+                return msg;
+            }
+        }
+
+        private static string VersionMessage
+        {
+            get
+            {
+                return String.Format("phonix {0}, (c) 2011 by Jesse Bangs", Version);
+            }
+        }
+
+        public static string Version
+        {
+            get
+            {
+                var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("version");
+                var version = new StreamReader(stream).ReadToEnd();
+                return version.Substring(0, version.Length - 1);
+            }
         }
     }
 }

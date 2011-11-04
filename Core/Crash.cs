@@ -45,6 +45,7 @@ namespace Phonix
             using (var report = new StreamWriter(File.OpenWrite(CrashReportFile)))
             {
                 var args = Environment.GetCommandLineArgs();
+                report.WriteLine("Version: {0}", Shell.Version);
                 report.WriteLine("Revision: {0}", Shell.FileRevision);
                 report.WriteLine("URL: {0}", Shell.FileURL);
                 report.WriteLine("Cmdline Args: {0}", String.Join(" ", args));

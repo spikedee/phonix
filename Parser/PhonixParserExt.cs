@@ -21,67 +21,104 @@ namespace Phonix.Parse
         private readonly Dictionary<string, IEnumerable<FeatureValue>> _featureValueGroups = 
             new Dictionary<string, IEnumerable<FeatureValue>>();
 
-        private void Parse(string currentFile, Phonology phono)
-        {
-            _currentFile = currentFile;
-            _phono = phono;
+        public event Action<string> ParseBegin;
+        public event Action<string> ParseEnd;
 
-            parseRoot();
-            if (_parseError)
+        public void Parse(Phonology phono)
+        {
+            if (ParseBegin == null)
             {
-                throw new ParseException(currentFile);
+                ParseBegin += (s) => {};
+            }
+            if (ParseEnd == null)
+            {
+                ParseEnd += (s) => {};
+            }
+
+            try
+            {
+                ParseBegin(_currentFile);
+
+                _phono = phono;
+                parseRoot();
+
+                if (_parseError)
+                {
+                    throw new ParseException(_currentFile);
+                }
+            }
+            finally
+            {
+                ParseEnd(_currentFile);
             }
         }
 
-        public static void ParseFile(Phonology phono, string currentFile, string filename)
+        private void ParseImport(string importFile)
         {
-            if (currentFile == null || filename == null)
-            {
-                throw new ArgumentNullException();
-            }
+            var importParser = FileParser(_currentFile, importFile);
+            importParser.ParseBegin += (s) => this.ParseBegin(s);
+            importParser.ParseEnd += (s) => this.ParseEnd(s);
+            importParser.Parse(_phono);
+        }
 
-            PhonixParser parser = null;
+        // this is the public method for parsing a root file
+        public static PhonixParser FileParser(string file)
+        {
+            return FileParser(null, file);
+        }
+
+        // this overload is used internally for parsing imports
+        private static PhonixParser FileParser(string currentFile, string importedFile)
+        {
+            if (importedFile == null)
+            {
+                throw new ArgumentNullException("importedFile");
+            }
 
             try
             {
                 // first try opening the file directly
-                var file = File.OpenText(filename);
-                parser = GetParserForStream(file);
+                var file = File.OpenText(importedFile);
+                return GetParserForStream(importedFile, file);
             }
             catch (FileNotFoundException)
             {
                 // look for a file in the same directory as the current file
                 try
                 {
-                    var fullCurrentPath = Path.GetFullPath(currentFile);
-                    var currentDir = Path.GetDirectoryName(fullCurrentPath);
-                    var file = File.OpenText(Path.Combine(currentDir, filename));
-                    parser = GetParserForStream(file);
+                    if (currentFile == null)
+                    {
+                        throw new FileNotFoundException(null, importedFile);
+                    }
+
+                    // only attempt this block if the currentFile is not null
+                    var currentFilePath = Path.GetFullPath(currentFile);
+                    var currentFileDir = Path.GetDirectoryName(currentFilePath);
+                    var importPath = Path.Combine(currentFileDir, importedFile);
+
+                    var file = File.OpenText(importPath);
+                    return GetParserForStream(importPath, file);
                 }
                 catch (FileNotFoundException)
                 {
                     // look for an embedded resource. Exceptions thrown here are allowed to propagate.
-                    var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(filename);
+                    var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(importedFile);
                     if (stream == null)
                     {
-                        throw new FileNotFoundException(filename);
+                        throw new FileNotFoundException(null, importedFile);
                     }
-                    parser = GetParserForStream(new StreamReader(stream));
+                    return GetParserForStream(importedFile, new StreamReader(stream));
                 }
             }
-
-            parser.Parse(currentFile, phono);
         }
 
-        public static void ParseString(Phonology phono, string str)
+        public static PhonixParser StringParser(string str)
         {
             StringReader reader = new StringReader(str);
-            PhonixParser parser = GetParserForStream(reader);
-
-            parser.Parse("$string", phono);
+            return GetParserForStream("<string>", reader);
         }
 
-        private static PhonixParser GetParserForStream(TextReader stream)
+        private static PhonixParser GetParserForStream(string filename, TextReader stream)
         {
             var lexStream = new ANTLRReaderStream(stream);
             var lexer = new PhonixLexer(lexStream);
@@ -90,10 +127,13 @@ namespace Phonix.Parse
 
 #if debug
             var tracer = new PhonixDebugTracer(tokenStream);
-            return new PhonixParser(tokenStream, tracer);
+            var parser = new PhonixParser(tokenStream, tracer);
 #else
-            return new PhonixParser(tokenStream);
+            var parser = new PhonixParser(tokenStream);
 #endif
+
+            parser._currentFile = filename;
+            return parser;
         }
 
         private FeatureMatrix GetSingleSymbol(List<Symbol> symbols)

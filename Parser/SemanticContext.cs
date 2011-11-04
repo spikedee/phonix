@@ -39,17 +39,17 @@ namespace Phonix.Parse
         public static FeatureMatrix FeatureMatrix(IEnumerable<object> objs)
         {
             return new FeatureMatrix(CheckTypes<FeatureValue>(objs, 
-                        "concrete feature value (not a variable value, node value, or syllable feature)"));
+                        "a concrete feature value"));
         }
 
         public static IEnumerable<IMatchable> MatchableMatrix(IEnumerable<object> objs)
         {
-            return CheckTypes<IMatchable>(objs, "match value (concrete feature value, variable value, node value, or syllable feature)");
+            return CheckTypes<IMatchable>(objs, "a concrete feature value, variable value, node value, or syllable feature");
         }
 
         public static IEnumerable<ICombinable> CombinableMatrix(IEnumerable<object> objs)
         {
-            return CheckTypes<ICombinable>(objs, "combining value (concrete feature value or variable value)");
+            return CheckTypes<ICombinable>(objs, "a concrete feature value or variable value");
         }
     }
 }

@@ -1,3 +1,4 @@
 #!/bin/sh
 
-exec mono PREFIX/phonix/phonix.exe $@
+DIR=`dirname $0`
+exec mono $DIR/../lib/phonix/phonix.exe $@
