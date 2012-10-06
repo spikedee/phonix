@@ -10,7 +10,6 @@ namespace Phonix
     public class FeatureMatrix : IEnumerable<FeatureValue>
     {
         private readonly List<FeatureValue> _values;
-        private readonly int _count = 0;
         private int _hashCode = 0;
 
         public FeatureMatrix(IEnumerable<FeatureValue> values)
@@ -37,7 +36,6 @@ namespace Phonix
             // build the hash code based on the enumerated values
             foreach (var fv in this)
             {
-                _count++;
                 _hashCode ^= fv.GetHashCode();
             }
         }
@@ -122,22 +120,11 @@ namespace Phonix
             }
         }
 
-        public int Weight
-        {
-            get
-            {
-                return _count;
-            }
-        }
-
         public bool Equals(FeatureMatrix fm)
         {
             if (this.GetHashCode() != fm.GetHashCode())
                 return false;
 
-            if (this.Weight != fm.Weight)
-                return false;
-            
             foreach (var fv in this)
             {
                 if (fm[fv.Feature] != fv)

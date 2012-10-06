@@ -14,7 +14,6 @@ namespace Phonix.Test
         public void Ctor()
         {
             var combo = new MatrixCombiner(FeatureMatrixTest.MatrixA);
-            Assert.AreEqual(FeatureMatrixTest.MatrixA.Weight + 1, combo.Count());
 
             // the combo enumerator should include the zero values
             bool hasNull = false;
@@ -37,7 +36,6 @@ namespace Phonix.Test
             // combining with a non-emtpy combiner should fill in new values
             var seg = new MutableSegment(FeatureMatrix.Empty);
             combo.Combine(null, seg);
-            Assert.AreEqual(combo.Count() - 1, seg.Matrix.Weight);
 
             Assert.IsTrue(FeatureMatrixTest.MatrixA.Equals(seg.Matrix), "combo with populated matrix");
         }
@@ -61,7 +59,6 @@ namespace Phonix.Test
             var seg = new MutableSegment(FeatureMatrixTest.MatrixA);
             empty.Combine(null, seg);
 
-            Assert.AreEqual(FeatureMatrixTest.MatrixA.Weight, seg.Matrix.Weight);
             Assert.IsTrue(FeatureMatrixTest.MatrixA.Equals(seg.Matrix), "combo with empty matrix");
         }
 
@@ -83,7 +80,6 @@ namespace Phonix.Test
             var seg = new MutableSegment(FeatureMatrixTest.MatrixA);
             nullCombo.Combine(null, seg);
 
-            Assert.AreEqual(0, seg.Matrix.Weight);
             foreach (var f in fs)
             {
                 if (f is NodeFeature) continue;

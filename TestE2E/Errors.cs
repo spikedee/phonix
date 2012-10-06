@@ -315,7 +315,7 @@ namespace Phonix.TestE2E
                 Append("rule subtract [] => [sc=-1]").
                 Start().
                 ValidateInOut("sc0", "sc0").
-                ValidateWarning("In rule 'subtract': resulting value sc=-1 is not in the range (0, ); some parts of this rule may be skipped").
+                ValidateWarning("In rule 'subtract': resulting value sc=-1 is less than the minimum value 0; some parts of this rule may be skipped").
                 End();
         }
 
@@ -330,7 +330,21 @@ namespace Phonix.TestE2E
                 Append("rule add [] => [sc=+1]").
                 Start().
                 ValidateInOut("sc0", "sc0").
-                ValidateWarning("In rule 'add': resulting value sc=4 is not in the range (1, 3); some parts of this rule may be skipped").
+                ValidateWarning("In rule 'add': resulting value sc=4 is greater than the maximum value 3; some parts of this rule may be skipped").
+                End();
+        }
+
+        [Test]
+        public void NoSuchFeatureValueGroup()
+        {
+            var phono = new PhonixWrapper();
+            phono.
+                StdImports().
+                AppendExpectError(
+                    "symbol sc0 [[mistake]]",
+                    "Feature value group 'mistake' not found",
+                    "Unexpected ']'").
+                Start().
                 End();
         }
     }

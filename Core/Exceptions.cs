@@ -16,6 +16,13 @@ namespace Phonix
             {}
     }
 
+    public class FeatureValueGroupNotFoundException : PhonixException
+    {
+        public FeatureValueGroupNotFoundException(string featureGroup)
+            : base(String.Format("Feature value group '{0}' not found", featureGroup))
+            {}
+    }
+
     public class FeatureTypeException : PhonixException
     {
         public FeatureTypeException(string name, string type)
@@ -58,11 +65,25 @@ namespace Phonix
         public readonly int Value;
 
         public ScalarValueRangeException(ScalarFeature feature, int actual)
-            : base(String.Format("Value {0} for {1} was not in the range ({2}, {3})",
-                        actual, feature.Name, feature.Min, feature.Max))
+            : base(GetMessage(feature, actual))
         {
             Feature = feature;
             Value = actual;
+        }
+
+        private static string GetMessage(ScalarFeature feature, int actual)
+        {
+            if (actual < feature.Min)
+            {
+                return String.Format("Value {0} for {1} was less than the minimum value of {2}",
+                        actual, feature.Name, feature.Min);
+            }
+            else if (actual > feature.Max.Value)
+            {
+                return String.Format("Value {0} for {1} is greater than maximum value of {2}",
+                        actual, feature.Name, feature.Max.Value);
+            }
+            throw new ArgumentException("Why are we throwing a range exception here?");
         }
     }
 
