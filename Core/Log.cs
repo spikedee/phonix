@@ -177,7 +177,23 @@ namespace Phonix
 
         private void LogScalarValueRangeViolation(Rule rule, ScalarFeature feature, int val)
         {
-            WriteLog(Level.Warning, "In rule '{0}': resulting value {1}={2} is not in the range ({3}, {4}); some parts of this rule may be skipped", rule.Name, feature.Name, val, feature.Min, feature.Max);
+            string valueMsg = null;
+            if (val < feature.Min)
+            {
+                valueMsg = String.Format("less than the minimum value {0}", feature.Min);
+            }
+            else if (val > feature.Max.Value)
+            {
+                valueMsg = String.Format("greater than the maximum value {0}", feature.Max.Value);
+            }
+
+            if (valueMsg == null) // sanity check -- this should never happen
+            {
+                throw new ArgumentException("Scalar range out of value, but all value checks succeeded in handler. WTF?");
+            }
+
+            WriteLog(Level.Warning, "In rule '{0}': resulting value {1}={2} is {3}; some parts of this rule may be skipped", 
+                    rule.Name, feature.Name, val, valueMsg);
         }
 
         private void LogInvalidScalarValueOp(Rule rule, ScalarFeature feature, string message)

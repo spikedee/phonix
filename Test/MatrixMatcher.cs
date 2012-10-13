@@ -15,7 +15,6 @@ namespace Phonix.Test
         public void Ctor()
         {
             var test = new MatrixMatcher(FeatureMatrixTest.MatrixA);
-            Assert.AreEqual(FeatureMatrixTest.MatrixA.Weight + 1, test.Count());
 
             bool hasNull = false;
             foreach (FeatureValue fv in test)

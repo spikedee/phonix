@@ -186,10 +186,14 @@ featureValueGroupDecl:
     { _featureValueGroups[$str.val] = $matrix.val; }
     ;
 
-featureValueGroup returns [IEnumerable<FeatureValue> val]
-@init { var list = new List<object>(); }:
+featureValueGroup returns [IEnumerable<FeatureValue> val]:
     LBRACE str RBRACE
-    { return _featureValueGroups[$str.val]; }
+    { 
+        if (!_featureValueGroups.TryGetValue($str.val, out $val))
+        {
+            throw new FeatureValueGroupNotFoundException($str.val);
+        }
+    }
     ;
 
 /* Symbol declarations and usage */

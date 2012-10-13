@@ -98,14 +98,6 @@ namespace Phonix.Test
         }
 
         [Test]
-        public void Weight()
-        {
-            var fm = MatrixA;
-            Assert.AreEqual(5, fm.Weight);
-            Assert.AreEqual(0, FeatureMatrix.Empty.Weight);
-        }
-
-        [Test]
         public void String()
         {
 
